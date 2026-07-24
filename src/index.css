@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+@media print {
+
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+  }
+
+}
+@media print {
+
+  body * {
+    visibility: hidden;
+  }
+
+  #print-area,
+  #print-area * {
+    visibility: visible;
+  }
+
+  #print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+}
+@media print {
+
+  body *{
+    visibility:hidden;
+  }
+
+  #print-area,
+  #print-area *{
+    visibility:visible;
+  }
+
+  #print-area{
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    box-shadow:none;
+    border:none;
+    margin:0;
+  }
+
+  .no-print{
+    display:none !important;
+  }
+
+}
+@media print {
+
+  @page{
+    size:A4 portrait;
+    margin:8mm;
+  }
+
+  #print-area{
+    width:100%;
+    break-inside:avoid;
+    page-break-inside:avoid;
+  }
+
+}
