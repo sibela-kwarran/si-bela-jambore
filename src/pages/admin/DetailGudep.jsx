@@ -1,72 +1,145 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
+import {
+  getPembinaByGudep,
+} from "../../services/pembinaService";
+
+import {
+  getReguByGudep,
+} from "../../services/reguService";
+
+import {
+  getPesertaByGudep,
+} from "../../services/pesertaService";
+
+import {
+  getProfilGudepById,
+} from "../../services/profilGudepService";
+
+import {
+  updatePendaftaran,
+} from "../../services/pendaftaranService";
+import {
+  getPendaftaranById
+} from "../../services/pendaftaranService";
+
 export default function DetailGudep() {
+const { id } = useParams();
 
-  const { id } = useParams();
+const [profil, setProfil] = useState({});
+const [pembina, setPembina] = useState([]);
+const [regu, setRegu] = useState([]);
+const [peserta, setPeserta] = useState([]);
 
-  const dataPendaftaran =
-    JSON.parse(localStorage.getItem("dataPendaftaran")) || [];
+const [catatanAdmin, setCatatanAdmin] = useState("");
+const [status, setStatus] = useState("Menunggu Verifikasi");
+const [pendaftaran, setPendaftaran] = useState(null);
 
-  const gudep = dataPendaftaran.find(
-    item => item.id === Number(id)
-  );
+useEffect(() => {
+  loadData();
+}, []);
+ 
 
- const [catatanAdmin, setCatatanAdmin] = useState(
-    gudep?.catatanAdmin || ""
-  );
+  async function loadData(){
 
-  if (!gudep) {
-    return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold text-red-600">
-          Data Gugus Depan tidak ditemukan
-        </h1>
-      </div>
-    );
-  }
+try{
+
+// ambil data pendaftaran
+const pendaftaranData = await getPendaftaranById(id);
+
+setPendaftaran(pendaftaranData);
+
+
+// ambil gudep berdasarkan gudep_id
+const gudepId = pendaftaranData.gudep_id;
+
+
+const profilData = await getProfilGudepById(gudepId);
+
+setProfil(profilData);
+
+
+const pembinaData = await getPembinaByGudep(gudepId);
+
+setPembina(pembinaData);
+
+
+const reguData = await getReguByGudep(gudepId);
+
+setRegu(reguData);
+
+
+const pesertaData = await getPesertaByGudep(gudepId);
+
+setPeserta(pesertaData);
+
+
+}catch(error){
+
+console.error(
+"Gagal mengambil detail gudep:",
+error
+);
+
+}
+
+}
 
  
 
 // Data terbaru dari Operator
 
-const profil = gudep.detail?.profil || {};
 
-const pembina = gudep.detail?.pembina || [];
+async function updateStatus(statusBaru){
 
-const regu = gudep.detail?.regu || [];
+  try {
+console.log("ID YANG DIUPDATE:", id);
+    await updatePendaftaran(id, {
 
-const peserta = gudep.detail?.peserta || [];
-function updateStatus(statusBaru) {
+      status: statusBaru,
 
-  const data =
-    JSON.parse(localStorage.getItem("dataPendaftaran")) || [];
+      tanggal_verifikasi: new Date()
+        .toISOString(),
 
-  const index =
-    data.findIndex(item => item.id === gudep.id);
+      catatan_admin: catatanAdmin || ""
 
-  if (index >= 0) {
+    });
 
-    data[index].status = statusBaru;
 
-data[index].tanggalVerifikasi =
-  new Date().toLocaleDateString("id-ID");
+    alert("Status berhasil diperbarui");
 
-data[index].catatanAdmin =
-  catatanAdmin;
 
-    localStorage.setItem(
-      "dataPendaftaran",
-      JSON.stringify(data)
+  } catch(error){
+
+    console.error(
+      "Gagal update status:",
+      error
     );
 
+
+    alert(
+      "Gagal mengubah status"
+    );
+
+  
+
+
+
+    
+
     // Pesan sesuai status
-    if (statusBaru === "Terverifikasi") {
-      alert("✅ Pendaftaran berhasil disetujui.");
-    } else if (statusBaru === "Perlu Perbaikan") {
-      alert("🟡 Pendaftaran dikembalikan untuk diperbaiki.");
-    } else if (statusBaru === "Ditolak") {
-      alert("❌ Pendaftaran telah ditolak.");
+    if (statusBaru === "Disetujui") {
+
+  alert("✅ Pendaftaran berhasil disetujui.");
+
+} else if (statusBaru === "Perlu Perbaikan") {
+
+  alert("🟡 Pendaftaran dikembalikan untuk diperbaiki.");
+
+} else if (statusBaru === "Ditolak") {
+
+  alert("❌ Pendaftaran telah ditolak.");
     }
 
     window.location.reload();
@@ -102,21 +175,21 @@ data[index].catatanAdmin =
               <td className="font-semibold py-2 w-56">
                 Nama Pangkalan
               </td>
-              <td>{profil.pangkalan}</td>
+              <td>{profil.nama_pangkalan}</td>
             </tr>
 
             <tr>
               <td className="font-semibold py-2">
                 Gudep Putra
               </td>
-              <td>{profil.gudepPutra}</td>
+              <td>{profil.gudep_putra || "-"}</td>
             </tr>
 
             <tr>
               <td className="font-semibold py-2">
                 Gudep Putri
               </td>
-              <td>{profil.gudepPutri}</td>
+              <td>{profil.gudep_putri || "-"}</td>
             </tr>
 
             <tr>
@@ -547,6 +620,81 @@ data[index].catatanAdmin =
 
 </div>
 
+{/* ====================== */}
+{/* STATUS VERIFIKASI */}
+{/* ====================== */}
+
+<div className="bg-white rounded-xl shadow p-6 mb-6">
+
+<h2 className="text-xl font-bold text-green-700 mb-5">
+STATUS VERIFIKASI PENDAFTARAN
+</h2>
+
+
+<p className="mb-3">
+Nama Gudep :
+
+<span className="font-semibold ml-2">
+{pendaftaran?.nama_gudep || "-"}
+</span>
+
+</p>
+
+
+<p className="mb-3">
+Tanggal Verifikasi :
+
+<span className="font-semibold ml-2">
+
+{
+pendaftaran?.tanggal_verifikasi
+?
+new Date(
+pendaftaran.tanggal_verifikasi
+)
+.toLocaleDateString("id-ID")
+:
+"-"
+}
+
+</span>
+
+</p>
+
+
+<p className="mb-3">
+Status :
+
+<span className="font-semibold ml-2">
+
+{
+pendaftaran?.status 
+||
+"Menunggu Verifikasi"
+}
+
+</span>
+
+</p>
+
+
+<p>
+Catatan Panitia :
+
+<span className="font-semibold ml-2">
+
+{
+pendaftaran?.catatan_admin
+||
+"Belum ada catatan."
+}
+
+</span>
+
+</p>
+
+
+</div>
 
 
 {/* ====================== */}

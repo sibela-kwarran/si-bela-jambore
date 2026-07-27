@@ -1,18 +1,75 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+
+
+import {
+ getKaplingByGudep
+} from "../../services/kaplingService";
+
+
 export default function KartuKapling() {
 
-const navigate = useNavigate();
+  const { id } = useParams();
 
-  const profil =
-    JSON.parse(localStorage.getItem("profilGudep")) || {};
+  const navigate = useNavigate();
 
-  const dataPendaftaran =
-    JSON.parse(localStorage.getItem("dataPendaftaran")) || [];
+  const [data, setData] = useState(null);
 
-  const data = dataPendaftaran.find(
-    (item) => item.namaGudep === profil.pangkalan
+  const [loading, setLoading] = useState(true);
+
+
+  console.log("GUDDEP KAPLING :", id);
+
+
+  useEffect(()=>{
+
+loadKapling();
+
+},[]);
+
+
+
+async function loadKapling(){
+
+try{
+
+const hasil = await getKaplingByGudep(id);
+
+
+console.log(
+"DATA KARTU KAPLING :",
+hasil
+);
+
+
+setData(hasil);
+
+
+}catch(error){
+
+console.error(error);
+
+}
+
+finally{
+
+setLoading(false);
+
+}
+
+
+
+
+
+  return (
+
+    <div className="p-10 text-center text-xl">
+      Memuat kartu kapling...
+    </div>
+
   );
 
+}
   return (
 
     <div className="min-h-screen bg-gray-100 py-10 px-4">
@@ -39,21 +96,22 @@ const navigate = useNavigate();
 
         {/* ================= CEK KAPLING ================= */}
 
-        {!data?.blokPutra ? (
+        {
+!data?.kapling_putra ? (
 
-          <div className="bg-yellow-100 border border-yellow-300 rounded-xl p-8 text-center">
+<div className="bg-yellow-100 border border-yellow-300 rounded-xl p-8 text-center">
 
-            <h2 className="text-2xl font-bold text-yellow-700">
-              Kapling Belum Dibuat
-            </h2>
+<h2 className="text-2xl font-bold text-yellow-700">
+Kapling Belum Dibuat
+</h2>
 
-            <p className="mt-3 text-gray-700">
-              Silakan menunggu panitia melakukan Generate Kapling.
-            </p>
+<p>
+Silakan menunggu panitia melakukan Generate Kapling.
+</p>
 
-          </div>
+</div>
 
-        ) : (
+) : (
 
           <>
         
@@ -88,7 +146,9 @@ const navigate = useNavigate();
 
     <h2 className="text-center text-2xl font-bold text-green-700">
 
-      {data.namaGudep}
+      {
+data?.profil_gudep?.nama_pangkalan
+}
 
     </h2>
 
@@ -114,7 +174,7 @@ const navigate = useNavigate();
       </p>
 
       <p className="font-bold text-lg">
-        {data.blokPutra.kecamatan}
+        {data?.kecamatan_putra || "-"}
       </p>
 
     </div>
@@ -126,7 +186,7 @@ const navigate = useNavigate();
       </p>
 
       <p className="font-bold text-lg">
-        {data.blokPutra.kelurahan}
+        {data?.kelurahan_putra || "-"}
       </p>
 
     </div>
@@ -140,7 +200,7 @@ const navigate = useNavigate();
     </p>
 
     <div className="text-5xl font-extrabold text-green-700 mt-1">
-      {data.blokPutra.kapling}
+      {data?.kapling_putra || "-"}
     </div>
 
   </div>
@@ -164,7 +224,7 @@ const navigate = useNavigate();
       </p>
 
       <p className="font-bold text-lg">
-        {data.blokPutri.kecamatan}
+        {data?.kecamatan_putri || "-"}
       </p>
 
     </div>
@@ -176,7 +236,7 @@ const navigate = useNavigate();
       </p>
 
       <p className="font-bold text-lg">
-        {data.blokPutri.kelurahan}
+        {data?.kelurahan_putri || "-"}
       </p>
 
     </div>
@@ -190,7 +250,7 @@ const navigate = useNavigate();
     </p>
 
     <div className="text-5xl font-extrabold text-pink-600 mt-1">
-      {data.blokPutri.kapling}
+       {data?.kapling_putri || "-"}
     </div>
 
   </div>

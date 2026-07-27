@@ -60,11 +60,7 @@ const menuItems = [
     path: "/operator/status",
     icon: <FaSearch className="text-red-300 text-xl" />,
   },
-  {
-    title: "Download Kartu",
-    path: "/operator/kartu",
-    icon: <FaIdCard className="text-indigo-300 text-xl" />,
-  },
+ 
 ];
 
 export default function Sidebar() {

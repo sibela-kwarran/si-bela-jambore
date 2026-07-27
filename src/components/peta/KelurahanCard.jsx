@@ -31,11 +31,10 @@ export default function KelurahanCard({
           const nomor = String(index + 1).padStart(2, "0");
 
           const gudep = cariKapling(
-            nama,
-            nomor,
-            jenis
-          );
-
+  nama,
+  nomor,
+  jenis
+);
           return (
 
            <KaplingCard
@@ -43,6 +42,8 @@ export default function KelurahanCard({
   key={nomor}
 
   nomor={nomor}
+
+  jenis={jenis}
 
   gudep={gudep}
 
@@ -55,6 +56,7 @@ export default function KelurahanCard({
     }
 
   }}
+
 />
 
           );

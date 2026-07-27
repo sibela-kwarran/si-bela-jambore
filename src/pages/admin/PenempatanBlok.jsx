@@ -1,254 +1,467 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export default function PenempatanBlok() {
+import {
+  getPembayaranLunas
+} from "../../services/pembayaranService";
 
-  const [data, setData] = useState(
-  JSON.parse(localStorage.getItem("dataPendaftaran")) || []
+
+import {
+  getBlok,
+  savePenempatanBlok,
+  savePeta
+} from "../../services/kaplingService";
+
+
+export default function PenempatanBlok(){
+
+
+const [data,setData] = useState([]);
+
+const [loading,setLoading] = useState(true);
+
+
+
+useEffect(()=>{
+
+loadBlok();
+
+},[]);
+
+
+
+// =================================
+// AMBIL DATA KAPLING
+// =================================
+
+async function loadBlok(){
+
+try{
+
+
+const hasil = await getBlok();
+
+
+console.log(
+"DATA KAPLING :",
+hasil
 );
 
-const kelurahanPutra = [
-  "Diponegoro",
-  "Pattimura",
-  "Jenderal Sudirman",
-  "Gatot Subroto",
-  "Sultan Hasanuddin",
-  "Imam Bonjol",
-];
 
-const kelurahanPutri = [
-  "Dewi Sartika",
-  "Cut Nyak Dhien",
-  "Martha Christina Tiahahu",
-  "Maria Walanda Maramis",
-  "Rasuna Said",
-  "Fatmawati",
-];
 
-const handleGenerate = () => {
+const tampil = hasil.map(item => ({
 
-  let nomor = 0;
+id:item.id,
 
-  const hasil = data.map((item) => {
+gudep_id:item.gudep_id,
 
-    // Hanya Gudep yang sudah diverifikasi
-    if (item.status !== "Terverifikasi") {
-      return item;
-    }
 
-    const indexKelurahan = Math.floor(nomor / 15);
+namaGudep:
+item.profil_gudep?.nama_pangkalan || "-",
 
-    const nomorKapling = String(
-      (nomor % 15) + 1
-    ).padStart(2, "0");
 
-    const dataBaru = {
+blokPutra:"Putra",
 
-      ...item,
+kecamatanPutra:
+item.kecamatan_putra,
 
-      blokPutra: {
+kelurahanPutra:
+item.kelurahan_putra,
 
-        kecamatan: "Soekarno",
-
-        kelurahan:
-          kelurahanPutra[indexKelurahan],
-
-        kapling: nomorKapling,
-
-      },
-
-      blokPutri: {
-
-        kecamatan: "R.A. Kartini",
-
-        kelurahan:
-          kelurahanPutri[indexKelurahan],
-
-        kapling: nomorKapling,
-
-      },
-
-    };
-
-    nomor++;
-
-    return dataBaru;
-
-  });
-
-  localStorage.setItem(
-    "dataPendaftaran",
-    JSON.stringify(hasil)
-  );
-
-  setData(hasil);
-
-  console.log("Generate Kapling berhasil");
-
-};
+kaplingPutra:
+item.kapling_putra,
 
 
 
-  return (
-    <div className="space-y-6">
+blokPutri:"Putri",
 
-      <h1 className="text-3xl font-bold text-green-700">
-        Penempatan Blok Perkemahan
-      </h1>
+kecamatanPutri:
+item.kecamatan_putri,
 
-      <div className="bg-white rounded-xl shadow p-6">
+kelurahanPutri:
+item.kelurahan_putri,
 
-        <div className="flex justify-between items-center mb-5">
+kaplingPutri:
+item.kapling_putri,
 
-          <div>
-            <h2 className="text-xl font-bold">
-              Daftar Penempatan Gudep
-            </h2>
 
-            <p className="text-gray-500">
-              Jumlah Gudep :
-              <b> {data.length}</b>
-            </p>
-          </div>
+status:item.status
 
-          <button
-  onClick={handleGenerate}
-  className="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-lg"
+
+}));
+
+
+
+setData(tampil);
+
+
+
+}catch(error){
+
+console.error(error);
+
+
+}
+
+finally{
+
+setLoading(false);
+
+}
+
+
+}
+
+
+
+// =================================
+// GENERATE KAPLING
+// =================================
+
+async function handleGenerate(){
+
+
+try{
+
+
+const pembayaran =
+await getPembayaranLunas();
+console.log(
+ "DATA AKAN DIGENERATE:",
+ pembayaran
+);
+
+
+let nomor = 1;
+
+const sudahGenerate = [...data];
+
+for(const item of pembayaran){
+
+
+  // CEK APAKAH GUDEP SUDAH ADA KAPLING
+  const sudahAda = sudahGenerate.find(
+  (x) => x.gudep_id === item.gudep_id
+);
+
+
+  if(sudahAda){
+    console.log(
+      "Lewat karena sudah ada:",
+      item.gudep_id
+    );
+
+    continue;
+  }
+
+
+
+const kapling =
+String(nomor)
+.padStart(2,"0");
+
+
+
+// =================
+// SIMPAN KAPLING
+// =================
+
+
+await savePenempatanBlok({
+
+
+gudep_id:item.gudep_id,
+
+
+kecamatan_putra:
+"Soekarno",
+
+
+kelurahan_putra:
+"Diponegoro",
+
+
+kapling_putra:
+kapling,
+
+
+kecamatan_putri:
+"R.A Kartini",
+
+
+kelurahan_putri:
+"Dewi Sartika",
+
+
+kapling_putri:
+kapling,
+
+
+status:
+"Sudah Dibuat"
+
+
+});
+
+
+
+
+
+
+
+sudahGenerate.push({
+  gudep_id:item.gudep_id
+});
+
+
+
+
+nomor++;
+
+
+}
+
+
+
+alert(
+"✅ Generate Kapling berhasil"
+);
+
+
+
+loadBlok();
+
+
+
+}catch(error){
+
+
+console.error(
+"GENERATE ERROR:",
+error
+);
+
+
+alert(
+"Gagal membuat kapling"
+);
+
+
+}
+
+
+}
+
+
+
+
+return (
+
+<div className="space-y-6">
+
+
+<h1 className="text-3xl font-bold text-green-700">
+Penempatan Blok Perkemahan
+</h1>
+
+
+
+<div className="bg-white rounded-xl shadow p-6">
+
+
+<div className="flex justify-between mb-5">
+
+
+<div>
+
+<h2 className="text-xl font-bold">
+Daftar Penempatan Gudep
+</h2>
+
+
+<p>
+Jumlah Gudep :
+<b> {data.length}</b>
+</p>
+
+
+</div>
+
+
+
+<button
+
+onClick={handleGenerate}
+
+className="
+bg-green-600
+text-white
+px-5
+py-3
+rounded-lg
+font-bold
+"
+
 >
-  ⚙ Generate Kapling
+
+⚙ Generate Kapling
+
 </button>
 
-        </div>
 
-        <table className="w-full border">
+</div>
 
-          <thead className="bg-green-700 text-white">
 
-            <tr>
 
-              <th className="border p-3 w-16">
-                No
-              </th>
 
-              <th className="border p-3">
-                Gugus Depan
-              </th>
+<table className="w-full border">
 
-              <th className="border p-3">
-                Kecamatan Putra
-              </th>
 
-              <th className="border p-3">
-                Kelurahan Putra
-              </th>
+<thead className="bg-green-700 text-white">
 
-              <th className="border p-3">
-                Kapling
-              </th>
+<tr>
 
-              <th className="border p-3">
-                Kecamatan Putri
-              </th>
+<th className="border p-3">
+No
+</th>
 
-              <th className="border p-3">
-                Kelurahan Putri
-              </th>
+<th className="border p-3">
+Gudep
+</th>
 
-              <th className="border p-3">
-                Kapling
-              </th>
+<th className="border p-3">
+Blok Putra
+</th>
 
-              <th className="border p-3">
-                Status
-              </th>
+<th className="border p-3">
+Kecamatan Putra
+</th>
 
-            </tr>
+<th className="border p-3">
+Kelurahan Putra
+</th>
 
-          </thead>
+<th className="border p-3">
+Kapling Putra
+</th>
 
-          <tbody>
+<th className="border p-3">
+Blok Putri
+</th>
 
-            {data.length === 0 ? (
+<th className="border p-3">
+Kecamatan Putri
+</th>
 
-              <tr>
+<th className="border p-3">
+Kelurahan Putri
+</th>
 
-                <td
-                  colSpan={9}
-                  className="text-center p-5"
-                >
-                  Belum ada data.
-                </td>
+<th className="border p-3">
+Kapling Putri
+</th>
 
-              </tr>
+<th className="border p-3">
+Status
+</th>
 
-            ) : (
+</tr>
 
-              data.map((item, index) => (
+</thead>
 
-                <tr key={index}>
 
-                  <td className="border p-3 text-center">
-                    {index + 1}
-                  </td>
 
-                  <td className="border p-3">
-                    {item.namaGudep}
-                  </td>
+<tbody>
 
-                  <td className="border p-3 text-center">
-  {item.blokPutra?.kecamatan || "-"}
+{
+data.map((item,index)=>(
+
+<tr key={index}>
+
+<td className="border p-3 text-center">
+{index+1}
 </td>
 
-                  <td className="border p-3 text-center">
-  {item.blokPutra?.kelurahan || "-"}
+
+<td className="border p-3">
+{item.namaGudep}
 </td>
 
-                  <td className="border p-3 text-center">
-  {item.blokPutra?.kapling || "-"}
+
+<td className="border p-3 text-center">
+{item.blokPutra}
 </td>
 
-                  <td className="border p-3 text-center">
-  {item.blokPutri?.kecamatan || "-"}
+
+<td className="border p-3">
+{item.kecamatanPutra}
 </td>
 
-                  <td className="border p-3 text-center">
-  {item.blokPutri?.kelurahan || "-"}
+
+<td className="border p-3">
+{item.kelurahanPutra}
 </td>
 
-                  <td className="border p-3 text-center">
-  {item.blokPutri?.kapling || "-"}
+
+<td className="border p-3 text-center">
+{item.kaplingPutra}
 </td>
 
-                  <td className="border p-3 text-center">
 
-  {item.blokPutra ? (
+<td className="border p-3 text-center">
+{item.blokPutri}
+</td>
 
-    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-      Sudah Dibuat
-    </span>
 
-  ) : (
+<td className="border p-3">
+{item.kecamatanPutri}
+</td>
 
-    <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm">
-      Belum Dibuat
-    </span>
 
-  )}
+<td className="border p-3">
+{item.kelurahanPutri}
+</td>
+
+
+<td className="border p-3 text-center">
+{item.kaplingPutri}
+</td>
+
+
+<td className="border p-3 text-center">
+
+<span className="
+bg-green-100 
+text-green-700 
+px-3 
+py-1 
+rounded-full
+">
+
+{item.status}
+
+</span>
 
 </td>
 
-                </tr>
 
-              ))
+</tr>
 
-            )}
+))
+}
 
-          </tbody>
+</tbody>
 
-        </table>
+</table>
 
-      </div>
 
-    </div>
-  );
+
+</div>
+
+
+
+</div>
+
+);
+
 
 }

@@ -1,46 +1,29 @@
 import { useState, useEffect } from "react";
 
+import {
+ uploadFile,
+ getBerkas,
+ saveBerkas,
+ updateBerkas,
+ deleteBerkas,
+ deleteFile,
+} from "../../services/berkasService";
 
-
-
-export default function UploadBerkas() {
-
-
-  const [berkas, setBerkas] = useState(() => {
-
-    const data = localStorage.getItem("uploadBerkas");
-
-    return data
-      ? JSON.parse(data)
-      : {
-          suratTugas: null,
-          suratIzin: null,
-        };
-
-  });
-
-
-
-  useEffect(() => {
-
-    localStorage.setItem(
-      "uploadBerkas",
-      JSON.stringify(berkas)
-    );
-
-  }, [berkas]);
+import {
+  getProfilGudep,
+} from "../../services/profilGudepService";
 
 
 
 
 
-  function downloadTemplate(file) {
+function downloadTemplate(file) {
 
   const link = document.createElement("a");
 
   link.href = file;
 
-  link.setAttribute("download", "");
+  link.download = file.split("/").pop();
 
   document.body.appendChild(link);
 
@@ -51,47 +34,74 @@ export default function UploadBerkas() {
 }
 
 
+export default function UploadBerkas() {
+
+  const [berkas, setBerkas] = useState({
+    suratTugas: null,
+    suratIzin: null,
+  });
 
 
-  function uploadBerkas(e, jenis) {
+  const [profil, setProfil] = useState({});
 
-  const file = e.target.files[0];
 
-  if (!file) return;
+  useEffect(() => {
 
-  if (file.type !== "application/pdf") {
+    loadData();
 
-    alert("Berkas harus berupa PDF.");
+  }, []);
 
-    return;
+
+
+  async function loadData(){
+
+  try {
+
+    const profilGudep = await getProfilGudep();
+
+    setProfil(profilGudep || {});
+
+
+    const data = await getBerkas();
+
+    console.log("DATA BERKAS SUPABASE:", data);
+
+
+    if(data && data.length > 0){
+
+      const item = data[0];
+
+      console.log("ITEM BERKAS:", item);
+
+
+      setBerkas({
+
+ suratTugas: item.surat_tugas
+ ? {
+     id:item.id,
+     nama:"Surat_Tugas_Mabigus.pdf",
+     url:item.surat_tugas
+ }
+ : null,
+
+ suratIzin: item.surat_izin
+ ? {
+     id:item.id,
+     nama:"Surat_Izin_Orang_Tua.pdf",
+     url:item.surat_izin
+ }
+ : null
+
+});
+
+    }
+
+
+  } catch(err){
+
+    console.error("LOAD BERKAS ERROR:", err);
 
   }
-
-  const reader = new FileReader();
-
-  reader.onload = () => {
-
-    setBerkas((prev) => ({
-
-      ...prev,
-
-      [jenis]: {
-
-        nama: file.name,
-
-        tipe: file.type,
-
-        file: reader.result,
-
-        tanggal: new Date().toLocaleString("id-ID")
-
-      }
-
-    }));
-
-  };
-
-  reader.readAsDataURL(file);
 
 }
 
@@ -99,22 +109,183 @@ export default function UploadBerkas() {
 
 
 
-  function hapusBerkas(jenis){
-
-    if(!window.confirm("Hapus berkas ini?"))
-      return;
+  async function uploadBerkas(e, jenis){
 
 
-    setBerkas((prev)=>({
+    try {
 
-      ...prev,
 
-      [jenis]: null
+      const file = e.target.files[0];
 
-    }));
+
+      if(!file) return;
+
+
+
+      if(file.type !== "application/pdf"){
+
+        alert("Berkas harus PDF");
+
+        return;
+
+      }
+
+
+
+      // Upload ke Storage
+
+      const url = await uploadFile(
+        file,
+        jenis
+      );
+
+
+
+      console.log(
+        "PROFIL SAAT UPLOAD:",
+        profil
+      );
+
+
+
+      const data = {
+
+  gudep_id: profil.id,
+
+  surat_tugas:
+    jenis === "suratTugas"
+      ? url
+      : berkas.suratTugas?.url || null,
+
+  surat_izin:
+    jenis === "suratIzin"
+      ? url
+      : berkas.suratIzin?.url || null,
+
+  status:"Lengkap"
+
+};
+
+
+
+      console.log(
+ "DATA BERKAS DIKIRIM:",
+ JSON.stringify(data,null,2)
+);
+
+
+
+      const dataLama = await getBerkas();
+
+
+if(dataLama.length > 0){
+
+  await updateBerkas(
+    dataLama[0].id,
+    data
+  );
+
+}else{
+
+  await saveBerkas(data);
+
+}
+
+
+
+      setBerkas((prev)=>({
+
+
+        ...prev,
+
+
+        [jenis]:{
+
+
+          nama:file.name,
+
+
+          url:url
+
+
+        }
+
+
+      }));
+
+
+
+      alert("Berkas berhasil diupload");
+
+
+    } catch(err){
+
+
+      console.error(
+        "UPLOAD ERROR:",
+        err
+      );
+
+
+      alert(
+        "Gagal upload berkas"
+      );
+
+
+    }
+
 
   }
 
+
+
+
+
+ async function hapusBerkas(jenis){
+
+try{
+
+const file = berkas[jenis];
+
+console.log("BERKAS DIHAPUS:",file);
+
+
+if(!file){
+ alert("Berkas tidak ditemukan");
+ return;
+}
+
+
+// hapus database
+await deleteBerkas(file.id);
+
+
+// hapus storage
+await deleteFile(file.url);
+
+
+
+setBerkas(prev=>({
+ ...prev,
+ [jenis]:null
+}));
+
+
+alert("Berkas berhasil dihapus");
+
+
+}catch(err){
+
+console.error(
+"GAGAL HAPUS:",
+err
+);
+
+alert("Gagal menghapus berkas");
+
+}
+
+}
 
 
 
@@ -126,6 +297,9 @@ export default function UploadBerkas() {
 
 
   const persen = (jumlahUpload / 2) * 100;
+
+
+
 
 
 

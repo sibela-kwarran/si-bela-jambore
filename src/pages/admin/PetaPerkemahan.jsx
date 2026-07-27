@@ -1,46 +1,126 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
 import DetailKapling from "../../components/peta/DetailKapling";
 
-import { wilayahPerkemahan } from "../../data/wilayahPerkemahan";
-import KaplingCard from "../../components/peta/KaplingCard";
-import KelurahanCard from "../../components/peta/KelurahanCard";
 import KecamatanCard from "../../components/peta/KecamatanCard";
 
+import {
+  getPeta
+} from "../../services/petaService";
+
+import {
+ getDetailKapling
+} from "../../services/petaService";
+
 export default function PetaPerkemahan() {
-const data =
-  JSON.parse(localStorage.getItem("dataPendaftaran")) || [];
-const [selectedGudep, setSelectedGudep] = useState(null);
+
+
+const [data,setData] = useState([]);
+
+const [selectedGudep,setSelectedGudep] = useState(null);
+const [jenisKapling,setJenisKapling] = useState("");
+
+
+useEffect(()=>{
+
+  loadPeta();
+
+},[]);
+
+
+
+async function loadPeta(){
+
+try{
+
+
+const hasil = await getPeta();
+
+
+console.log(
+"DATA PETA PERKEMAHAN:",
+hasil
+);
+
+
+setData(hasil);
+
+
+
+}catch(error){
+
+console.error(
+"GAGAL LOAD PETA:",
+error
+);
+
+
+}
+
+}
+
+
+
 
 const cariKapling = (
   kelurahan,
   nomor,
   jenis
-) => {
+)=>{
 
-  return data.find((item) => {
 
-    if (jenis === "putra") {
+return data.find((item)=>{
 
-      return (
-        item.blokPutra?.kelurahan === kelurahan &&
-        item.blokPutra?.kapling === nomor
-      );
 
-    }
+if(jenis==="putra"){
 
-    return (
+return (
+ item.kelurahan_putra === kelurahan
+ &&
+ item.kapling_putra === nomor
+);
 
-      item.blokPutri?.kelurahan === kelurahan &&
-      item.blokPutri?.kapling === nomor
+}
 
-    );
 
-  });
+if(jenis==="putri"){
+
+return (
+ item.kelurahan_putri === kelurahan
+ &&
+ item.kapling_putri === nomor
+);
+
+}
+
+
+});
+
 
 };
 
 
+async function loadPeta(){
 
+try{
+
+
+const hasil = await getPeta();
+
+
+console.table(hasil);
+
+
+setData(hasil);
+
+
+}catch(error){
+
+console.error(error);
+
+}
+
+}
   return (
 
     <div className="space-y-6">
@@ -65,14 +145,60 @@ const cariKapling = (
   jenis="putra"
   data={data}
   cariKapling={cariKapling}
-  onSelectGudep={setSelectedGudep}
+
+  onSelectGudep={async(item)=>{
+
+ try{
+
+ const detail =
+ await getDetailKapling(item.gudep_id);
+
+
+ console.log(
+ "KLIK PUTRA",
+ detail
+ );
+
+
+ setSelectedGudep(detail);
+
+ setJenisKapling("Putra");
+
+
+ }catch(error){
+
+ console.error(error);
+
+ }
+
+}}
 />
 
   <KecamatanCard
   jenis="putri"
   data={data}
   cariKapling={cariKapling}
-  onSelectGudep={setSelectedGudep}
+
+  onSelectGudep={async(item)=>{
+
+    try{
+
+      const detail =
+      await getDetailKapling(item.gudep_id);
+
+
+      setSelectedGudep(detail);
+
+      setJenisKapling("Putri");
+
+
+    }catch(error){
+
+      console.error(error);
+
+    }
+
+  }}
 />
 
 </div>
@@ -82,6 +208,8 @@ const cariKapling = (
 <DetailKapling
 
   gudep={selectedGudep}
+
+  jenis={jenisKapling}
 
   onClose={() => setSelectedGudep(null)}
 

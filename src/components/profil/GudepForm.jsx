@@ -1,29 +1,54 @@
 import { useState, useEffect } from "react";
+import {
+  getProfilGudep,
+  saveProfilGudep,
+} from "../../services/profilGudepService";
 
 export default function GudepForm() {
 
-  
-    const [form, setForm] = useState(() => {
+  const [form, setForm] = useState({
+    gudepPutra: "",
+    gudepPutri: "",
+    pangkalan: "",
+    kwarran: "",
+    kwarcab: "",
+    alamat: "",
+    kabupaten: "",
+    provinsi: "",
+    email: "",
+    namaMabigus: "",
+    hpMabigus: "",
+  });
 
-  const data = localStorage.getItem("profilGudep");
+  useEffect(() => {
+    async function loadProfil() {
+      try {
+        const data = await getProfilGudep();
 
-  return data
-    ? JSON.parse(data)
-    : {
-        gudepPutra: "",
-        gudepPutri: "",
-        pangkalan: "",
-        kwarran: "",
-        kwarcab: "",
-        alamat: "",
-        kabupaten: "",
-        provinsi: "",
-        email: "",
-        namaMabigus: "",
-        hpMabigus: "",
-      };
+        if (data) {
+          setForm({
 
-});
+  gudepPutra: data.gudep_putra || "",
+  gudepPutri: data.gudep_putri || "",
+  pangkalan: data.nama_pangkalan || "",
+            kwarran: data.kwarran || "",
+            kwarcab: data.kwarcab || "",
+            alamat: data.alamat || "",
+            kabupaten: data.kabupaten || "",
+            provinsi: data.provinsi || "",
+            email: data.email || "",
+            namaMabigus: data.nama_mabigus || "",
+            hpMabigus: data.hp_mabigus || "",
+          });
+        }
+      } catch (err) {
+  console.error(err);
+  alert(err.message);
+      }
+    }
+
+    loadProfil();
+  }, []);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -33,27 +58,31 @@ export default function GudepForm() {
       [name]: value,
     }));
   }
-useEffect(() => {
-
-  localStorage.setItem(
-    "profilGudep",
-    JSON.stringify(form)
-  );
-
-}, [form]);
 
 
-  function handleSubmit(e) {
+
+  async function handleSubmit(e) {
 
   e.preventDefault();
 
-  localStorage.setItem(
-    "profilGudep",
-    JSON.stringify(form)
-  );
+  try {
 
-  alert("Profil Gugus Depan berhasil disimpan.");
+    await saveProfilGudep(form);
 
+    alert("Profil Gugus Depan berhasil disimpan ke Supabase.");
+
+  } catch (err) {
+
+    console.error(
+      "ERROR SIMPAN PROFIL:",
+      err
+    );
+
+    alert(
+      err.message
+    );
+
+}
 }
 
   return (

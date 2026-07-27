@@ -1,33 +1,141 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
+
+import supabase from "../../lib/supabase";
+
+import {
+ getAdminDashboard
+} from "../../services/adminDashboardService";
 
 export default function DashboardAdmin() {
-const data =
-  JSON.parse(localStorage.getItem("dataPendaftaran")) || [];
+const [dashboard,setDashboard] = useState({
 
-const statistik = useMemo(() => {
+gudep:0,
+peserta:0,
+pembayaran:0,
+kapling:0,
+verifikasi:0
 
-  const totalGudep = data.length;
+});
 
-  const dataPeserta =
-  JSON.parse(localStorage.getItem("dataPeserta")) || [];
+const [statistik,setStatistik] = useState({
 
-const totalPeserta = dataPeserta.length;
-  const sudahVerifikasi = data.filter(
-    item => item.status === "Terverifikasi"
-  ).length;
+    totalGudep:0,
 
-  const belumVerifikasi =
-    totalGudep - sudahVerifikasi;
+    totalPeserta:0,
 
-  return {
-    totalGudep,
-    totalPeserta,
-    sudahVerifikasi,
-    belumVerifikasi,
-  };
+    sudahVerifikasi:0,
 
-}, [data]);
-  return (
+    belumVerifikasi:0
+
+});
+
+
+useEffect(()=>{
+
+async function load(){
+
+const hasil =
+await getAdminDashboard();
+
+console.log(
+"ADMIN DASHBOARD:",
+hasil
+);
+
+
+setDashboard(hasil);
+
+}
+
+
+load();
+
+
+},[]);
+
+
+async function loadDashboard(){
+
+
+try{
+
+
+// TOTAL GUDEP
+
+const {data:gudep}=await supabase
+.from("profil_gudep")
+.select("*");
+
+console.log(
+"DATA GUDEP:",
+gudep
+);
+
+// TOTAL PESERTA
+
+const {data:peserta}=await supabase
+.from("peserta")
+.select("*");
+
+
+
+// DATA PENDAFTARAN
+
+const {data:pendaftaran}=await supabase
+.from("pendaftaran")
+.select("*");
+
+
+
+const totalGudep =
+gudep?.length || 0;
+
+
+
+const totalPeserta =
+peserta?.length || 0;
+
+
+
+const sudahVerifikasi =
+pendaftaran?.filter(
+item=>item.status==="Terverifikasi"
+).length || 0;
+
+
+
+setStatistik({
+
+totalGudep,
+
+totalPeserta,
+
+sudahVerifikasi,
+
+belumVerifikasi:
+totalGudep - sudahVerifikasi
+
+});
+
+
+
+}catch(error){
+
+console.error(
+"DASHBOARD ADMIN ERROR:",
+error
+);
+
+
+}
+
+
+}
+
+
+
+return (
+  
 
     <div className="space-y-8">
 
@@ -56,7 +164,7 @@ const totalPeserta = dataPeserta.length;
       </p>
 
       <h2 className="text-4xl font-bold mt-3">
-        {statistik.totalGudep}
+        {dashboard.gudep}
       </h2>
 
       <p className="mt-2 opacity-80">
@@ -72,7 +180,7 @@ const totalPeserta = dataPeserta.length;
       </p>
 
       <h2 className="text-4xl font-bold mt-3">
-        {statistik.totalPeserta}
+        {dashboard.peserta}
       </h2>
 
       <p className="mt-2 opacity-80">
@@ -88,7 +196,7 @@ const totalPeserta = dataPeserta.length;
       </p>
 
       <h2 className="text-4xl font-bold mt-3">
-        {statistik.sudahVerifikasi}
+        {dashboard.verifikasi}
       </h2>
 
       <p className="mt-2 opacity-80">
@@ -104,7 +212,7 @@ const totalPeserta = dataPeserta.length;
       </p>
 
       <h2 className="text-4xl font-bold mt-3">
-        {statistik.belumVerifikasi}
+        {dashboard.kapling}
       </h2>
 
       <p className="mt-2 opacity-80">

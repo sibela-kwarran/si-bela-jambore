@@ -1,74 +1,138 @@
 import { useState, useEffect } from "react";
 
+import {
+  getPeserta
+} from "../../services/pesertaService";
+
+import {
+  getPembayaran,
+  savePembayaran,
+  updatePembayaran
+} from "../../services/pembayaranService";
+
+import {
+  getProfilGudep,
+} from "../../services/profilGudepService";
 
 
 export default function Pembayaran() {
 
   const [preview, setPreview] = useState(null);
 
-  const [pembayaran, setPembayaran] = useState(() => {
+  const [jumlahPeserta,setJumlahPeserta] = useState(0);
 
-    const data = localStorage.getItem("pembayaran");
+  const [profilGudep,setProfilGudep] = useState({});
 
-    return data
-      ? JSON.parse(data)
-      : {
-          bank: "BANK BJB",
-          rekening: "0148423563101",
-          atasNama: "KWARRAN CIKARANG UTARA",
-          biayaPerPeserta: 75000,
-          bukti: null,
-          status: "Belum Bayar",
-        };
+  const [profil,setProfil] = useState({});
 
-  });
 
-  const dataPeserta = JSON.parse(
-    localStorage.getItem("dataPeserta") || "[]"
-  );
+  const [pembayaran, setPembayaran] = useState({
+  bank: "BANK BJB",
+  rekening: "0148423563101",
+  atasNama: "KWARRAN CIKARANG UTARA",
+  biayaPerPeserta: 75000,
+  bukti: null,
+  status: "Belum Bayar",
+});
 
-  const jumlahPeserta = dataPeserta.length;
+  
 
   const totalBayar =
     jumlahPeserta * pembayaran.biayaPerPeserta;
 
-  useEffect(() => {
+  
 
-    localStorage.setItem(
-      "pembayaran",
-      JSON.stringify(pembayaran)
+async function uploadBukti(e) {
+
+  try {
+
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+
+    const reader = new FileReader();
+
+
+   reader.onload = async () => {
+
+  const dataBaru = {
+
+  gudep_id: profil.id,
+
+  bank: pembayaran.bank,
+
+  rekening: pembayaran.rekening,
+
+  atas_nama: pembayaran.atasNama,
+
+  nominal: totalBayar,
+
+  bukti: reader.result,
+
+  status: "Menunggu Verifikasi",
+
+  tanggal: new Date(),
+
+  jumlah_peserta: jumlahPeserta,
+
+};
+
+  console.log(dataBaru);
+
+  const lama = await getPembayaran();
+
+if (lama) {
+
+  await updatePembayaran(lama.id, dataBaru);
+
+} else {
+
+  await savePembayaran(dataBaru);
+await loadDataPembayaran();
+}
+
+  setPembayaran(prev => ({
+
+    ...prev,
+
+    bukti: {
+
+      nama: file.name,
+
+      tipe: file.type,
+
+      file: reader.result,
+
+      tanggal: new Date().toLocaleString("id-ID"),
+
+    },
+
+    status: "Menunggu Verifikasi",
+
+  }));
+
+  alert("Bukti pembayaran berhasil disimpan");
+
+};
+
+    reader.readAsDataURL(file);
+
+
+  } catch(err) {
+
+
+    console.error(
+      "ERROR PEMBAYARAN:",
+      err
     );
 
-  }, [pembayaran]);
 
-function uploadBukti(e) {
+    alert(
+      "Gagal menyimpan pembayaran"
+    );
 
-  const file = e.target.files[0];
-
-  if (!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = () => {
-
-    setPembayaran(prev => ({
-
-      ...prev,
-
-      bukti: {
-        nama: file.name,
-  tipe: file.type,
-  file: reader.result,
-  tanggal: new Date().toLocaleString("id-ID"),
-      },
-
-      status: "Menunggu Verifikasi",
-
-    }));
-
-  };
-
-  reader.readAsDataURL(file);
+  }
 
 }
 
@@ -91,35 +155,119 @@ function hapusBukti() {
 
 }
 
-function lihatBukti() {
+function lihatBukti(){
 
-  if (!pembayaran.bukti) return;
-
-
-  // jika PDF buka tab baru
-  if (
-    pembayaran.bukti.tipe === "application/pdf" ||
-    pembayaran.bukti.file.includes("application/pdf")
-  ) {
-
-    window.open(
-      pembayaran.bukti.file,
-      "_blank"
-    );
-
-    return;
-
-  }
+  if(!pembayaran.bukti) return;
 
 
-  // jika gambar tampilkan preview
   setPreview(
     pembayaran.bukti.file
   );
 
 }
 
+useEffect(() => {
+  loadProfilGudep();
+  loadJumlahPeserta();
+  loadDataPembayaran();
+}, []);
 
+
+
+async function loadDataPembayaran(){
+
+try{
+
+
+const data = await getPembayaran();
+
+
+if (data) {
+
+  setPembayaran({
+
+    bank: data.bank,
+
+    rekening: data.rekening,
+
+    atasNama: data.atas_nama,
+
+    biayaPerPeserta: data.biaya_per_peserta,
+
+    nominal: data.nominal,
+
+    status: data.status,
+
+    tanggal: data.tanggal,
+
+    bukti: data.bukti
+? {
+    nama: "Bukti Pembayaran",
+    file: data.bukti,
+    tipe: "application/pdf",
+    tanggal: new Date(data.tanggal)
+      .toLocaleString("id-ID"),
+  }
+: null,
+
+  });
+
+}
+
+
+}catch(err){
+
+console.error(err);
+
+}
+
+
+}
+
+async function loadJumlahPeserta(){
+
+  try{
+
+    const data = await getPeserta();
+
+    console.log(
+      "DATA PESERTA PEMBAYARAN:",
+      data
+    );
+
+
+    setJumlahPeserta(data.length);
+
+
+  }catch(err){
+
+    console.error(
+      "ERROR PESERTA:",
+      err
+    );
+
+  }
+
+}
+
+async function loadProfilGudep() {
+
+  try {
+
+    const data = await getProfilGudep();
+
+    console.log("PROFIL GUDEP:", data);
+
+    setProfil(data);
+    setProfilGudep(data);
+
+  } catch (err) {
+
+    console.error(err);
+
+  }
+
+}
 
   return (
 
@@ -257,11 +405,26 @@ function lihatBukti() {
       Preview Bukti Transfer
     </h3>
 
-    <img
-      src={preview}
-      alt="Bukti Transfer"
-      className="max-w-lg rounded-lg border shadow"
-    />
+    {pembayaran.bukti?.tipe === "application/pdf" ? (
+
+<a
+  href={preview}
+  target="_blank"
+  rel="noreferrer"
+  className="bg-blue-600 text-white px-4 py-2 rounded"
+>
+📄 Lihat PDF
+</a>
+
+) : (
+
+<img
+  src={preview}
+  alt="Preview"
+  className="max-w-lg rounded-lg border shadow"
+/>
+
+)}
 
     <button
       onClick={() => setPreview(null)}

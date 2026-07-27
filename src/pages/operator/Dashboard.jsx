@@ -1,150 +1,487 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import {
-    FaUsers,
-    FaUserTie,
-    FaUserGraduate,
-    FaFolderOpen,
+  FaUserGraduate,
+  FaUserTie,
+  FaCampground,
+  FaMoneyBill,
+  FaMapMarkerAlt,
 } from "react-icons/fa";
 
 
+import {
+  getDashboardOperator
+} from "../../services/dashboardOperatorService";
+
+
 import StatCard from "../../components/dashboard/StatCard";
-import ProgressCard from "../../components/dashboard/ProgressCard";
-import ActivityCard from "../../components/dashboard/ActivityCard";
 
 
 
-export default function Dashboard() {
-const [jumlahPembina, setJumlahPembina] = useState(0);
+export default function Dashboard(){
 
-const [jumlahRegu, setJumlahRegu] = useState(0);
 
-const [jumlahPeserta, setJumlahPeserta] = useState(0);
-
-const [jumlahBerkas, setJumlahBerkas] = useState(0);
-
-    
+const [data,setData] = useState(null);
 
 
 
-    useEffect(() => {
+useEffect(()=>{
 
 
-        const data = localStorage.getItem(
-            "dataPembina"
-        );
+async function load(){
 
 
-        if(data){
-
-            const pembina = JSON.parse(data);
+try{
 
 
-            setJumlahPembina(
-                pembina.length
-            );
-
-        }
-
-
-    },[]);
-
-useEffect(() => {
-
-    const pembina =
-        JSON.parse(localStorage.getItem("dataPembina")) || [];
-
-    const regu =
-        JSON.parse(localStorage.getItem("dataRegu")) || [];
-
-    const peserta =
-        JSON.parse(localStorage.getItem("dataPeserta")) || [];
-
-    const berkas =
-    JSON.parse(localStorage.getItem("uploadBerkas")) || {};
-
-    setJumlahPembina(pembina.length);
-
-    setJumlahRegu(regu.length);
-
-    setJumlahPeserta(peserta.length);
-
-    const totalBerkas =
-    (berkas.suratTugas ? 1 : 0) +
-    (berkas.suratIzin ? 1 : 0);
-
-setJumlahBerkas(totalBerkas);
-
-}, []);
-
-    return (
-
-        <div className="space-y-8">
+const operator =
+JSON.parse(
+localStorage.getItem("operator")
+);
+console.log(
+"ISI LOCAL STORAGE:",
+localStorage.getItem("operatorAktif")
+);
 
 
-            <div className="grid grid-cols-4 gap-6">
+console.log(
+"OPERATOR AKTIF DASHBOARD:",
+operator
+);
 
 
 
-                <StatCard
-    title="Total Peserta"
-    value={jumlahPeserta}
-    color="#2563eb"
-    icon={<FaUserGraduate />}
-/>
+const hasil =
+await getDashboardOperator(
+operator.gudep_id
+);
 
 
 
-                <StatCard
-    title="Total Pembina"
-    value={jumlahPembina}
-    color="#16a34a"
-    icon={<FaUserTie />}
-/>
+console.log(
+"DASHBOARD OPERATOR:",
+hasil
+);
 
 
 
-                <StatCard
-    title="Total Regu"
-    value={jumlahRegu}
-    color="#f59e0b"
-    icon={<FaUsers />}
+setData(hasil);
+
+
+
+}catch(error){
+
+console.error(
+"DASHBOARD OPERATOR ERROR:",
+error
+);
+
+
+}
+
+
+}
+
+
+load();
+
+
+
+},[]);
+
+
+
+
+
+if(!data){
+
+return (
+
+<div className="p-10">
+
+Loading Dashboard...
+
+</div>
+
+)
+
+}
+
+
+
+
+return (
+
+<div className="space-y-6">
+
+
+{/* PROFIL GUDEP */}
+
+<div className="
+bg-green-700
+text-white
+rounded-2xl
+p-6
+shadow
+">
+
+
+<h1 className="
+text-3xl
+font-bold
+">
+
+🏫 Dashboard Gugus Depan
+
+</h1>
+
+
+<p className="mt-3 text-lg">
+
+{data.gudep?.nama_pangkalan}
+
+</p>
+
+
+<p>
+
+Gudep Putra :
+{data.gudep?.gudep_putra}
+
+</p>
+
+
+<p>
+
+Gudep Putri :
+{data.gudep?.gudep_putri}
+
+</p>
+
+
+</div>
+
+
+
+
+
+{/* STATISTIK */}
+
+
+<div className="
+grid
+grid-cols-1
+md:grid-cols-4
+gap-6
+">
+
+
+<StatCard
+
+title="Total Peserta"
+
+value={
+data.peserta.putra +
+data.peserta.putri
+}
+
+color="#2563eb"
+
+icon={<FaUserGraduate />}
+
 />
 
 
 
 <StatCard
-    title="Berkas Upload"
-    value={jumlahBerkas}
-    color="#7c3aed"
-    icon={<FaFolderOpen />}
+
+title="Total Pembina"
+
+value={
+data.pembina.putra +
+data.pembina.putri
+}
+
+color="#16a34a"
+
+icon={<FaUserTie />}
+
 />
 
 
-            </div>
+
+
+<StatCard
+
+title="Jumlah Regu"
+
+value={
+data.regu
+}
+
+color="#f59e0b"
+
+icon={<FaCampground />}
+
+/>
 
 
 
 
-            <div className="grid grid-cols-2 gap-6">
+<StatCard
+
+title="Kapling"
+
+value={
+data.kapling?.kapling_putra || "-"
+}
+
+color="#7c3aed"
+
+icon={<FaMapMarkerAlt />}
+
+/>
 
 
-                <ProgressCard />
-
-
-                <ActivityCard />
-
-
-            </div>
+</div>
 
 
 
-           
+
+
+<div className="
+grid
+md:grid-cols-2
+gap-6
+">
 
 
 
-        </div>
+{/* PESERTA */}
 
-    );
+<div className="
+bg-white
+rounded-xl
+shadow
+p-6
+">
+
+
+<h2 className="
+font-bold
+text-xl
+">
+
+👦 Peserta
+
+</h2>
+
+
+<div className="space-y-2 mt-2">
+
+<div className="grid grid-cols-3">
+<span>Putra</span>
+<span>:</span>
+<span>{data.peserta.putra}</span>
+</div>
+
+
+<div className="grid grid-cols-3">
+<span>Putri</span>
+<span>:</span>
+<span>{data.peserta.putri}</span>
+</div>
+
+
+<div className="grid grid-cols-3 font-bold">
+<span>Total</span>
+<span>:</span>
+<span>
+{
+data.peserta.putra +
+data.peserta.putri
+}
+</span>
+</div>
+
+</div>
+
+
+</div>
+
+
+
+
+
+{/* PEMBINA */}
+
+<div className="
+bg-white
+rounded-xl
+shadow
+p-6
+">
+
+
+<h2 className="
+font-bold
+text-xl
+">
+
+👨‍🏫 Pembina
+
+</h2>
+
+
+<div className="space-y-2 mt-3">
+
+<div className="grid grid-cols-3">
+<span>Putra</span>
+<span>:</span>
+<span>{data.pembina.putra}</span>
+</div>
+
+
+<div className="grid grid-cols-3">
+<span>Putri</span>
+<span>:</span>
+<span>{data.pembina.putri}</span>
+</div>
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+{/* PEMBAYARAN DAN KAPLING */}
+
+
+<div className="
+grid
+md:grid-cols-2
+gap-6
+">
+
+
+
+<div className="
+bg-white
+rounded-xl
+shadow
+p-6
+">
+
+
+<h2 className="font-bold text-xl">
+
+💰 Pembayaran
+
+</h2>
+
+
+<div className="grid grid-cols-3 mt-3">
+
+<span>Status</span>
+
+<span>:</span>
+
+<span>
+
+<span className="
+bg-green-100
+text-green-700
+px-3
+py-1
+rounded-full
+">
+
+{
+data.pembayaran?.status || "Belum Ada"
+}
+
+</span>
+
+</span>
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div className="
+bg-white
+rounded-xl
+shadow
+p-6
+">
+
+
+<h2 className="font-bold text-xl">
+
+🏕 Kapling Perkemahan
+
+</h2>
+
+
+<div className="space-y-2 mt-3">
+
+
+<div className="grid grid-cols-3">
+
+<span>Blok Putra</span>
+
+<span>:</span>
+
+<span>
+{data.kapling?.kapling_putra || "-"}
+</span>
+
+</div>
+
+
+
+<div className="grid grid-cols-3">
+
+<span>Blok Putri</span>
+
+<span>:</span>
+
+<span>
+{data.kapling?.kapling_putri || "-"}
+</span>
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+</div>
+
+);
+
 
 }

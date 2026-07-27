@@ -2,12 +2,18 @@ export default function DetailKapling({
 
   gudep,
 
+  jenis,
+
   onClose,
 
 }) {
 
   if (!gudep) return null;
-
+console.log(
+"DETAIL JENIS :",
+jenis,
+gudep
+);
   return (
 
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -31,94 +37,92 @@ export default function DetailKapling({
               </td>
 
               <td>
-                {gudep.namaGudep}
-              </td>
+ {gudep.profil_gudep?.nama_pangkalan 
+ || gudep.nama_gudep 
+ || "-"}
+</td>
 
             </tr>
 
-            <tr>
+            {
+jenis === "Putra" ? (
 
-              <td className="font-semibold py-2">
-                Status
-              </td>
+<>
 
-              <td>
-                {gudep.status}
-              </td>
+<tr>
+<td className="font-semibold py-2">
+Kecamatan Putra
+</td>
 
-            </tr>
+<td>
+{gudep.kecamatan_putra || "-"}
+</td>
+</tr>
 
-            <tr>
 
-              <td className="font-semibold py-2">
-                Kecamatan Putra
-              </td>
+<tr>
+<td className="font-semibold py-2">
+Kelurahan Putra
+</td>
 
-              <td>
-                {gudep.blokPutra?.kecamatan}
-              </td>
+<td>
+{gudep.kelurahan_putra || "-"}
+</td>
+</tr>
 
-            </tr>
 
-            <tr>
+<tr>
+<td className="font-semibold py-2">
+Kapling Putra
+</td>
 
-              <td className="font-semibold py-2">
-                Kelurahan Putra
-              </td>
+<td>
+{gudep.kapling_putra || "-"}
+</td>
+</tr>
 
-              <td>
-                {gudep.blokPutra?.kelurahan}
-              </td>
+</>
 
-            </tr>
+) : (
 
-            <tr>
+<>
 
-              <td className="font-semibold py-2">
-                Kapling Putra
-              </td>
+<tr>
+<td className="font-semibold py-2">
+Kecamatan Putri
+</td>
 
-              <td>
-                {gudep.blokPutra?.kapling}
-              </td>
+<td>
+{gudep.kecamatan_putri || "-"}
+</td>
+</tr>
 
-            </tr>
 
-            <tr>
+<tr>
+<td className="font-semibold py-2">
+Kelurahan Putri
+</td>
 
-              <td className="font-semibold py-2">
-                Kecamatan Putri
-              </td>
+<td>
+{gudep.kelurahan_putri || "-"}
+</td>
+</tr>
 
-              <td>
-                {gudep.blokPutri?.kecamatan}
-              </td>
 
-            </tr>
+<tr>
+<td className="font-semibold py-2">
+Kapling Putri
+</td>
 
-            <tr>
+<td>
+{gudep.kapling_putri || "-"}
+</td>
+</tr>
 
-              <td className="font-semibold py-2">
-                Kelurahan Putri
-              </td>
+</>
 
-              <td>
-                {gudep.blokPutri?.kelurahan}
-              </td>
-
-            </tr>
-
-            <tr>
-
-              <td className="font-semibold py-2">
-                Kapling Putri
-              </td>
-
-              <td>
-                {gudep.blokPutri?.kapling}
-              </td>
-
-            </tr>
+)
+}
 
           </tbody>
 

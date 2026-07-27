@@ -1,26 +1,68 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { loginOperator } from "../../services/operatorService";
 
 export default function Login() {
 
   const navigate = useNavigate();
+const location = useLocation();
+const [email, setEmail] = useState(
+  localStorage.getItem("lastEmail") || ""
+);
+const [password, setPassword] = useState("");
+const [loading, setLoading] = useState(false);
 
-  const [role, setRole] = useState("operator");
 
 
-  function handleLogin() {
 
-    if (role === "operator") {
+const isAdmin = location.pathname === "/admin-login";
 
-      navigate("/operator/dashboard");
+  async function handleLogin() {
 
-    } else {
+  if (isAdmin) {
+    navigate("/admin/dashboard");
+    return;
+  }
 
-      navigate("/admin/dashboard");
+  if (!email || !password) {
+    alert("Email dan Password wajib diisi.");
+    return;
+  }
 
+  try {
+
+    setLoading(true);
+
+    const operator = await loginOperator(email, password);
+
+    if (!operator) {
+      alert("Email atau Password salah.");
+      return;
     }
 
+    // Simpan session
+    localStorage.setItem(
+  "operator",
+  JSON.stringify(operator)
+);
+
+    alert(`Selamat datang ${operator.nama_operator}`);
+
+    navigate("/operator/dashboard");
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert(err.message);
+
+  } finally {
+
+    setLoading(false);
+
   }
+
+}
 
 
   return (
@@ -34,8 +76,8 @@ export default function Login() {
         <div className="text-center mb-8">
 
           <h1 className="text-4xl font-bold text-green-700">
-            SI BELA
-          </h1>
+  {isAdmin ? "Login Panitia" : "SI BELA"}
+</h1>
 
           <p className="text-gray-500 mt-2">
             Sistem Informasi Pendaftaran dan Administrasi
@@ -43,61 +85,54 @@ export default function Login() {
 
         </div>
 
+        <div className="mb-4">
+  <label className="block mb-2 font-semibold">
+    Login Operator Gudep
+  </label>
 
-
-        <label className="block mb-2 font-semibold">
-          Login Sebagai
-        </label>
-
-
-        <select
-          value={role}
-          onChange={(e)=>setRole(e.target.value)}
-          className="w-full border rounded-lg p-3 mb-4"
-        >
-
-          <option value="operator">
-            Operator Gugus Depan
-          </option>
-
-
-          <option value="admin">
-            Panitia / Admin
-          </option>
-
-
-        </select>
-
-
+  <div className="w-full border rounded-lg p-3 bg-gray-100">
+    👨‍🏫 Operator Gudep
+  </div>
+</div>
 
         <input
-          type="text"
-          placeholder="Username"
-          className="w-full border rounded-lg p-3 mb-4"
-        />
+  type="email"
+  placeholder="Email"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  className="w-full border rounded-lg p-3 mb-4"
+/>
 
 
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full border rounded-lg p-3 mb-6"
-        />
+       <input
+  type="password"
+  placeholder="Password"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  className="w-full border rounded-lg p-3 mb-6"
+/>
 
 
 
         <button
+  onClick={handleLogin}
+  disabled={loading}
+  className="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-3 rounded-lg"
+>
+  {loading ? "Memproses..." : "Masuk"}
+</button>
 
-          onClick={handleLogin}
-
-          className="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-3 rounded-lg"
-
-        >
-
-          Masuk
-
-        </button>
-
-
+<div className="text-center mt-5">
+  <p className="text-gray-600">
+    Belum punya akun?
+    <Link
+      to="/daftar-operator"
+      className="ml-2 text-green-700 font-semibold hover:underline"
+    >
+      Daftar Operator
+    </Link>
+  </p>
+</div>
 
         <p className="text-center text-sm text-gray-400 mt-6">
 

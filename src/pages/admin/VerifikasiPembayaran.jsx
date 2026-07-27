@@ -1,19 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+import {
+  getPeserta
+} from "../../services/pesertaService";
+
+import {
+  getSemuaPembayaran,
+ updatePembayaran
+} from "../../services/pembayaranService";
 
 export default function VerifikasiPembayaran() {
+const [dataPembayaran,setDataPembayaran] = useState([]);
+
+const [peserta,setPeserta] = useState([]);
+
 
   // sementara masih 1 Gudep (LocalStorage)
-  const pembayaran = JSON.parse(
-    localStorage.getItem("pembayaran") || "{}"
-  );
+  
 
   const profil = JSON.parse(
     localStorage.getItem("profilGudep") || "{}"
   );
 
-  const peserta = JSON.parse(
-    localStorage.getItem("dataPeserta") || "[]"
-  );
+  
 
   const pembina = JSON.parse(
     localStorage.getItem("dataPembina") || "[]"
@@ -21,64 +30,101 @@ export default function VerifikasiPembayaran() {
 
   const [cari, setCari] = useState("");
 const [selected, setSelected] = useState(null);
-function ubahStatus(statusBaru) {
 
-  const dataBaru = {
-    ...pembayaran,
-    status: statusBaru,
-  };
+async function ubahStatus(statusBaru) {
 
-  localStorage.setItem(
-    "pembayaran",
-    JSON.stringify(dataBaru)
-  );
+  try {
 
-  setSelected((prev) => ({
-    ...prev,
-    status: statusBaru,
-  }));
-
-}
+    await updatePembayaran(
+      selected.id,
+      {
+        status: statusBaru
+      }
+    );
 
 
-  const data = [];
+    
 
-  if (Object.keys(profil).length > 0) {
 
-    data.push({
+    setSelected(prev => ({
 
-      id: 1,
+      ...prev,
 
-      gudep:
-  profil.pangkalan ||
-  profil.namaSekolah ||
-  profil.namaGudep ||
-  "-",
+      status: statusBaru
 
-      ketua:
-        pembina.length > 0
-          ? pembina[0].nama
-          : "-",
+    }));
 
-      peserta: peserta.length,
 
-      total:
-        peserta.length *
-        (pembayaran.biayaPerPeserta || 75000),
+    alert("Status pembayaran berhasil diperbarui");
 
-      status:
-        pembayaran.status ||
-        "Belum Bayar",
 
-    });
+  } catch(err) {
+
+    console.error(
+      "Gagal update pembayaran:",
+      err
+    );
+
+    alert(
+      "Gagal mengubah status pembayaran"
+    );
 
   }
 
-  const hasil = data.filter((item) =>
-    item.gudep
-      .toLowerCase()
-      .includes(cari.toLowerCase())
-  );
+}
+useEffect(()=>{
+
+loadData();
+
+},[]);
+
+
+
+async function loadData() {
+
+  try {
+
+    const data = await getSemuaPembayaran();
+
+    setDataPembayaran(data);
+
+  } catch(err) {
+
+    console.error(err);
+
+  }
+
+}
+
+  const data = dataPembayaran.map((item) => ({
+
+  id: item.id,
+
+  gudep:
+    item.profil_gudep?.nama_pangkalan || "-",
+
+  ketua:
+    item.profil_gudep?.nama_mabigus || "-",
+
+  peserta:
+    item.jumlah_peserta || 0,
+
+  total:
+    item.nominal || 0,
+
+  status:
+    item.status || "Belum Bayar",
+
+  bukti:
+    item.bukti || null,
+
+}));
+
+const hasil = data.filter((item) =>
+  item.gudep
+    .toLowerCase()
+    .includes(cari.toLowerCase())
+);
 
   return (
 
@@ -234,34 +280,47 @@ function ubahStatus(statusBaru) {
 
   </div>
 
-  {pembayaran.bukti && (
+  {selected?.bukti && (
 
-    <div className="mt-6">
+<div className="mt-6">
 
-      {pembayaran.bukti.tipe === "application/pdf" ? (
+<h3 className="font-bold mb-3">
+Bukti Transfer
+</h3>
 
-        <a
-          href={pembayaran.bukti.file}
-          target="_blank"
-          rel="noreferrer"
-          className="text-blue-600 underline"
-        >
-          Lihat PDF
-        </a>
 
-      ) : (
+{
+selected.bukti.toLowerCase()
+.includes(".pdf")
+?
 
-        <img
-          src={pembayaran.bukti.file}
-          className="w-80 rounded-lg border"
-          alt="Bukti Transfer"
-        />
+(
+<a
+href={selected.bukti}
+target="_blank"
+rel="noreferrer"
+className="bg-blue-600 text-white px-5 py-2 rounded-lg inline-block"
+>
+📄 Lihat PDF
+</a>
+)
 
-      )}
+:
 
-    </div>
+(
+<img
+src={selected.bukti}
+alt="Bukti Transfer"
+className="w-96 rounded-lg border shadow"
+/>
+)
 
-  )}
+}
+
+
+</div>
+
+)}
 
   <div className="flex gap-3 mt-6">
 

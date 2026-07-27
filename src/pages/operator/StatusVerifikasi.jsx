@@ -1,18 +1,74 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { getPendaftaranByGudep } from "../../services/pendaftaranService";
+import { getProfilGudep } from "../../services/profilGudepService";
+
 export default function StatusVerifikasi() {
+  const [profil,setProfil] = useState(null);
+
+const [loading,setLoading] = useState(true);
   const navigate = useNavigate();
+const [data,setData] = useState(null);
 
-  const profil =
-    JSON.parse(localStorage.getItem("profilGudep")) || {};
 
-  const dataPendaftaran =
-    JSON.parse(localStorage.getItem("dataPendaftaran")) || [];
+  useEffect(()=>{
 
-  const data = dataPendaftaran.find(
-    (item) => item.namaGudep === profil.pangkalan
-  );
+  loadData();
 
+},[]);
+
+async function loadData(){
+
+  try {
+
+    setLoading(true);
+
+    const profilData = await getProfilGudep();
+
+    setProfil(profilData);
+
+
+    const hasil = await getPendaftaranByGudep(
+      profilData.id
+    );
+
+    setData(hasil);
+
+
+  } catch(error){
+
+    console.error(error);
+
+  } finally {
+
+    setLoading(false);
+
+  }
+
+
+
+
+
+
+return (
+
+<div className="p-10 text-center">
+
+Memuat data verifikasi...
+
+</div>
+
+);
+
+}
+if(loading){
+ return(
+  <div className="p-10 text-center">
+    Memuat data verifikasi...
+  </div>
+ )
+}
   if (!data) {
     return (
       <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-10">
@@ -77,7 +133,7 @@ export default function StatusVerifikasi() {
             </p>
 
             <h2 className="text-3xl font-bold text-green-700">
-              {data.namaGudep}
+              {data.nama_gudep}
             </h2>
 
           </div>
@@ -89,8 +145,17 @@ export default function StatusVerifikasi() {
             </p>
 
             <p className="text-xl font-semibold">
-              {data.tanggalVerifikasi || "-"}
-            </p>
+
+{
+data.tanggal_verifikasi
+?
+new Date(data.tanggal_verifikasi)
+.toLocaleDateString("id-ID")
+:
+"-"
+}
+
+</p>
 
           </div>
 
@@ -122,7 +187,7 @@ export default function StatusVerifikasi() {
 
             <div className="mt-2 bg-gray-100 rounded-xl p-5 min-h-[130px]">
 
-              {data.catatanAdmin || "Belum ada catatan."}
+              {data.catatan_admin || "Belum ada catatan."}
 
             </div>
 
@@ -132,13 +197,25 @@ export default function StatusVerifikasi() {
           {data.status === "Terverifikasi" && (
 
             <div className="flex items-end justify-end">
-
+{console.log("PROFIL ID :", profil?.id)}
+    {console.log("DATA GUDEP ID :", data?.gudep_id)}
               <button
-                onClick={() => navigate("/operator/kapling")}
-                className="bg-green-700 hover:bg-green-800 text-white px-8 py-4 rounded-xl shadow-lg font-bold text-lg transition duration-300"
-              >
-                🪪 Lihat & Cetak Kartu Kapling
-              </button>
+  onClick={() => {
+
+    console.log("DATA STATUS :", data);
+
+    console.log(
+      "MENUJU KAPLING ID :",
+      data?.gudep_id
+    );
+
+    navigate(`/operator/kapling/${data?.gudep_id}`);
+
+  }}
+  className="bg-green-700 hover:bg-green-800 text-white px-8 py-4 rounded-xl shadow-lg font-bold text-lg transition duration-300"
+>
+  🪪 Lihat & Cetak Kartu Kapling
+</button>
 
             </div>
 

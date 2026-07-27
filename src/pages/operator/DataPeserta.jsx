@@ -1,5 +1,22 @@
 import { useState, useEffect } from "react";
 
+import {
+  getPeserta,
+  savePeserta,
+  updatePeserta,
+  deletePeserta,
+} from "../../services/pesertaService";
+
+import {
+  getProfilGudep,
+} from "../../services/profilGudepService";
+
+import {
+  getRegu,
+} from "../../services/reguService";
+
+
+
 export default function DataPeserta() {
 
   // ==========================
@@ -8,22 +25,10 @@ export default function DataPeserta() {
 
   const [showForm, setShowForm] = useState(false);
 
-const [dataPeserta, setDataPeserta] = useState(() => {
+const [dataPeserta, setDataPeserta] = useState([]);
 
-  const data = localStorage.getItem("dataPeserta");
-
-  return data ? JSON.parse(data) : [];
-
-});
-
-const [dataRegu, setDataRegu] = useState(() => {
-
-  const data = localStorage.getItem("dataRegu");
-
-  return data ? JSON.parse(data) : [];
-
-});
-
+const [dataRegu, setDataRegu] = useState([]);
+const [profilGudep, setProfilGudep] = useState({});
 
 
 
@@ -50,11 +55,36 @@ const [cari, setCari] = useState("");
   // ==========================
 
   useEffect(() => {
-    localStorage.setItem(
-      "dataPeserta",
-      JSON.stringify(dataPeserta)
-    );
-  }, [dataPeserta]);
+  loadData();
+}, []);
+
+async function loadData() {
+  try {
+
+    const profil = await getProfilGudep();
+    setProfilGudep(profil || {});
+
+    const regu = await getRegu();
+    setDataRegu(regu || []);
+
+    const peserta = await getPeserta();
+
+    if (profil) {
+
+      const hasil = peserta.filter(
+        item => item.nama_gudep === profil.nama_pangkalan
+      );
+
+      setDataPeserta(hasil);
+
+    }
+
+  } catch (err) {
+
+    console.error(err);
+
+  }
+}
 
   // ==========================
   // HANDLE INPUT
@@ -97,77 +127,111 @@ const [cari, setCari] = useState("");
   // SIMPAN
   // ==========================
 
-  function simpanPeserta(e) {
+  async function simpanPeserta(e) {
 
-    e.preventDefault();
+  e.preventDefault();
 
-   if (editIndex !== null) {
+  try {
 
-  const update = [...dataPeserta];
+    const dataBaru = {
 
-  update[editIndex] = form;
+      nama_gudep: profilGudep.nama_pangkalan,
 
-  console.log("FORM DISIMPAN =", form);
-  console.log("UPDATE =", update);
+      nama: form.nama,
 
-  setDataPeserta(update);
+      no_kta: form.noKta,
 
-} else {
+      tempat_lahir: form.tempatLahir,
 
-  setDataPeserta([
-    ...dataPeserta,
-    form
-  ]);
+      tanggal_lahir: form.tanggalLahir,
 
-}
+      jk: form.jk,
+
+      agama: form.agama,
+
+      kelas: form.kelas,
+
+      regu: form.regu,
+
+      status: form.status,
+
+    };
+
+    if (editIndex !== null) {
+
+      await updatePeserta(editIndex, dataBaru);
+
+    } else {
+
+      await savePeserta(dataBaru);
+
+    }
+
+    await loadData();
 
     resetForm();
 
     setShowForm(false);
 
+  } catch (err) {
+
+    console.error(err);
+
+    alert("Gagal menyimpan data peserta.");
+
   }
 
-  // ==========================
-  // EDIT
-  // ==========================
-
-  function editPeserta(index) {
-  const data = dataPeserta[index];
-
-  setForm({
-    nama: data.nama || "",
-    noKta: data.noKta || "",
-    tempatLahir: data.tempatLahir || "",
-    tanggalLahir: data.tanggalLahir || "",
-    jk: data.jk || "Putra",
-    agama: data.agama || "Islam",
-    kelas: data.kelas || "1",
-    regu: data.regu || "",
-    status: data.status || "Anggota",
-  });
-
-  setEditIndex(index);
-  setShowForm(true);
 }
 
   // ==========================
   // HAPUS
   // ==========================
 
-  function hapusPeserta(index) {
+  async function hapusPeserta(item) {
 
-    if (window.confirm("Hapus data peserta ini?")) {
+  const yakin = window.confirm(
+    "Hapus data peserta ini?"
+  );
 
-      const data = [...dataPeserta];
+  if (!yakin) return;
 
-      data.splice(index, 1);
+  try {
 
-      setDataPeserta(data);
+    await deletePeserta(item.id);
 
-    }
+    await loadData();
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("Gagal menghapus data.");
 
   }
 
+}
+function editPeserta(item) {
+
+  setForm({
+
+    nama: item.nama || "",
+    noKta: item.no_kta || "",
+    tempatLahir: item.tempat_lahir || "",
+    tanggalLahir: item.tanggal_lahir || "",
+    jk: item.jk || "Putra",
+    agama: item.agama || "Islam",
+    kelas: item.kelas || "1",
+    regu: item.regu || "",
+    status: item.status || "Anggota",
+
+  });
+
+
+  setEditIndex(item.id);
+
+  setShowForm(true);
+
+}
   // ==========================
   // FILTER PENCARIAN
   // ==========================
@@ -435,11 +499,11 @@ const [cari, setCari] = useState("");
               <td className="border p-3 space-x-2">
 
                 <button
-                  onClick={() => editPeserta(index)}
-                  className="bg-blue-600 text-white px-3 py-1 rounded"
-                >
-                  Edit
-                </button>
+  onClick={() => editPeserta(item)}
+  className="bg-blue-600 text-white px-3 py-1 rounded"
+>
+  Edit
+</button>
 
                 <button
                   onClick={() => hapusPeserta(index)}

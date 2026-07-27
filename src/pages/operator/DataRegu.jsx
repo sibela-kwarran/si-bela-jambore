@@ -1,19 +1,25 @@
 import { useState, useEffect } from "react";
 
+import {
+  getRegu,
+  saveRegu,
+  updateRegu,
+  deleteRegu,
+} from "../../services/reguService";
+
+import {
+  getProfilGudep,
+} from "../../services/profilGudepService";
+
+
+
+
 export default function DataRegu() {
-
-  const [showForm, setShowForm] = useState(false);
-const [dataRegu, setDataRegu] = useState(() => {
-
-  const data = localStorage.getItem("dataRegu");
-
-  return data ? JSON.parse(data) : [];
-
-});
+const [showForm, setShowForm] = useState(false);
+  const [dataRegu, setDataRegu] = useState([]);
 
 const [editIndex, setEditIndex] = useState(null);
-  const profilGudep =
-  JSON.parse(localStorage.getItem("profilGudep")) || {};
+  const [profilGudep, setProfilGudep] = useState({});
   
 const [form, setForm] = useState({
   nama: "",
@@ -31,90 +37,139 @@ const [form, setForm] = useState({
     });
   }
 
-  function simpanRegu(e) {
+  async function simpanRegu(e) {
 
   e.preventDefault();
 
+  try {
 
-  if(editIndex !== null){
+    const dataBaru = {
 
-    const update = [...dataRegu];
+  gudep_id: profilGudep.id,
 
-    update[editIndex] = {
-  ...form,
-  namaGudep: profilGudep.pangkalan,
+  nama: form.nama,
+
+  golongan: form.golongan,
+
+  jenis: form.jenis,
+
+  jumlah: Number(form.jumlah),
+
 };
 
-    setDataRegu(update);
+    if (editIndex !== null) {
+
+      await updateRegu(editIndex, dataBaru);
+
+    } else {
+
+      await saveRegu(dataBaru);
+
+    }
+
+    await loadData();
+
+    setForm({
+
+      nama: "",
+
+      golongan: "Penggalang",
+
+      jenis: "Putra",
+
+      jumlah: "",
+
+    });
 
     setEditIndex(null);
 
-  }
-  else {
+    setShowForm(false);
 
+  } catch (err) {
 
-    setDataRegu([
-  ...dataRegu,
-  {
-    ...form,
-    namaGudep: profilGudep.pangkalan,
-  },
-]);
+    console.error(err);
+
+    alert("Gagal menyimpan data regu.");
 
   }
 
+}
+function editRegu(item) {
+
+  setEditIndex(item.id);
 
   setForm({
- nama:"",
- golongan:"Penggalang",
- jenis:"Putra",
- jumlah:""
-});
 
+    nama: item.nama,
 
-  setShowForm(false);
+    golongan: item.golongan,
 
+    jenis: item.jenis,
 
-  }
-function editRegu(index){
+    jumlah: item.jumlah,
 
-  setForm(dataRegu[index]);
-
-  setEditIndex(index);
+  });
 
   setShowForm(true);
 
 }
 
-function hapusRegu(index){
+async function hapusRegu(item) {
 
   const yakin = window.confirm(
     "Hapus data regu ini?"
   );
 
+  if (!yakin) return;
 
-  if(yakin){
+  try {
 
-    const data = [...dataRegu];
+    await deleteRegu(item.id);
 
-    data.splice(index,1);
+    await loadData();
 
-    setDataRegu(data);
+  } catch (err) {
+
+    console.error(err);
+
+    alert("Gagal menghapus data.");
 
   }
 
 }
 
 useEffect(() => {
+  loadData();
+}, []);
 
-  console.log("MENYIMPAN REGU:", dataRegu);
 
-  localStorage.setItem(
-    "dataRegu",
-    JSON.stringify(dataRegu)
-  );
+async function loadData() {
 
-}, [dataRegu]);
+  try {
+
+    const profil = await getProfilGudep();
+
+    setProfilGudep(profil || {});
+
+
+    const regu = await getRegu();
+
+    setDataRegu(regu || []);
+
+
+    console.log("PROFIL GUDEP:", profil);
+    console.log("DATA REGU:", regu);
+
+
+  } catch (err) {
+
+    console.error("LOAD DATA REGU ERROR:", err);
+
+  }
+
+}
+
+
 
   return (
     <div className="space-y-6">
@@ -290,7 +345,7 @@ Belum ada data regu
 
 dataRegu.map((item,index)=>(
 
-<tr key={index}>
+<tr key={item.id}>
 
 <td className="border p-3">
 {index+1}
@@ -316,7 +371,7 @@ dataRegu.map((item,index)=>(
 
 <button
 
-onClick={()=>editRegu(index)}
+onClick={() => editRegu(item)}
 
 className="bg-blue-600 text-white px-3 py-1 rounded"
 
@@ -329,7 +384,7 @@ Edit
 
 <button
 
-onClick={()=>hapusRegu(index)}
+onClick={() => hapusRegu(item)}
 
 className="bg-red-600 text-white px-3 py-1 rounded"
 

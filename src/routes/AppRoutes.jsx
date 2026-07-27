@@ -1,7 +1,9 @@
+import LandingPage from "../pages/LandingPage";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 console.log("ROUTER SI BELA AKTIF VERSI PESERTA");
 import Login from "../pages/auth/Login";
+
 import MainLayout from "../layouts/MainLayout";
 
 import Dashboard from "../pages/operator/Dashboard";
@@ -15,7 +17,10 @@ import KonfirmasiData from "../pages/operator/KonfirmasiData.jsx";
 import StatusVerifikasi from "../pages/operator/StatusVerifikasi";
 import DownloadKartu from "../pages/operator/DownloadKartu";
 import KartuKapling from "../pages/operator/KartuKapling";
+import DaftarOperator from "../pages/auth/DaftarOperator";
 
+
+import LoginAdmin from "../pages/auth/LoginAdmin";
 import VerifikasiPembayaran from "../pages/admin/VerifikasiPembayaran";
 import AdminLayout from "../layouts/AdminLayout";
 import DashboardAdmin from "../pages/admin/DashboardAdmin";
@@ -26,14 +31,29 @@ import DetailGudep from "../pages/admin/DetailGudep";
 import PenempatanBlok from "../pages/admin/PenempatanBlok";
 import PetaPerkemahan from "../pages/admin/PetaPerkemahan";
 
-
+import Laporan from "../pages/admin/Laporan";
 export default function AppRoutes() {
   console.log("APP ROUTES DIRENDER");
+
+
+
+
+
+
   return (
     <BrowserRouter>
       <Routes>
 
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<LandingPage />} />
+
+<Route path="/login" element={<Login />} />
+<Route path="/admin-login" element={<LoginAdmin />} />
+<Route
+  path="/daftar-operator"
+  element={<DaftarOperator />}
+/>
+
+
 
         <Route path="/operator" element={<MainLayout />}>
 
@@ -51,7 +71,7 @@ export default function AppRoutes() {
     element={<DownloadKartu />}
   />
 <Route
-  path="kapling"
+  path="kapling/:id"
   element={<KartuKapling />}
 />
 
@@ -94,6 +114,12 @@ export default function AppRoutes() {
   path="peta"
   element={<PetaPerkemahan />}
 />
+<Route
+path="/admin/laporan"
+element={<Laporan />}
+/>
+
+
         </Route>
 
       </Routes>

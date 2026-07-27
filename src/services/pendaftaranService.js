@@ -1,43 +1,113 @@
-const KEY = "dataPendaftaran";
+import supabase from "../lib/supabase.js";
 
-export function getPendaftaran() {
-  return JSON.parse(localStorage.getItem(KEY)) || [];
-}
+console.log("SERVICE PENDAFTARAN AKTIF");
 
-export function savePendaftaran(data) {
-  localStorage.setItem(KEY, JSON.stringify(data));
-}
+// ===============================
+// SIMPAN PENDAFTARAN
+// ===============================
+export async function savePendaftaran(data) {
 
-export function simpanPendaftaran(gudepBaru) {
-  console.log("YANG DISIMPAN =", gudepBaru);
-  const data = getPendaftaran();
+  console.log("INSERT DATA:", data);
 
-  const index = data.findIndex(
-    item => item.namaGudep === gudepBaru.namaGudep
-  );
+  const { data: hasil, error } = await supabase
+    .from("pendaftaran")
+    .insert(data)
+    .select()
+    .single();
 
-  if (index >= 0) {
-    data[index] = gudepBaru;
-  } else {
-    data.push(gudepBaru);
+  if (error) {
+    console.error(error);
+    throw error;
   }
 
-  savePendaftaran(data);
+  return hasil;
+}
+
+// ===============================
+// PENDAFTARAN BERDASARKAN GUDEP
+// ===============================
+export async function getPendaftaranByGudep(gudepId) {
+
+  const { data, error } = await supabase
+    .from("pendaftaran")
+    .select("*")
+    .eq("gudep_id", gudepId)
+    .order("id", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error(error);
+    throw error;
+  }
+
+  return data.length > 0 ? data[0] : null;
+}
+
+// ===============================
+// SEMUA PENDAFTARAN (ADMIN)
+// ===============================
+export async function getSemuaPendaftaran() {
+
+  const { data, error } = await supabase
+    .from("pendaftaran")
+    .select(`
+      *,
+      profil_gudep(
+        nama_pangkalan,
+        nama_mabigus
+      )
+    `)
+    .order("tanggal_kirim", {
+      ascending: false,
+    });
+
+  if (error) {
+    console.error(error);
+    throw error;
+  }
 
   return data;
 }
 
-export function getGudepById(id) {
-  return getPendaftaran().find(item => item.id === id);
+// ===============================
+// UPDATE STATUS PENDAFTARAN
+// ===============================
+export async function updatePendaftaran(id, data){
+
+  const { data: hasil, error } = await supabase
+    .from("pendaftaran")
+    .update(data)
+    .eq("id", id)
+    .select();
+
+  if(error){
+    console.error("UPDATE PENDAFTARAN ERROR:", error);
+    throw error;
+  }
+
+  return hasil;
+
+}
+export async function getPendaftaranById(id){
+
+const {data,error}=await supabase
+.from("pendaftaran")
+.select("*")
+.eq("id",id)
+.single();
+
+
+if(error){
+
+console.error(
+"GET PENDAFTARAN ERROR:",
+error
+);
+
+throw error;
+
 }
 
-export function updateStatus(id, status) {
-  const data = getPendaftaran();
+return data;
 
-  const index = data.findIndex(item => item.id === id);
-
-  if (index >= 0) {
-    data[index].status = status;
-    savePendaftaran(data);
-  }
 }

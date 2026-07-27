@@ -1,51 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function VerifikasiBerkas() {
+import {
+  getSemuaBerkasAdmin,
+  updateBerkas
+} from "../../services/berkasService";
 
-  const berkas = JSON.parse(
-    localStorage.getItem("uploadBerkas") || "{}"
-  );
 
-  const profil = JSON.parse(
-    localStorage.getItem("profilGudep") || "{}"
-  );
-
-  const pembina = JSON.parse(
-    localStorage.getItem("dataPembina") || "[]"
-  );
-
-  const [selected, setSelected] = useState(null);
-
-  const data = [];
-
-  if (Object.keys(profil).length > 0) {
-
-    data.push({
-
-      id:1,
-
-      gudep:
-        profil.pangkalan ||
-        profil.namaGudep ||
-        "-",
-
-      ketua:
-        pembina.length>0
-          ? pembina[0].nama
-          : "-",
-
-      suratTugas:
-        berkas.suratTugas,
-
-      suratIzin:
-        berkas.suratIzin,
-
-      status:
-        berkas.status || "Menunggu"
-
-    });
-
-  }
+// Komponen kecil untuk detail
 function Info({ title, value }) {
 
   return (
@@ -57,7 +18,7 @@ function Info({ title, value }) {
       </p>
 
       <h2 className="text-xl font-bold">
-        {value}
+        {value || "-"}
       </h2>
 
     </div>
@@ -65,237 +26,379 @@ function Info({ title, value }) {
   );
 
 }
-console.log("BERKAS =", berkas);
-console.log("DATA =", data);
 
-function ubahStatus(status) {
 
-  const dataBaru = {
 
-    ...berkas,
+export default function VerifikasiBerkas() {
 
-    status,
 
-  };
+  const [data,setData] = useState([]);
 
-  localStorage.setItem(
-    "uploadBerkas",
-    JSON.stringify(dataBaru)
-  );
+  const [selected,setSelected] = useState(null);
 
-  setSelected((prev) => ({
-    ...prev,
-    status,
-  }));
 
-  window.location.reload();
 
-}
+  // ambil data saat halaman dibuka
+  useEffect(()=>{
+
+    loadBerkas();
+
+  },[]);
+
+
+
+  async function loadBerkas(){
+
+    try{
+
+      const hasil = await getSemuaBerkasAdmin();
+
+      console.log("DATA BERKAS ADMIN :",hasil);
+
+      setData(hasil || []);
+
+
+    }catch(error){
+
+      console.error(
+        "Gagal mengambil berkas:",
+        error
+      );
+
+    }
+
+  }
+
+
+
+  async function ubahStatus(status){
+
+
+    try{
+
+
+      await updateBerkas(
+
+        selected.id,
+
+        {
+          status:status
+        }
+
+      );
+
+
+      alert(
+        "Status berhasil diperbarui"
+      );
+
+
+      setSelected(null);
+
+
+      loadBerkas();
+
+
+
+    }catch(error){
+
+      console.error(error);
+
+    }
+
+
+  }
 
   return (
 
-    <div className="space-y-6">
+<div className="space-y-6">
 
-      <h1 className="text-3xl font-bold text-amber-700">
+<h1 className="text-3xl font-bold text-amber-700">
+  Verifikasi Berkas
+</h1>
 
-        Verifikasi Berkas
 
-      </h1>
+<div className="bg-white rounded-xl shadow overflow-hidden">
 
-      <div className="bg-white rounded-xl shadow overflow-hidden">
+<table className="w-full">
 
-        <table className="w-full">
+<thead className="bg-amber-700 text-white">
 
-          <thead className="bg-amber-700 text-white">
+<tr>
 
-            <tr>
+<th className="p-3">No</th>
 
-              <th className="p-3">No</th>
-              <th>Gudep</th>
-              <th>Surat Tugas</th>
-              <th>Surat Izin</th>
-              <th>Status</th>
-              <th>Aksi</th>
+<th>Gudep</th>
 
-            </tr>
+<th>Surat Tugas</th>
 
-          </thead>
+<th>Surat Izin</th>
 
-          <tbody>
+<th>Status</th>
 
-            {data.map((item,index)=>(
+<th>Aksi</th>
 
-              <tr key={item.id} className="border-b">
+</tr>
 
-                <td className="p-3 text-center">
-                  {index+1}
-                </td>
+</thead>
 
-                <td>{item.gudep}</td>
 
-                <td className="text-center">
-  {item.suratTugas?.nama || "-"}
+<tbody>
+
+
+{data.length === 0 ? (
+
+<tr>
+
+<td 
+colSpan="6"
+className="text-center p-5"
+>
+
+Belum ada data.
+
 </td>
+
+</tr>
+
+
+) : (
+
+
+data.map((item,index)=>(
+
+
+<tr 
+key={item.id}
+className="border-b"
+>
+
+
+<td className="p-3 text-center">
+{index+1}
+</td>
+
+
+
+<td>
+{
+item.profil_gudep?.nama_pangkalan 
+|| "-"
+}
+</td>
+
+
 
 <td className="text-center">
-  {item.suratIzin?.nama || "-"}
-</td>
 
-                <td>
-
-  {item.status === "Terverifikasi" && (
-    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full">
-      ✔ Terverifikasi
-    </span>
-  )}
-
-  {item.status === "Ditolak" && (
-    <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full">
-      ✖ Ditolak
-    </span>
-  )}
-
-  {item.status === "Menunggu" && (
-    <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full">
-      ⏳ Menunggu
-    </span>
-  )}
+{
+item.surat_tugas
+?
+"📄 Ada"
+:
+"-"
+}
 
 </td>
 
-                <td>
 
-                  <button
-                    onClick={()=>setSelected(item)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded"
-                  >
-                    Lihat
-                  </button>
 
-                </td>
+<td className="text-center">
 
-              </tr>
+{
+item.surat_izin
+?
+"📄 Ada"
+:
+"-"
+}
 
-            ))}
+</td>
 
-          </tbody>
 
-        </table>
 
-      </div>
+<td className="text-center">
+
+<span className="
+bg-yellow-100 
+text-yellow-700 
+px-3 py-1 
+rounded-full
+">
+
+{item.status || "Menunggu"}
+
+</span>
+
+</td>
+
+
+
+<td className="text-center">
+
+<button
+  onClick={() => {
+    console.log("DETAIL BERKAS :", item);
+    setSelected(item);
+  }}
+  className="bg-blue-600 text-white px-4 py-2 rounded"
+>
+  Lihat
+</button>
+
+
+</td>
+
+
+</tr>
+
+
+))
+
+)}
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
 {selected && (
 
 <div className="bg-white rounded-xl shadow p-6">
 
-  <h2 className="text-2xl font-bold text-amber-700 mb-6">
-    Detail Berkas
-  </h2>
+<h2 className="text-2xl font-bold text-amber-700 mb-5">
+Detail Berkas
+</h2>
 
-  <div className="grid grid-cols-2 gap-5">
 
-    <Info
-      title="Gudep"
-      value={selected.gudep}
-    />
+<div className="grid grid-cols-2 gap-5 mb-6">
 
-    <Info
-      title="Ketua Kontingen"
-      value={selected.ketua}
-    />
 
-  </div>
+<Info
+ title="Gudep"
+ value={
+ selected.profil_gudep?.nama_pangkalan
+ }
+/>
 
-  {/* SURAT TUGAS */}
 
-  <div className="mt-8 border rounded-lg p-5">
+<Info
+ title="Status"
+ value={selected.status}
+/>
 
-    <h3 className="text-xl font-bold mb-3">
-      📄 Surat Tugas Mabigus
-    </h3>
 
-    {selected.suratTugas ? (
+</div>
 
-  <div>
 
-    <p className="mb-3">
-      <b>Nama File :</b> {selected.suratTugas.nama}
-    </p>
 
-    <iframe
-      src={selected.suratTugas.file}
-      className="w-full h-[700px] border rounded-lg"
-      title="Surat Tugas"
-    />
+<h3 className="text-xl font-bold mb-3">
+📄 Surat Tugas Mabigus
+</h3>
 
-  </div>
 
-) : (
+{
+selected.surat_tugas ? (
 
-  <p className="text-red-600">
-    Belum diupload.
-  </p>
+<iframe
 
-)}
+src={selected.surat_tugas}
 
-  </div>
+className="w-full h-[600px] border rounded-lg mb-6"
 
-  {/* SURAT IZIN */}
+title="Surat Tugas"
 
-  <div className="mt-6 border rounded-lg p-5">
+/>
 
-    <h3 className="text-xl font-bold mb-3">
-      📄 Surat Izin Orang Tua
-    </h3>
+)
 
-    {selected.suratIzin ? (
+:
 
-  <div>
+(
 
-    <p className="mb-3">
-      <b>Nama File :</b> {selected.suratIzin.nama}
-    </p>
+<p className="text-red-600">
+Belum ada surat tugas
+</p>
 
-    <iframe
-      src={selected.suratIzin.file}
-      className="w-full h-[700px] border rounded-lg"
-      title="Surat Izin"
-    />
+)
 
-  </div>
+}
 
-) : (
 
-  <p className="text-red-600">
-    Belum diupload.
-  </p>
 
-)}
+<h3 className="text-xl font-bold mb-3">
+📄 Surat Izin Orang Tua
+</h3>
 
-  </div>
 
-  <div className="flex gap-3 mt-8">
+{
+selected.surat_izin ? (
 
-    <button
-  onClick={() => ubahStatus("Terverifikasi")}
-  className="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-lg"
+<iframe
+
+src={selected.surat_izin}
+
+className="w-full h-[600px] border rounded-lg"
+
+title="Surat Izin"
+
+/>
+
+)
+
+:
+
+(
+
+<p className="text-red-600">
+Belum ada surat izin
+</p>
+
+)
+
+}
+
+
+
+<div className="flex gap-3 mt-6">
+
+
+<button
+
+onClick={()=>ubahStatus("Terverifikasi")}
+
+className="bg-green-700 text-white px-6 py-3 rounded-lg"
+
 >
-  ✔ Verifikasi Berkas
+✔ Verifikasi
 </button>
 
-    <button
-  onClick={() => ubahStatus("Ditolak")}
-  className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg"
+
+
+<button
+
+onClick={()=>ubahStatus("Ditolak")}
+
+className="bg-red-600 text-white px-6 py-3 rounded-lg"
+
 >
-  ✖ Tolak Berkas
+✖ Tolak
 </button>
 
-  </div>
+
+</div>
+
 
 </div>
 
 )}
-    </div>
 
-  );
+</div>
+
+
+);
 
 }

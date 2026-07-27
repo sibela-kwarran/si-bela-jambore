@@ -1,20 +1,44 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function VerifikasiGudep() {
-const navigate = useNavigate();
+import {
+  getSemuaPendaftaran,
+} from "../../services/pendaftaranService";
 
-  const dataPendaftaran =
-  JSON.parse(localStorage.getItem("dataPendaftaran")) || [];
-console.log("DATA PENDAFTARAN ADMIN =", dataPendaftaran);
-  
+export default function VerifikasiGudep() {
+
+  const navigate = useNavigate();
+
+  const [dataPendaftaran, setDataPendaftaran] = useState([]);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function loadData() {
+
+    try {
+
+      const data = await getSemuaPendaftaran();
+
+      setDataPendaftaran(data || []);
+
+    } catch (err) {
+
+      console.error(err);
+
+    }
+
+  }
 
   return (
 
     <div className="space-y-6">
 
       <h1 className="text-3xl font-bold text-amber-700">
+
         Verifikasi Gudep
+
       </h1>
 
       <div className="bg-white rounded-xl shadow overflow-hidden">
@@ -26,13 +50,17 @@ console.log("DATA PENDAFTARAN ADMIN =", dataPendaftaran);
             <tr>
 
               <th className="p-3">No</th>
+
               <th>Gudep</th>
+
               <th>Pembina</th>
+
               <th>Regu</th>
+
               <th>Peserta</th>
-              <th>Berkas</th>
-              <th>Pembayaran</th>
+
               <th>Status</th>
+
               <th>Aksi</th>
 
             </tr>
@@ -41,65 +69,87 @@ console.log("DATA PENDAFTARAN ADMIN =", dataPendaftaran);
 
           <tbody>
 
-  {dataPendaftaran.length === 0 ? (
+            {dataPendaftaran.length === 0 ? (
 
-    <tr>
+              <tr>
 
-      <td
-        colSpan="9"
-        className="text-center p-5"
-      >
-        Belum ada pendaftaran
-      </td>
+                <td
+                  colSpan="7"
+                  className="text-center p-6"
+                >
+                  Belum ada data pendaftaran
+                </td>
 
-    </tr>
+              </tr>
 
-  ) : (
+            ) : (
 
-    dataPendaftaran.map((item,index)=>(
+              dataPendaftaran.map((item, index) => (
 
-      <tr key={item.id}>
+                <tr key={item.id}>
 
-        <td className="p-3">
-          {index+1}
-        </td>
+                  <td className="p-3">
 
-        <td>{item.namaGudep}</td>
+                    {index + 1}
 
-        <td>{item.pembina}</td>
+                  </td>
 
-        <td>{item.regu}</td>
+                  <td>
 
-        <td>{item.peserta}</td>
+                    {item.profil_gudep?.nama_pangkalan}
 
-        <td>{item.berkas}</td>
+                  </td>
 
-        <td>{item.pembayaran}</td>
+                  <td className="text-center">
 
-        <td>{item.status}</td>
+                    {item.jumlah_pembina}
 
-        <td>
+                  </td>
 
-          <button
-  onClick={() =>
-    navigate(`/admin/detail-gudep/${item.id}`)
-  }
-  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
->
-  Lihat
-</button>
+                  <td className="text-center">
 
-        </td>
+                    {item.jumlah_regu}
 
-      </tr>
+                  </td>
 
-    ))
+                  <td className="text-center">
 
-  )}
+                    {item.jumlah_peserta}
 
-</tbody>
+                  </td>
 
-         
+                  <td>
+
+                    {item.status}
+
+                  </td>
+
+                  <td>
+
+                    <button
+
+                      onClick={() => {
+  console.log("DATA ITEM DI KLIK:", item);
+  navigate(`/admin/detail-gudep/${item.id}`);
+}}
+
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+
+                    >
+
+                      Lihat
+
+                    </button>
+
+                  </td>
+
+                </tr>
+
+              ))
+
+            )}
+
+          </tbody>
 
         </table>
 

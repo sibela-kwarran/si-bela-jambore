@@ -4,6 +4,8 @@ export default function KaplingCard({
 
   gudep,
 
+  jenis,
+
   onClick,
 
 }) {
@@ -15,6 +17,7 @@ export default function KaplingCard({
       onClick={onClick}
 
       className={`
+
         h-20
         rounded-lg
         border
@@ -27,46 +30,62 @@ export default function KaplingCard({
         hover:scale-105
         shadow-sm
 
+
         ${
           gudep
-            ? "bg-green-300"
-            : "bg-gray-100"
+
+          ?
+
+          jenis === "putra"
+
+            ? "bg-green-300 border-green-600"
+
+            : "bg-pink-300 border-pink-600"
+
+
+          :
+
+          "bg-gray-100"
+
         }
+
 
       `}
 
     >
 
       <div className="text-lg">
-
         🏕️
-
       </div>
+
 
       <div className="font-bold">
-
         {nomor}
-
       </div>
+
 
       {gudep && (
 
         <div
 
           className="
-            text-[10px]
-            text-center
-            leading-3
-            px-1
+          text-[10px]
+          text-center
+          leading-3
+          px-1
           "
 
         >
 
-          {gudep.namaGudep}
+          {
+ gudep.profil_gudep?.nama_pangkalan ||
+ "-"
+}
 
         </div>
 
       )}
+
 
     </div>
 
