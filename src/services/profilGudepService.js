@@ -1,14 +1,24 @@
 import supabase from "../lib/supabase";
 
 const TABLE = "profil_gudep";
-function getOperatorLogin() {
-  const operator = JSON.parse(localStorage.getItem("operatorLogin"));
 
-  if (!operator) {
+function getOperatorLogin() {
+
+  const data = localStorage.getItem("operatorLogin");
+
+  console.log(
+    "CEK SESSION PROFIL GUDEP:",
+    data
+  );
+
+
+  if (!data) {
     throw new Error("Operator belum login.");
   }
 
-  return operator;
+
+  return JSON.parse(data);
+
 }
 
 // Ambil semua profil

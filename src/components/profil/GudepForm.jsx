@@ -21,6 +21,11 @@ export default function GudepForm() {
   });
 
   useEffect(() => {
+
+  console.log(
+    "CEK OPERATOR DI GUDEPFOrm:",
+    localStorage.getItem("operatorLogin")
+  );
     async function loadProfil() {
       try {
         const data = await getProfilGudep();
