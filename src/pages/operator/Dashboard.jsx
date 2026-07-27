@@ -36,11 +36,11 @@ try{
 
 const operator =
 JSON.parse(
-localStorage.getItem("operator")
+localStorage.getItem("operatorLogin")
 );
 console.log(
 "ISI LOCAL STORAGE:",
-localStorage.getItem("operatorAktif")
+localStorage.getItem("operatorLogin")
 );
 
 

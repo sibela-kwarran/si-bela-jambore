@@ -11,19 +11,26 @@ function getOperatorLogin() {
   return operator;
 }
 
+
 async function getGudepLogin() {
 
   const operator = getOperatorLogin();
 
-  const { data, error } = await supabase
-    .from("profil_gudep")
-    .select("id")
-    .eq("operator_id", operator.id)
-    .single();
 
-  if (error) throw error;
+  if(!operator.gudep_id){
 
-  return data;
+    throw new Error(
+      "Operator belum memiliki Gudep."
+    );
+
+  }
+
+
+  return {
+    id: operator.gudep_id
+  };
+
+
 }
 // Ambil semua pembina
 export async function getPembina() {

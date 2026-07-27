@@ -42,7 +42,7 @@ const isAdmin = location.pathname === "/admin-login";
 
     // Simpan session
     localStorage.setItem(
-  "operator",
+  "operatorLogin",
   JSON.stringify(operator)
 );
 
