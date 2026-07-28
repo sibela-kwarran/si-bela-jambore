@@ -1,19 +1,45 @@
 import { useEffect, useState } from "react";
 
 import supabase from "../../lib/supabase";
+import GrafikGudep from "./GrafikGudep";
+import TabelGudepTerbaru from "./TabelGudepTerbaru";
+import AktivitasHariIni from "./AktivitasHariIni";
+import RingkasanPembayaran from "./RingkasanPembayaran";
+import StatusBerkas from "./StatusBerkas";
+import AgendaJamran from "./AgendaJamran";
+
+
+
+
+
+import {
+  FaCampground,
+  FaUsers,
+  FaUserTie,
+  FaCheckCircle,
+  FaClock,
+  FaMoneyBillWave,
+} from "react-icons/fa";
+
+
+
+
 
 import {
  getAdminDashboard
 } from "../../services/adminDashboardService";
 
 export default function DashboardAdmin() {
-const [dashboard,setDashboard] = useState({
 
-gudep:0,
-peserta:0,
-pembayaran:0,
-kapling:0,
-verifikasi:0
+  const [dashboard,setDashboard] = useState({
+
+  gudep:0,
+  peserta:0,
+  pembina:0,
+  regu:0,
+  pembayaran:0,
+  verifikasi:0,
+  menunggu:0
 
 });
 
@@ -153,78 +179,200 @@ return (
 
   </div>
 
-  {/* KARTU STATISTIK */}
+ {/* KARTU STATISTIK */}
 
-  <div className="grid grid-cols-4 gap-6">
+<div className="
+grid
+grid-cols-1
+sm:grid-cols-2
+xl:grid-cols-4
+gap-6
+">
 
-    <div className="bg-blue-500 text-white rounded-2xl shadow-lg p-6">
 
-      <p className="text-lg">
-        🏕 Gudep
-      </p>
+<div className="
+bg-blue-600
+text-white
+rounded-2xl
+shadow-lg
+p-6
+hover:scale-105
+transition
+">
 
-      <h2 className="text-4xl font-bold mt-3">
-        {dashboard.gudep}
-      </h2>
 
-      <p className="mt-2 opacity-80">
-        Total Gudep
-      </p>
+{/* GUDEP */}
+<div className="flex justify-between items-center">
 
-    </div>
+<div>
 
-    <div className="bg-green-600 text-white rounded-2xl shadow-lg p-6">
+<p className="text-lg">
+🏕 Gudep
+</p>
 
-      <p className="text-lg">
-        👥 Peserta
-      </p>
+<h2 className="text-4xl font-bold mt-3">
+{dashboard.gudep}
+</h2>
 
-      <h2 className="text-4xl font-bold mt-3">
-        {dashboard.peserta}
-      </h2>
+<p className="mt-2 opacity-80">
+Total Gugus Depan
+</p>
 
-      <p className="mt-2 opacity-80">
-        Total Peserta
-      </p>
+</div>
 
-    </div>
+<FaCampground size={45}/>
 
-    <div className="bg-purple-600 text-white rounded-2xl shadow-lg p-6">
+</div>
 
-      <p className="text-lg">
-        ✅ Verifikasi
-      </p>
+</div>
 
-      <h2 className="text-4xl font-bold mt-3">
-        {dashboard.verifikasi}
-      </h2>
 
-      <p className="mt-2 opacity-80">
-        Sudah Diverifikasi
-      </p>
 
-    </div>
 
-    <div className="bg-orange-500 text-white rounded-2xl shadow-lg p-6">
+{/* PESERTA */}
 
-      <p className="text-lg">
-        ⏳ Menunggu
-      </p>
+<div className="
+bg-green-600
+text-white
+rounded-2xl
+shadow-lg
+p-6
+hover:scale-105
+transition
+">
 
-      <h2 className="text-4xl font-bold mt-3">
-        {dashboard.kapling}
-      </h2>
+<div className="flex justify-between items-center">
 
-      <p className="mt-2 opacity-80">
-        Belum Diverifikasi
-      </p>
+<div>
 
-    </div>
+<p className="text-lg">
+👥 Peserta
+</p>
+
+<h2 className="text-4xl font-bold mt-3">
+{dashboard.peserta}
+</h2>
+
+<p className="mt-2 opacity-80">
+Total Peserta
+</p>
+
+</div>
+
+<FaUsers size={45}/>
+
+</div>
+
+</div>
+
+
+
+
+
+{/* VERIFIKASI */}
+
+<div className="
+bg-purple-600
+text-white
+rounded-2xl
+shadow-lg
+p-6
+hover:scale-105
+transition
+">
+
+<div className="flex justify-between">
+
+<div>
+
+<p className="text-lg">
+✅ Verifikasi
+</p>
+
+<h2 className="text-4xl font-bold mt-3">
+{dashboard.verifikasi}
+</h2>
+
+<p className="mt-2 opacity-80">
+Sudah Diverifikasi
+</p>
+
+</div>
+
+
+<FaCheckCircle size={45}/>
+
+
+</div>
+
+</div>
+
+{/* MENUNGGU */}
+
+<div className="
+bg-orange-500
+text-white
+rounded-2xl
+shadow-lg
+p-6
+hover:scale-105
+transition
+">
+
+<div className="flex justify-between">
+
+
+<div>
+
+<p className="text-lg">
+⏳ Menunggu
+</p>
+
+
+<h2 className="text-4xl font-bold mt-3">
+{dashboard.menunggu}
+</h2>
+
+
+<p className="mt-2 opacity-80">
+Belum Diverifikasi
+</p>
+
+
+</div>
+
+
+<FaClock size={45}/>
+
+
+</div>
+
+</div>
+
+<GrafikGudep
+    totalGudep={dashboard.gudep}
+    sudahVerifikasi={dashboard.verifikasi}
+    belumVerifikasi={dashboard.menunggu}
+/>
+ </div>
+{/* TABEL */}
+<div className="mt-8 w-full">
+
+  <TabelGudepTerbaru />
+ </div>
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+
+    <AktivitasHariIni />
+
+    <RingkasanPembayaran />
+
+    <StatusBerkas />
+
+    <AgendaJamran />
 
   </div>
 
 </div>
-
-  );
+);
 
 }

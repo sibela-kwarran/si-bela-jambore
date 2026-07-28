@@ -112,7 +112,7 @@ Loading Dashboard...
 
 return (
 
-<div className="space-y-6">
+<div className="space-y-4 md:space-y-6">
 
 
 {/* PROFIL GUDEP */}
@@ -127,7 +127,8 @@ shadow
 
 
 <h1 className="
-text-3xl
+text-2xl
+md:text-3xl
 font-bold
 ">
 
@@ -136,7 +137,7 @@ font-bold
 </h1>
 
 
-<p className="mt-3 text-lg">
+<p className="mt-3 text-base md:text-lg">
 
 {data.gudep?.nama_pangkalan}
 
@@ -251,6 +252,7 @@ icon={<FaMapMarkerAlt />}
 
 <div className="
 grid
+grid-cols-1
 md:grid-cols-2
 gap-6
 ">
@@ -367,6 +369,7 @@ text-xl
 
 <div className="
 grid
+grid-cols-1
 md:grid-cols-2
 gap-6
 ">
