@@ -7,7 +7,7 @@ import AktivitasHariIni from "./AktivitasHariIni";
 import RingkasanPembayaran from "./RingkasanPembayaran";
 import StatusBerkas from "./StatusBerkas";
 import AgendaJamran from "./AgendaJamran";
-
+import NotifikasiPendaftaran from "./NotifikasiPendaftaran";
 
 
 
@@ -179,6 +179,9 @@ return (
 
   </div>
 
+{/* NOTIFIKASI */}
+  <NotifikasiPendaftaran />
+  
  {/* KARTU STATISTIK */}
 
 <div className="

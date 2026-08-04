@@ -119,3 +119,21 @@ export async function deleteRegu(id){
   if(error) throw error;
 
 }
+// ===================================
+// CEK REGU PUTRA & PUTRI
+// ===================================
+export async function getJenisRegu(gudepId){
+
+  const { data, error } = await supabase
+    .from("data_regu")
+    .select("jenis")
+    .eq("gudep_id", gudepId);
+
+  if(error) throw error;
+
+  return {
+    adaPutra: data.some(x => x.jenis === "Putra"),
+    adaPutri: data.some(x => x.jenis === "Putri")
+  };
+
+}

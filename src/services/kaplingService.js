@@ -107,3 +107,102 @@ export async function savePeta(data){
   return hasil;
 
 }
+// ======================================
+// CEK APAKAH GUDEP SUDAH PUNYA KAPLING
+// ======================================
+export async function cekKaplingGudep(gudepId) {
+
+  const { data, error } = await supabase
+    .from("penempatan_blok")
+    .select("id")
+    .eq("gudep_id", gudepId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return data;
+}
+
+
+// ======================================
+// NOMOR KAPLING PUTRA TERAKHIR
+// ======================================
+export async function getNomorPutraTerakhir() {
+
+  const { data, error } = await supabase
+    .from("penempatan_blok")
+    .select("kapling_putra")
+    .not("kapling_putra", "is", null);
+
+  if (error) throw error;
+
+  if (!data || data.length === 0) return 0;
+
+  return Math.max(
+    ...data.map(x => Number(x.kapling_putra))
+  );
+
+}
+
+
+// ======================================
+// NOMOR KAPLING PUTRI TERAKHIR
+// ======================================
+export async function getNomorPutriTerakhir() {
+
+  const { data, error } = await supabase
+    .from("penempatan_blok")
+    .select("kapling_putri")
+    .not("kapling_putri", "is", null);
+
+  if (error) throw error;
+
+  if (!data || data.length === 0) return 0;
+
+  return Math.max(
+    ...data.map(x => Number(x.kapling_putri))
+  );
+
+}
+// =====================================
+// CARI NOMOR KAPLING BERIKUTNYA
+// LANGSUNG DARI SUPABASE
+// =====================================
+
+export async function getNomorKaplingBerikutnya(jenis) {
+
+  const kolom =
+    jenis === "putra"
+      ? "kapling_putra"
+      : "kapling_putri";
+
+  const { data, error } = await supabase
+    .from("kapling")
+    .select(kolom)
+    .not(kolom, "is", null);
+
+  if (error) {
+
+    console.error(
+      "GAGAL CEK NOMOR KAPLING:",
+      error
+    );
+
+    throw error;
+  }
+
+  const nomorTerpakai = (data || [])
+    .map(item => Number(item[kolom]))
+    .filter(nomor => !isNaN(nomor));
+
+
+  let nomor = 1;
+
+  while (
+    nomorTerpakai.includes(nomor)
+  ) {
+    nomor++;
+  }
+
+  return nomor;
+}

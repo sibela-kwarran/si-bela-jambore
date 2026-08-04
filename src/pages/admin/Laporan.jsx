@@ -1,14 +1,9 @@
-import {
-  useEffect,
-  useState
-} from "react";
-
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 import {
   getLaporanAdmin
-}
-from "../../services/laporanService";
-
+} from "../../services/laporanService";
 
 import StatCard from "./StatCard";
 
@@ -219,6 +214,9 @@ Peserta Putri
 Jumlah Regu
 </th>
 
+<th className="border p-3">
+Aksi
+</th>
 
 </tr>
 
@@ -271,7 +269,29 @@ data.map((item,index)=>(
 {item.jumlahRegu}
 </td>
 
+<td className="border p-3 text-center">
 
+  <Link
+    to={`/admin/detail-laporan/${item.id}`}
+    className="
+      inline-flex
+      items-center
+      gap-2
+      bg-blue-600
+      hover:bg-blue-700
+      text-white
+      px-3
+      py-2
+      rounded-lg
+      transition
+      text-sm
+      font-medium
+    "
+  >
+    👁️ Lihat
+  </Link>
+
+</td>
 </tr>
 
 

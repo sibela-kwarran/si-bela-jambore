@@ -9,6 +9,7 @@ import { getPembayaran } from "../../services/pembayaranService";
 
 import {
   savePendaftaran,
+  getPendaftaranByGudep,
 } from "../../services/pendaftaranService";
 
 export default function KonfirmasiData() {
@@ -90,15 +91,54 @@ setProfil(dataProfil || {});
 // Pembayaran dari Supabase
 setPembayaran(dataPembayaran ?? {});
 
-      setSudahKirim(
-        JSON.parse(
-          localStorage.getItem("statusPendaftaran")
-        ) || {
-          sudahKirim: false,
-          status: "",
-          tanggalKirim: "",
-        }
-      );
+      // ===============================
+// CEK STATUS PENDAFTARAN DARI SUPABASE
+// ===============================
+
+if (dataProfil?.id) {
+
+  const dataPendaftaran =
+    await getPendaftaranByGudep(dataProfil.id);
+
+  console.log(
+    "STATUS PENDAFTARAN DARI SUPABASE:",
+    dataPendaftaran
+  );
+
+  if (dataPendaftaran) {
+
+  console.log(
+    "PENDAFTARAN SUDAH ADA:",
+    dataPendaftaran
+  );
+
+  setSudahKirim({
+
+    sudahKirim: true,
+
+    status:
+      dataPendaftaran.status || "Menunggu",
+
+    tanggalKirim:
+      dataPendaftaran.tanggal_kirim || "",
+
+  });
+
+} else {
+
+  setSudahKirim({
+
+    sudahKirim: false,
+
+    status: "",
+
+    tanggalKirim: "",
+
+  });
+
+}
+
+}
 
       console.log("=== DATA KONFIRMASI ===");
       console.log("Profil :", dataProfil);
@@ -121,63 +161,76 @@ console.log("Pembayaran :", dataPembayaran);
   }
 
   async function kirimPendaftaran() {
-console.log("=== KLIK KIRIM ===");
-console.log("PROFIL :", profil);
-    const gudepBaru = {
 
-      id: Date.now(),
+  console.log("=== KLIK KIRIM ===");
+  console.log("PROFIL :", profil);
 
-      namaGudep:
-        profil?.nama_pangkalan || "-",
+  // =====================================
+  // CEK ID GUDEP
+  // =====================================
 
-      pembina: pembina.length,
+  if (!profil?.id) {
 
-      regu: regu.length,
+    alert(
+      "ID Gudep tidak ditemukan. Silakan simpan Profil Gudep terlebih dahulu."
+    );
 
-      peserta: peserta.length,
+    return;
 
-      berkas:
-        berkas.suratTugas &&
-        berkas.suratIzin
-          ? "Lengkap"
-          : "Belum Lengkap",
-
-      pembayaran:
-        pembayaran.status ||
-        "Belum Bayar",
-
-      status: "Menunggu Verifikasi",
-
-      detail: {
-
-        profil,
-
-        pembina,
-
-        regu,
-
-        peserta,
-
-        upload: berkas,
-
-        pembayaran,
-
-      },
-
-    };
-
-    try {
-
-console.log(
-  "DATA DIKIRIM KE SUPABASE:",
-  {
-    gudep_id: profil.id,
-    nama_gudep: profil.nama_pangkalan,
-    jumlah_pembina: pembina.length,
-    jumlah_regu: regu.length,
-    jumlah_peserta: peserta.length
   }
-);
+
+  // =====================================
+  // CEK PENDAFTARAN YANG SUDAH ADA
+  // =====================================
+
+  const existing =
+    await getPendaftaranByGudep(profil.id);
+
+  console.log(
+    "CEK PENDAFTARAN SEBELUM KIRIM:",
+    existing
+  );
+
+  if (existing) {
+
+    setSudahKirim({
+
+      sudahKirim: true,
+
+      status:
+        existing.status || "Menunggu",
+
+      tanggalKirim:
+        existing.tanggal_kirim || "",
+
+    });
+
+    alert(
+      "⚠️ Pendaftaran Gudep ini sudah pernah dikirim."
+    );
+
+    return;
+
+  }
+
+  // =====================================
+  // LANJUT PROSES KIRIM
+  // =====================================
+
+  try {
+
+    console.log(
+      "DATA DIKIRIM KE SUPABASE:",
+      {
+        gudep_id: profil.id,
+        nama_gudep: profil.nama_pangkalan,
+        jumlah_pembina: pembina.length,
+        jumlah_regu: regu.length,
+        jumlah_peserta: peserta.length
+      }
+    );
+
+    // LANJUTKAN KODE ANDA YANG LAMA DI SINI
 if(!profil?.id){
 
   alert(

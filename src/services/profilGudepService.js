@@ -2,26 +2,25 @@ import supabase from "../lib/supabase";
 
 const TABLE = "profil_gudep";
 
+// ======================================
+// AMBIL SESSION OPERATOR
+// ======================================
 function getOperatorLogin() {
 
   const data = localStorage.getItem("operatorLogin");
 
-  console.log(
-    "CEK SESSION PROFIL GUDEP:",
-    data
-  );
-
+  console.log("CEK SESSION PROFIL GUDEP:", data);
 
   if (!data) {
     throw new Error("Operator belum login.");
   }
 
-
   return JSON.parse(data);
-
 }
 
-// Ambil semua profil
+// ======================================
+// AMBIL PROFIL GUDEP
+// ======================================
 export async function getProfilGudep() {
 
   const operator = getOperatorLogin();
@@ -32,42 +31,29 @@ export async function getProfilGudep() {
     .eq("operator_id", operator.id)
     .maybeSingle();
 
+  if (error) throw error;
 
-  if(error) throw error;
-
-
-  if(data){
+  if (data) {
 
     localStorage.setItem(
       "operatorLogin",
       JSON.stringify({
         ...operator,
-        gudep_id:data.id
+        gudep_id: data.id,
       })
     );
 
   }
 
-
   return data;
 }
 
-
-
-
-
-// Simpan profil baru
+// ======================================
+// SIMPAN / UPDATE PROFIL
+// ======================================
 export async function saveProfilGudep(form) {
 
-
   const operator = getOperatorLogin();
-
-
-  console.log(
-    "OPERATOR AKTIF:",
-    operator
-  );
-
 
   const dataBaru = {
 
@@ -97,119 +83,116 @@ export async function saveProfilGudep(form) {
 
   };
 
+  console.log("DATA PROFIL:", dataBaru);
 
-  console.log(
-    "DATA PROFIL DIKIRIM:",
-    dataBaru
-  );
-
-  // Cek apakah user sudah punya profil
-  const { data: profilLama, error: cekError } = await supabase
+  // ==========================
+  // CEK PROFIL SUDAH ADA?
+  // ==========================
+  const {
+    data: profilLama,
+    error: cekError,
+  } = await supabase
     .from(TABLE)
     .select("id")
     .eq("operator_id", operator.id)
     .maybeSingle();
 
-  console.log(
- "CEK PROFIL LAMA:",
- profilLama
-);
+  if (cekError) throw cekError;
 
-  // Jika sudah ada → update
+  // ==========================
+  // UPDATE
+  // ==========================
   if (profilLama) {
-    const { data, error } = await supabase
+
+    const {
+      data,
+      error,
+    } = await supabase
       .from(TABLE)
       .update(dataBaru)
       .eq("id", profilLama.id)
       .select()
       .single();
 
-    // update gudep_id ke operator
-await supabase
-.from("operator_gudep")
-.update({
-  gudep_id: data.id
-})
-.eq(
-  "id",
-  operator.id
-);
-}
-  // Jika belum ada → insert
-  const { data, error } = await supabase
+    if (error) throw error;
+
+    await supabase
+      .from("operator_gudep")
+      .update({
+        gudep_id: data.id,
+      })
+      .eq("id", operator.id);
+
+    return data;
+  }
+
+  // ==========================
+  // INSERT
+  // ==========================
+  const {
+    data,
+    error,
+  } = await supabase
     .from(TABLE)
     .insert(dataBaru)
     .select()
     .single();
 
+  if (error) throw error;
 
-console.log(
-  "HASIL INSERT PROFIL:",
-  data
-);
+  await supabase
+    .from("operator_gudep")
+    .update({
+      gudep_id: data.id,
+    })
+    .eq("id", operator.id);
 
-
-console.log(
-  "ERROR INSERT PROFIL:",
-  error
-);
-
-
-if (error) throw error;
+  return data;
 }
 
+// ======================================
+// UPDATE PROFIL
+// ======================================
+export async function updateProfilGudep(id, form) {
 
+  const dataUpdate = {
 
-// Update profil
+    nama_pangkalan: form.pangkalan,
 
-export async function updateProfilGudep(id,form){
+    gudep_putra: form.gudepPutra,
 
+    gudep_putri: form.gudepPutri,
 
-const dataUpdate={
+    kwarran: form.kwarran,
 
-nama_pangkalan: form.pangkalan,
+    kwarcab: form.kwarcab,
 
-gudep_putra: form.gudepPutra,
+    kabupaten: form.kabupaten,
 
-gudep_putri: form.gudepPutri,
+    provinsi: form.provinsi,
 
-kwarran: form.kwarran,
+    alamat: form.alamat,
 
-kwarcab: form.kwarcab,
+    email: form.email,
 
-kabupaten: form.kabupaten,
+    nama_mabigus: form.namaMabigus,
 
-provinsi: form.provinsi,
+    hp_mabigus: form.hpMabigus,
 
-alamat: form.alamat,
+  };
 
-email: form.email,
+  const { error } = await supabase
+    .from(TABLE)
+    .update(dataUpdate)
+    .eq("id", id);
 
-nama_mabigus: form.namaMabigus,
-
-hp_mabigus: form.hpMabigus,
-
-};
-
-
-
-const {error}=await supabase
-
-.from(TABLE)
-
-.update(dataUpdate)
-
-.eq("id",id);
-
-
-
-if(error) throw error;
-
-
+  if (error) throw error;
 }
-// Ambil profil gudep berdasarkan id untuk admin
 
-export async function getProfilGudepById(id){
+// ======================================
+// ADMIN
+// ======================================
+export async function getProfilGudepById(id) {
 
   const { data, error } = await supabase
     .from(TABLE)
@@ -217,8 +200,7 @@ export async function getProfilGudepById(id){
     .eq("id", id)
     .single();
 
-
-  if(error){
+  if (error) {
 
     console.error(
       "ERROR GET PROFIL GUDEP BY ID:",
@@ -226,10 +208,7 @@ export async function getProfilGudepById(id){
     );
 
     throw error;
-
   }
 
-
   return data;
-
 }

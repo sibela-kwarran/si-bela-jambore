@@ -17,37 +17,190 @@ export default function StatusBerkas() {
 
   async function loadData() {
 
-    const { data: berkas, error } = await supabase
-      .from("berkas")
-      .select("*");
+    try {
 
-    if (error) {
-      console.log(error);
-      return;
+      // =====================================
+      // AMBIL SEMUA GUDEP
+      // =====================================
+
+      const {
+        data: gudep,
+        error: gudepError
+      } = await supabase
+        .from("profil_gudep")
+        .select("id");
+
+      if (gudepError) {
+        console.error(
+          "ERROR GET GUDEP:",
+          gudepError
+        );
+        return;
+      }
+
+
+      // =====================================
+      // AMBIL SEMUA BERKAS
+      // =====================================
+
+      const {
+        data: berkas,
+        error: berkasError
+      } = await supabase
+        .from("berkas")
+        .select("*");
+
+      if (berkasError) {
+        console.error(
+          "ERROR GET BERKAS:",
+          berkasError
+        );
+        return;
+      }
+
+
+      console.log(
+        "SEMUA GUDEP:",
+        gudep
+      );
+
+      console.log(
+        "SEMUA BERKAS:",
+        berkas
+      );
+
+
+      // =====================================
+      // HITUNG STATUS PER GUDEP
+      // =====================================
+
+      let lengkap = 0;
+      let menunggu = 0;
+      let belum = 0;
+
+
+      for (const itemGudep of gudep || []) {
+
+        const dataBerkasGudep =
+          (berkas || []).find(
+            item =>
+              Number(item.gudep_id) ===
+              Number(itemGudep.id)
+          );
+
+
+        // Tidak ada data berkas
+        if (!dataBerkasGudep) {
+
+          belum++;
+
+          continue;
+
+        }
+
+
+        const adaSuratTugas =
+          Boolean(
+            dataBerkasGudep.surat_tugas
+          );
+
+        const adaSuratIzin =
+          Boolean(
+            dataBerkasGudep.surat_izin
+          );
+
+
+        // =====================================
+        // LENGKAP
+        // =====================================
+
+        if (
+          adaSuratTugas &&
+          adaSuratIzin
+        ) {
+
+          lengkap++;
+
+        }
+
+        // =====================================
+        // MENUNGGU
+        // =====================================
+
+        else if (
+          adaSuratTugas ||
+          adaSuratIzin
+        ) {
+
+          menunggu++;
+
+        }
+
+        // =====================================
+        // BELUM UPLOAD
+        // =====================================
+
+        else {
+
+          belum++;
+
+        }
+
+      }
+
+
+      // =====================================
+      // PROGRESS
+      // =====================================
+
+      const totalGudep =
+        gudep?.length || 0;
+
+
+      const progress =
+        totalGudep === 0
+          ? 0
+          : Math.round(
+              (lengkap / totalGudep) * 100
+            );
+
+
+      console.log(
+        "STATUS BERKAS:",
+        {
+          lengkap,
+          menunggu,
+          belum,
+          totalGudep,
+          progress
+        }
+      );
+
+
+      setData({
+
+        lengkap,
+
+        menunggu,
+
+        belum,
+
+        progress,
+
+      });
+
+
+    } catch (error) {
+
+      console.error(
+        "STATUS BERKAS ERROR:",
+        error
+      );
+
     }
 
-    const lengkap = berkas.filter(
-      (item) => item.status === "Lengkap"
-    ).length;
-
-    const menunggu = berkas.filter(
-      (item) => item.status === "Menunggu"
-    ).length;
-
-    const belum = berkas.length - lengkap - menunggu;
-
-    const progress =
-      berkas.length === 0
-        ? 0
-        : Math.round((lengkap / berkas.length) * 100);
-
-    setData({
-      lengkap,
-      menunggu,
-      belum,
-      progress,
-    });
   }
+
 
   return (
 
@@ -66,11 +219,15 @@ export default function StatusBerkas() {
 
       </div>
 
+
       <div className="space-y-3">
+
 
         <div className="flex justify-between">
 
-          <span>🟢 Lengkap</span>
+          <span>
+            🟢 Lengkap
+          </span>
 
           <span className="font-bold text-green-600">
             {data.lengkap} Gudep
@@ -78,9 +235,12 @@ export default function StatusBerkas() {
 
         </div>
 
+
         <div className="flex justify-between">
 
-          <span>🟡 Menunggu</span>
+          <span>
+            🟡 Menunggu
+          </span>
 
           <span className="font-bold text-orange-500">
             {data.menunggu} Gudep
@@ -88,15 +248,19 @@ export default function StatusBerkas() {
 
         </div>
 
+
         <div className="flex justify-between">
 
-          <span>🔴 Belum Upload</span>
+          <span>
+            🔴 Belum Upload
+          </span>
 
           <span className="font-bold text-red-600">
             {data.belum} Gudep
           </span>
 
         </div>
+
 
         <div className="mt-5">
 
@@ -111,6 +275,7 @@ export default function StatusBerkas() {
 
           </div>
 
+
           <p className="text-center mt-2 font-semibold text-amber-700">
 
             Progress Berkas {data.progress}%
@@ -118,6 +283,7 @@ export default function StatusBerkas() {
           </p>
 
         </div>
+
 
       </div>
 

@@ -29,7 +29,8 @@ const [dataPeserta, setDataPeserta] = useState([]);
 
 const [dataRegu, setDataRegu] = useState([]);
 const [profilGudep, setProfilGudep] = useState({});
-
+const [kuotaPutra, setKuotaPutra] = useState(0);
+const [kuotaPutri, setKuotaPutri] = useState(0);
 
 
 const [editIndex, setEditIndex] = useState(null);
@@ -62,22 +63,54 @@ async function loadData() {
   try {
 
     const profil = await getProfilGudep();
+
     setProfilGudep(profil || {});
 
     const regu = await getRegu();
+
     setDataRegu(regu || []);
 
     const peserta = await getPeserta();
 
-    if (profil) {
+    console.log("PESERTA DARI SERVICE:", peserta);
 
-      const hasil = peserta.filter(
-        item => item.nama_gudep === profil.nama_pangkalan
-      );
+    setDataPeserta(peserta || []);
 
-      setDataPeserta(hasil);
+    // ==========================
+// HITUNG KUOTA PESERTA
+// ==========================
 
-    }
+const totalPutra = (regu || [])
+  .filter(item => item.jenis === "Putra")
+  .reduce(
+    (total, item) =>
+      total + Number(item.jumlah || 0),
+    0
+  );
+
+const totalPutri = (regu || [])
+  .filter(item => item.jenis === "Putri")
+  .reduce(
+    (total, item) =>
+      total + Number(item.jumlah || 0),
+    0
+  );
+
+setKuotaPutra(totalPutra);
+setKuotaPutri(totalPutri);
+
+console.log(
+  "KUOTA PUTRA:",
+  totalPutra
+);
+
+console.log(
+  "KUOTA PUTRI:",
+  totalPutri
+);
+
+    
+    
 
   } catch (err) {
 
@@ -85,7 +118,19 @@ async function loadData() {
 
   }
 }
+// ==========================
+// JUMLAH PESERTA TERISI
+// ==========================
 
+const jumlahPesertaPutra =
+  dataPeserta.filter(
+    item => item.jk === "Putra"
+  ).length;
+
+const jumlahPesertaPutri =
+  dataPeserta.filter(
+    item => item.jk === "Putri"
+  ).length;
   // ==========================
   // HANDLE INPUT
   // ==========================
@@ -130,6 +175,49 @@ async function loadData() {
   async function simpanPeserta(e) {
 
   e.preventDefault();
+
+// ==========================
+// CEK KUOTA PESERTA
+// ==========================
+
+const jumlahSekarang =
+  dataPeserta.filter(
+    item => item.jk === form.jk
+  ).length;
+
+
+// Kalau sedang EDIT, jangan hitung
+// peserta yang sedang diedit
+const jumlahSelainEdit =
+  editIndex !== null
+    ? dataPeserta.filter(
+        item =>
+          item.jk === form.jk &&
+          item.id !== editIndex
+      ).length
+    : jumlahSekarang;
+
+
+const kuota =
+  form.jk === "Putra"
+    ? kuotaPutra
+    : kuotaPutri;
+
+
+if (
+  jumlahSelainEdit >= kuota
+) {
+
+  alert(
+    `⚠️ Kuota peserta ${form.jk} sudah penuh (${kuota} orang).`
+  );
+
+  return;
+
+}
+
+
+
 
   try {
 
@@ -197,19 +285,43 @@ async function loadData() {
 
   try {
 
+    console.log("=== HAPUS PESERTA ===");
+    console.log("ITEM:", item);
+    console.log("ID:", item.id);
+
+    if (!item.id) {
+      alert("ID peserta tidak ditemukan.");
+      return;
+    }
+
     await deletePeserta(item.id);
+
+    console.log(
+      "DELETE SUPABASE BERHASIL:",
+      item.id
+    );
 
     await loadData();
 
+    alert("✅ Data peserta berhasil dihapus.");
+
   } catch (err) {
 
-    console.error(err);
+    console.error(
+      "DELETE PESERTA ERROR:",
+      err
+    );
 
-    alert("Gagal menghapus data.");
+    alert(
+      "❌ Gagal menghapus data peserta: " +
+      err.message
+    );
 
   }
 
 }
+
+
 function editPeserta(item) {
 
   setForm({
@@ -265,14 +377,28 @@ function editPeserta(item) {
     <div className="flex justify-between items-center mb-6">
 
       <button
-        onClick={() => {
-          resetForm();
-          setShowForm(true);
-        }}
-        className="bg-green-700 hover:bg-green-800 text-white px-5 py-3 rounded-lg"
-      >
-        + Tambah Peserta
-      </button>
+  onClick={() => {
+
+    if (
+      jumlahPesertaPutra >= kuotaPutra &&
+      jumlahPesertaPutri >= kuotaPutri
+    ) {
+
+      alert(
+        "⚠️ Kuota peserta Putra dan Putri sudah penuh."
+      );
+
+      return;
+    }
+
+    resetForm();
+    setShowForm(true);
+
+  }}
+  className="bg-green-700 hover:bg-green-800 text-white px-5 py-3 rounded-lg"
+>
+  + Tambah Peserta
+</button>
 
       <input
         type="text"
@@ -283,6 +409,61 @@ function editPeserta(item) {
       />
 
     </div>
+
+{/* ==========================
+    INFORMASI KUOTA PESERTA
+========================== */}
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+  {/* PUTRA */}
+
+  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+
+    <div className="font-semibold text-blue-700">
+      👦 Peserta Putra
+    </div>
+
+    <div className="text-2xl font-bold mt-1">
+      {jumlahPesertaPutra} / {kuotaPutra}
+    </div>
+
+    <div className="text-sm text-gray-500">
+      Sisa kuota:{" "}
+      {Math.max(
+        kuotaPutra - jumlahPesertaPutra,
+        0
+      )} orang
+    </div>
+
+  </div>
+
+
+  {/* PUTRI */}
+
+  <div className="bg-pink-50 border border-pink-200 rounded-xl p-4">
+
+    <div className="font-semibold text-pink-700">
+      👧 Peserta Putri
+    </div>
+
+    <div className="text-2xl font-bold mt-1">
+      {jumlahPesertaPutri} / {kuotaPutri}
+    </div>
+
+    <div className="text-sm text-gray-500">
+      Sisa kuota:{" "}
+      {Math.max(
+        kuotaPutri - jumlahPesertaPutri,
+        0
+      )} orang
+    </div>
+
+  </div>
+
+</div>
+
+
 
     {showForm && (
 
@@ -506,11 +687,11 @@ function editPeserta(item) {
 </button>
 
                 <button
-                  onClick={() => hapusPeserta(index)}
-                  className="bg-red-600 text-white px-3 py-1 rounded"
-                >
-                  Hapus
-                </button>
+  onClick={() => hapusPeserta(item)}
+  className="bg-red-600 text-white px-3 py-1 rounded"
+>
+  Hapus
+</button>
 
               </td>
 

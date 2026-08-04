@@ -93,18 +93,19 @@ await supabase
 
 return {
 
-nama_gudep:item.nama_pangkalan,
+  id: item.id,
 
-pembinaPutra,
+  nama_gudep: item.nama_pangkalan,
 
-pembinaPutri,
+  pembinaPutra,
 
-pesertaPutra,
+  pembinaPutri,
 
-pesertaPutri,
+  pesertaPutra,
 
-jumlahRegu:jumlahRegu || 0
+  pesertaPutri,
 
+  jumlahRegu: jumlahRegu || 0
 
 };
 

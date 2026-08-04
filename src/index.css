@@ -79,3 +79,41 @@ body {
   }
 
 }
+/* ===============================
+   DETAIL LAPORAN GUDEP
+================================ */
+
+#laporan-pdf {
+  width: 100%;
+  max-width: 1000px;
+  margin: auto;
+}
+
+
+#laporan-pdf table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+
+#laporan-pdf th,
+#laporan-pdf td {
+  padding: 8px;
+  font-size: 13px;
+  border: 1px solid #ddd;
+}
+
+
+@media print {
+
+  body {
+    background: white;
+  }
+
+
+  #laporan-pdf {
+    width: 210mm;
+    max-width: 210mm;
+  }
+
+}

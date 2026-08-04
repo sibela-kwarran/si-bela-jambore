@@ -32,6 +32,10 @@ import PenempatanBlok from "../pages/admin/PenempatanBlok";
 import PetaPerkemahan from "../pages/admin/PetaPerkemahan";
 
 import Laporan from "../pages/admin/Laporan";
+import DetailLaporan from "../pages/admin/DetailLaporan";
+
+
+
 export default function AppRoutes() {
   console.log("APP ROUTES DIRENDER");
 
@@ -118,7 +122,10 @@ export default function AppRoutes() {
 path="/admin/laporan"
 element={<Laporan />}
 />
-
+<Route
+    path="detail-laporan/:id"
+    element={<DetailLaporan />}
+  />
 
         </Route>
 

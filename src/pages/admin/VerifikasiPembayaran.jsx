@@ -160,7 +160,7 @@ const hasil = data.filter((item) =>
 
               <th>Gudep</th>
 
-              <th>Ketua</th>
+              <th>Mabigus</th>
 
               <th>Peserta</th>
 

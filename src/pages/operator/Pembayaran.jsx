@@ -89,8 +89,14 @@ if (lama) {
 } else {
 
   await savePembayaran(dataBaru);
-await loadDataPembayaran();
+
 }
+
+// ==========================
+// MUAT ULANG DATA PEMBAYARAN
+// ==========================
+
+await loadDataPembayaran();
 
   setPembayaran(prev => ({
 
@@ -155,10 +161,17 @@ function hapusBukti() {
 
 }
 
-function lihatBukti(){
+function lihatBukti() {
 
-  if(!pembayaran.bukti) return;
+  if (!pembayaran.bukti?.file) {
+    alert("File bukti pembayaran tidak ditemukan.");
+    return;
+  }
 
+  console.log(
+    "FILE BUKTI:",
+    pembayaran.bukti.file
+  );
 
   setPreview(
     pembayaran.bukti.file
@@ -174,53 +187,60 @@ useEffect(() => {
 
 
 
-async function loadDataPembayaran(){
+async function loadDataPembayaran() {
 
-try{
+  try {
 
+    const data = await getPembayaran();
 
-const data = await getPembayaran();
+    console.log("DATA PEMBAYARAN:", data);
+    console.log("BUKTI DARI SUPABASE:", data?.bukti);
 
+    if (data) {
 
-if (data) {
+      setPembayaran({
 
-  setPembayaran({
+        bank: data.bank,
 
-    bank: data.bank,
+        rekening: data.rekening,
 
-    rekening: data.rekening,
+        atasNama: data.atas_nama,
 
-    atasNama: data.atas_nama,
+        biayaPerPeserta: data.biaya_per_peserta,
 
-    biayaPerPeserta: data.biaya_per_peserta,
+        nominal: data.nominal,
 
-    nominal: data.nominal,
+        status: data.status,
 
-    status: data.status,
+        tanggal: data.tanggal,
 
-    tanggal: data.tanggal,
+        bukti: data.bukti
+          ? {
+              nama: "Bukti Pembayaran",
 
-    bukti: data.bukti
-? {
-    nama: "Bukti Pembayaran",
-    file: data.bukti,
-    tipe: "application/pdf",
-    tanggal: new Date(data.tanggal)
-      .toLocaleString("id-ID"),
+              file: data.bukti,
+
+              tipe: data.bukti.startsWith("data:application/pdf")
+                ? "application/pdf"
+                : "image",
+
+              tanggal: new Date(data.tanggal)
+                .toLocaleString("id-ID"),
+            }
+          : null,
+
+      });
+
+    }
+
+  } catch (err) {
+
+    console.error(
+      "ERROR LOAD PEMBAYARAN:",
+      err
+    );
+
   }
-: null,
-
-  });
-
-}
-
-
-}catch(err){
-
-console.error(err);
-
-}
-
 
 }
 
@@ -407,14 +427,42 @@ async function loadProfilGudep() {
 
     {pembayaran.bukti?.tipe === "application/pdf" ? (
 
-<a
-  href={preview}
-  target="_blank"
-  rel="noreferrer"
+<button
+  onClick={() => {
+
+    if (!preview) {
+      alert("File PDF tidak ditemukan.");
+      return;
+    }
+
+    console.log("MEMBUKA PDF:", preview);
+
+    const win = window.open();
+
+    if (win) {
+      win.document.write(`
+        <html>
+          <head>
+            <title>Preview Bukti Pembayaran</title>
+          </head>
+          <body style="margin:0">
+            <iframe
+              src="${preview}"
+              width="100%"
+              height="100%"
+              style="border:none; height:100vh;"
+            ></iframe>
+          </body>
+        </html>
+      `);
+      win.document.close();
+    }
+
+  }}
   className="bg-blue-600 text-white px-4 py-2 rounded"
 >
-📄 Lihat PDF
-</a>
+  📄 Lihat PDF
+</button>
 
 ) : (
 

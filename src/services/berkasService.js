@@ -72,7 +72,33 @@ export async function getBerkas() {
 
 }
 
+// =====================================
+// AMBIL BERKAS BERDASARKAN GUDEP - ADMIN
+// =====================================
 
+export async function getBerkasByGudep(gudepId) {
+
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("*")
+    .eq("gudep_id", gudepId)
+    .order("id", { ascending: false })
+    .limit(1);
+
+  if (error) {
+
+    console.error(
+      "GET BERKAS BY GUDEP ERROR:",
+      error
+    );
+
+    throw error;
+  }
+
+  return data && data.length > 0
+    ? data[0]
+    : null;
+}
 
 // simpan
 

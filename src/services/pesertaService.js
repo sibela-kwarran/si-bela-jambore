@@ -30,7 +30,15 @@ async function getGudepLogin() {
 
 export async function getPeserta() {
 
+  console.log("=== MULAI GET PESERTA ===");
+
+  const operator = getOperatorLogin();
+
+  console.log("OPERATOR LOGIN:", operator);
+
   const gudep = await getGudepLogin();
+
+  console.log("GUDEP LOGIN:", gudep);
 
   const { data, error } = await supabase
     .from(TABLE)
@@ -38,16 +46,12 @@ export async function getPeserta() {
     .eq("gudep_id", gudep.id)
     .order("id");
 
-
   console.log("HASIL GET PESERTA:", data);
   console.log("ERROR GET PESERTA:", error);
 
-
   if (error) throw error;
 
-
-  return data;
-
+  return data || [];
 }
 
 export async function savePeserta(dataBaru) {
