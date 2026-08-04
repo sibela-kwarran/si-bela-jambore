@@ -6,9 +6,7 @@ import { getPembinaByGudep } from "../../services/pembinaService";
 import { getReguByGudep } from "../../services/reguService";
 import { getPesertaByGudep } from "../../services/pesertaService";
 
-import { cetakLaporanGudepPDF } from "../../services/pdfService";
 import html2pdf from "html2pdf.js";
-
 
 
 
@@ -66,84 +64,194 @@ function cetakPDF() {
 
   const element = document.getElementById("laporan-pdf");
 
-
   if (!element) {
     alert("Elemen laporan tidak ditemukan");
     return;
   }
 
+  // ===============================
+  // BUAT STYLE KHUSUS PDF
+  // ===============================
 
-  // FIX html2canvas ERROR OKLCH
-  document.querySelectorAll("*").forEach((el) => {
+  const style = document.createElement("style");
 
-    const style = window.getComputedStyle(el);
+  style.id = "pdf-print-style";
+
+  style.innerHTML = `
+    .no-pdf {
+    display: none !important;
+  }
+  #laporan-pdf {
+      background: #ffffff !important;
+      color: #000000 !important;
+    }
+
+    #laporan-pdf * {
+      box-sizing: border-box !important;
+    }
+
+    #laporan-pdf .pdf-page {
+      page-break-before: always !important;
+      break-before: page !important;
+
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+
+      width: 100% !important;
+      background: #ffffff !important;
+    }
+
+    #laporan-pdf table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    #laporan-pdf thead {
+      display: table-header-group !important;
+    }
+
+    #laporan-pdf tr {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    #laporan-pdf th,
+    #laporan-pdf td {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    #laporan-pdf .pdf-no-break {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+  `;
+
+  document.head.appendChild(style);
 
 
-    if (style.color.includes("oklch")) {
+  // ===============================
+  // FIX WARNA OKLCH
+  // ===============================
+
+  const originalStyles = [];
+
+  element.querySelectorAll("*").forEach((el) => {
+
+    const computed = window.getComputedStyle(el);
+
+    originalStyles.push({
+      el: el,
+      color: el.style.color,
+      backgroundColor: el.style.backgroundColor,
+      borderColor: el.style.borderColor
+    });
+
+    if (computed.color.includes("oklch")) {
       el.style.color = "#000000";
     }
 
-
-    if (style.backgroundColor.includes("oklch")) {
+    if (computed.backgroundColor.includes("oklch")) {
       el.style.backgroundColor = "#ffffff";
     }
 
-
-    if (style.borderColor.includes("oklch")) {
+    if (computed.borderColor.includes("oklch")) {
       el.style.borderColor = "#000000";
     }
 
   });
 
 
+  // ===============================
+  // CETAK PDF
+  // ===============================
 
-  setTimeout(() => {
+  html2pdf()
+    .set({
 
+      margin: [8, 8, 8, 8],
 
-    html2pdf()
+      filename:
+        `Laporan-${profil.nama_pangkalan || "Gudep"}.pdf`,
 
-      .set({
+      image: {
+        type: "jpeg",
+        quality: 0.98
+      },
 
-        margin: 0.3,
+      html2canvas: {
 
-        filename:
-          `Laporan-${profil.nama_pangkalan || "Gudep"}.pdf`,
+        scale: 2,
 
-        image: {
-          type: "jpeg",
-          quality: 1,
-        },
+        useCORS: true,
 
+        backgroundColor: "#ffffff",
 
-        html2canvas: {
+        logging: false
 
-           scale:2,
-  useCORS:true,
-  width:794,
-  windowWidth:794
+      },
 
-        },
+      pagebreak: {
 
+        mode: ["css", "legacy"]
 
-        jsPDF: {
+      },
 
-          unit: "mm",
+      jsPDF: {
 
-          format: "a4",
+        unit: "mm",
 
-          orientation: "portrait",
+        format: "a4",
 
-        },
+        orientation: "portrait"
 
-      })
+      }
 
-      .from(element)
+    })
 
-      .save();
+    .from(element)
 
+    .save()
 
-  }, 300);
+    .then(() => {
 
+      // ===============================
+      // KEMBALIKAN STYLE
+      // ===============================
+
+      originalStyles.forEach((item) => {
+
+        item.el.style.color = item.color;
+
+        item.el.style.backgroundColor =
+          item.backgroundColor;
+
+        item.el.style.borderColor =
+          item.borderColor;
+
+      });
+
+      // Hapus style PDF
+      style.remove();
+
+    })
+
+    .catch((error) => {
+
+      console.error(
+        "ERROR CETAK PDF:",
+        error
+      );
+
+      style.remove();
+
+      alert(
+        "Gagal membuat PDF. Silakan coba lagi."
+      );
+
+    });
 
 }
 
@@ -277,7 +385,9 @@ const pesertaPutri =
 
       {/* STATISTIK */}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+     <div
+  className="grid grid-cols-1 md:grid-cols-3 gap-5 no-pdf"
+>
 
         <div className="bg-white rounded-xl shadow p-5">
           <div className="text-sm text-gray-500">
@@ -346,7 +456,7 @@ const pesertaPutri =
       {/* DATA PEMBINA */}
       {/* =============================== */}
 
-      <div className="bg-white rounded-xl shadow p-6">
+      <div className="pdf-no-break bg-white rounded-xl shadow p-6">
 
         <h2 className="text-xl font-bold text-blue-700 mb-5">
           👨‍🏫 Data Pembina
@@ -441,7 +551,7 @@ const pesertaPutri =
       {/* DATA REGU */}
       {/* =============================== */}
 
-      <div className="bg-white rounded-xl shadow p-6">
+      <div className="pdf-no-break bg-white rounded-xl shadow p-6">
 
         <h2 className="text-xl font-bold text-orange-700 mb-5">
           ⛺ Data Regu
@@ -533,7 +643,10 @@ const pesertaPutri =
       {/* DATA PESERTA PUTRA */}
       {/* =============================== */}
 
-      <div className="bg-white rounded-xl shadow p-6">
+      <div
+  id="peserta-putra"
+  className="pdf-page bg-white rounded-xl shadow p-6"
+>
 
         <h2 className="text-xl font-bold text-blue-700 mb-5">
           👦 Data Peserta Putra
@@ -622,7 +735,10 @@ const pesertaPutri =
       {/* DATA PESERTA PUTRI */}
       {/* =============================== */}
 
-      <div className="bg-white rounded-xl shadow p-6">
+    <div
+  id="peserta-putri"
+  className="pdf-page bg-white rounded-xl shadow p-6"
+>
 
         <h2 className="text-xl font-bold text-pink-700 mb-5">
           👧 Data Peserta Putri
