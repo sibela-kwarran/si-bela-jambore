@@ -464,33 +464,39 @@ const pesertaPutri =
 
         <table className="w-full border">
 
-          <thead className="bg-blue-600 text-white">
+          <thead>
 
-            <tr>
+<tr
+  style={{
+    backgroundColor: "#2563eb",
+    color: "#ffffff",
+    fontWeight: "bold"
+  }}
+>
 
-              <th className="border p-3 w-16">
-                No
-              </th>
+<td className="border p-3 text-center">
+No
+</td>
 
-              <th className="border p-3">
-                Nama Pembina
-              </th>
+<td className="border p-3">
+Nama Pembina
+</td>
 
-              <th className="border p-3 w-32">
-                JK
-              </th>
+<td className="border p-3 text-center">
+JK
+</td>
 
-              <th className="border p-3 w-40">
-                Jabatan
-              </th>
+<td className="border p-3 text-center">
+Jabatan
+</td>
 
-              <th className="border p-3 w-40">
-                No. HP
-              </th>
+<td className="border p-3 text-center">
+No. HP
+</td>
 
-            </tr>
+</tr>
 
-          </thead>
+</thead>
 
           <tbody>
 
@@ -559,29 +565,37 @@ const pesertaPutri =
 
         <table className="w-full border">
 
-          <thead className="bg-orange-600 text-white">
+          <thead>
 
-            <tr>
+<tr
+  style={{
+    backgroundColor: "#2563eb",
+    color: "#ffffff",
+    fontWeight: "bold"
+  }}
+>
 
-              <th className="border p-3 w-16">
-                No
-              </th>
+<td className="border p-3 text-center">
+No
+</td>
 
-              <th className="border p-3">
-                Nama Regu
-              </th>
+<td className="border p-3">
+Nama Regu
+</td>
 
-              <th className="border p-3 w-40">
-                Jenis
-              </th>
+<td className="border p-3 text-center">
+Jenis
+</td>
 
-              <th className="border p-3 w-40">
-                Jumlah Anggota
-              </th>
+<td className="border p-3 text-center">
+Jumlah Anggota
+</td>
 
-            </tr>
 
-          </thead>
+</tr>
+
+</thead>
+
 
           <tbody>
 
@@ -654,29 +668,37 @@ const pesertaPutri =
 
         <table className="w-full border">
 
-          <thead className="bg-blue-600 text-white">
+          <thead>
 
-            <tr>
+<tr
+  style={{
+    backgroundColor: "#2563eb",
+    color: "#ffffff",
+    fontWeight: "bold"
+  }}
+>
 
-              <th className="border p-3 w-16">
-                No
-              </th>
+<td className="border p-3 text-center">
+No
+</td>
 
-              <th className="border p-3">
-                Nama Peserta
-              </th>
+<td className="border p-3">
+Nama Peserta
+</td>
 
-              <th className="border p-3 w-24">
-                Kelas
-              </th>
+<td className="border p-3 text-center">
+Kelas
+</td>
 
-              <th className="border p-3 w-40">
-                Regu
-              </th>
+<td className="border p-3 text-center">
+Regu
+</td>
 
-            </tr>
 
-          </thead>
+</tr>
+
+</thead>
+
 
           <tbody>
 
@@ -746,29 +768,37 @@ const pesertaPutri =
 
         <table className="w-full border">
 
-          <thead className="bg-pink-600 text-white">
+          <thead>
 
-            <tr>
+<tr
+  style={{
+    backgroundColor: "#2563eb",
+    color: "#ffffff",
+    fontWeight: "bold"
+  }}
+>
 
-              <th className="border p-3 w-16">
-                No
-              </th>
+<td className="border p-3 text-center">
+No
+</td>
 
-              <th className="border p-3">
-                Nama Peserta
-              </th>
+<td className="border p-3">
+Nama Peserta
+</td>
 
-              <th className="border p-3 w-24">
-                Kelas
-              </th>
+<td className="border p-3 text-center">
+Kelas
+</td>
 
-              <th className="border p-3 w-40">
-                Regu
-              </th>
+<td className="border p-3 text-center">
+Regu
+</td>
 
-            </tr>
 
-          </thead>
+</tr>
+
+</thead>
+
 
           <tbody>
 
