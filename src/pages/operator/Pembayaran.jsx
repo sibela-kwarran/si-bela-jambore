@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 
+
+
 import {
-  getPeserta
-} from "../../services/pesertaService";
+  getRegu
+} from "../../services/reguService";
 
 import {
   getPembayaran,
@@ -19,7 +21,8 @@ export default function Pembayaran() {
 
   const [preview, setPreview] = useState(null);
 
-  const [jumlahPeserta,setJumlahPeserta] = useState(0);
+  
+  const [jumlahRegu, setJumlahRegu] = useState(0);
 
   const [profilGudep,setProfilGudep] = useState({});
 
@@ -30,7 +33,7 @@ export default function Pembayaran() {
   bank: "BANK BJB",
   rekening: "0148423563101",
   atasNama: "KWARRAN CIKARANG UTARA",
-  biayaPerPeserta: 75000,
+  biayaPerRegu: 750000,
   bukti: null,
   status: "Belum Bayar",
 });
@@ -38,7 +41,7 @@ export default function Pembayaran() {
   
 
   const totalBayar =
-    jumlahPeserta * pembayaran.biayaPerPeserta;
+  jumlahRegu * pembayaran.biayaPerRegu;
 
   
 
@@ -73,8 +76,6 @@ async function uploadBukti(e) {
   status: "Menunggu Verifikasi",
 
   tanggal: new Date(),
-
-  jumlah_peserta: jumlahPeserta,
 
 };
 
@@ -180,9 +181,13 @@ function lihatBukti() {
 }
 
 useEffect(() => {
+
   loadProfilGudep();
-  loadJumlahPeserta();
+
+  loadJumlahRegu();
+
   loadDataPembayaran();
+
 }, []);
 
 
@@ -200,21 +205,22 @@ async function loadDataPembayaran() {
 
       setPembayaran({
 
-        bank: data.bank,
+  bank: data.bank || "BANK BJB",
 
-        rekening: data.rekening,
+  rekening: data.rekening || "0148423563101",
 
-        atasNama: data.atas_nama,
+  atasNama: data.atas_nama || "KWARRAN CIKARANG UTARA",
 
-        biayaPerPeserta: data.biaya_per_peserta,
+  // BIAYA PER REGU
+  biayaPerRegu: Number(data.biaya_per_regu) || 750000,
 
-        nominal: data.nominal,
+  nominal: Number(data.nominal) || 0,
 
-        status: data.status,
+  status: data.status || "Belum Bayar",
 
-        tanggal: data.tanggal,
+  tanggal: data.tanggal,
 
-        bukti: data.bukti
+  bukti: data.bukti
           ? {
               nama: "Bukti Pembayaran",
 
@@ -244,31 +250,34 @@ async function loadDataPembayaran() {
 
 }
 
-async function loadJumlahPeserta(){
 
-  try{
 
-    const data = await getPeserta();
+async function loadJumlahRegu() {
+
+  try {
+
+    const data = await getRegu();
 
     console.log(
-      "DATA PESERTA PEMBAYARAN:",
+      "DATA REGU PEMBAYARAN:",
       data
     );
 
+    setJumlahRegu(data.length);
 
-    setJumlahPeserta(data.length);
-
-
-  }catch(err){
+  } catch (err) {
 
     console.error(
-      "ERROR PESERTA:",
+      "ERROR REGU PEMBAYARAN:",
       err
     );
 
   }
 
 }
+
+
+
 
 async function loadProfilGudep() {
 
@@ -329,19 +338,19 @@ async function loadProfilGudep() {
           />
 
           <Info
-            title="Jumlah Peserta"
-            value={`${jumlahPeserta} Orang`}
-          />
+  title="Jumlah Regu"
+  value={`${jumlahRegu} Regu`}
+/>
 
-          <Info
-            title="Biaya / Peserta"
-            value={`Rp ${pembayaran.biayaPerPeserta.toLocaleString("id-ID")}`}
-          />
+<Info
+  title="Biaya / Regu"
+  value={`Rp ${(pembayaran.biayaPerRegu || 750000).toLocaleString("id-ID")}`}
+/>
 
-          <Info
-            title="Total Pembayaran"
-            value={`Rp ${totalBayar.toLocaleString("id-ID")}`}
-          />
+<Info
+  title="Total Pembayaran"
+  value={`Rp ${Number(totalBayar || 0).toLocaleString("id-ID")}`}
+/>
 
         </div>
 <div className="bg-white rounded-xl shadow p-6">
