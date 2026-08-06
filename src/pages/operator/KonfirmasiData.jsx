@@ -10,6 +10,7 @@ import { getPembayaran } from "../../services/pembayaranService";
 import {
   savePendaftaran,
   getPendaftaranByGudep,
+  kirimUlangPendaftaran,
 } from "../../services/pendaftaranService";
 
 export default function KonfirmasiData() {
@@ -162,12 +163,13 @@ console.log("Pembayaran :", dataPembayaran);
 
   async function kirimPendaftaran() {
 
-  console.log("=== KLIK KIRIM ===");
+  console.log("=== KLIK KIRIM PENDAFTARAN ===");
   console.log("PROFIL :", profil);
 
-  // =====================================
-  // CEK ID GUDEP
-  // =====================================
+
+  // ==========================================
+  // 1. CEK ID GUDEP
+  // ==========================================
 
   if (!profil?.id) {
 
@@ -179,19 +181,306 @@ console.log("Pembayaran :", dataPembayaran);
 
   }
 
-  // =====================================
-  // CEK PENDAFTARAN YANG SUDAH ADA
-  // =====================================
 
-  const existing =
-    await getPendaftaranByGudep(profil.id);
+  // ==========================================
+  // 2. CEK PERSETUJUAN
+  // ==========================================
 
-  console.log(
-    "CEK PENDAFTARAN SEBELUM KIRIM:",
-    existing
-  );
+  if (!setuju) {
 
-  if (existing) {
+    alert(
+      "Silakan centang pernyataan bahwa seluruh data sudah benar."
+    );
+
+    return;
+
+  }
+
+
+  try {
+
+    // ========================================
+    // 3. CEK PENDAFTARAN YANG SUDAH ADA
+    // ========================================
+
+    const existing =
+      await getPendaftaranByGudep(
+        profil.id
+      );
+
+
+    console.log(
+      "PENDAFTARAN EXISTING:",
+      existing
+    );
+
+
+    // ========================================
+    // 4. SIAPKAN DATA
+    // ========================================
+
+    const dataPendaftaran = {
+
+      gudep_id:
+        Number(profil.id),
+
+      nama_gudep:
+        profil.nama_pangkalan,
+
+      jumlah_pembina:
+        pembina.length,
+
+      jumlah_regu:
+        regu.length,
+
+      jumlah_peserta:
+        peserta.length,
+
+      status:
+        "Menunggu Verifikasi",
+
+      tanggal_kirim:
+        new Date().toISOString(),
+
+      catatan_admin:
+        existing?.status === "Perlu Perbaikan"
+          ? existing.catatan_admin || ""
+          : ""
+
+    };
+
+
+    console.log(
+      "DATA PENDAFTARAN:",
+      dataPendaftaran
+    );
+
+
+    // ========================================
+    // 5. BELUM PERNAH MENDAFTAR
+    // ========================================
+
+    if (!existing) {
+
+      console.log(
+        "BELUM ADA PENDAFTARAN → INSERT"
+      );
+
+
+      const hasil =
+        await savePendaftaran(
+          dataPendaftaran
+        );
+
+
+      console.log(
+        "HASIL INSERT:",
+        hasil
+      );
+
+
+      const statusBaru = {
+
+        sudahKirim: true,
+
+        status:
+          "Menunggu Verifikasi",
+
+        tanggalKirim:
+          new Date().toLocaleDateString(
+            "id-ID"
+          )
+
+      };
+
+
+      setSudahKirim(
+        statusBaru
+      );
+
+
+      localStorage.setItem(
+        "statusPendaftaran",
+        JSON.stringify(
+          statusBaru
+        )
+      );
+
+
+      alert(
+        "✅ Pendaftaran berhasil dikirim dan menunggu verifikasi panitia."
+      );
+
+
+      return;
+
+    }
+
+
+    // ========================================
+    // 6. JIKA PERLU PERBAIKAN
+    // ========================================
+
+    if (
+      existing.status ===
+      "Perlu Perbaikan"
+    ) {
+
+      console.log(
+        "STATUS PERLU PERBAIKAN → UPDATE"
+      );
+
+
+      const hasil =
+        await kirimUlangPendaftaran(
+          existing.id,
+          dataPendaftaran
+        );
+
+
+      console.log(
+        "HASIL KIRIM ULANG:",
+        hasil
+      );
+
+
+      const statusBaru = {
+
+        sudahKirim: true,
+
+        status:
+          "Menunggu Verifikasi",
+
+        tanggalKirim:
+          new Date().toLocaleDateString(
+            "id-ID"
+          )
+
+      };
+
+
+      setSudahKirim(
+        statusBaru
+      );
+
+
+      localStorage.setItem(
+        "statusPendaftaran",
+        JSON.stringify(
+          statusBaru
+        )
+      );
+
+
+      alert(
+        "✅ Data berhasil diperbaiki dan dikirim kembali untuk verifikasi."
+      );
+
+
+      return;
+
+    }
+
+
+    // ========================================
+    // 7. MASIH MENUNGGU VERIFIKASI
+    // ========================================
+
+    if (
+      existing.status ===
+      "Menunggu Verifikasi"
+    ) {
+
+      setSudahKirim({
+
+        sudahKirim: true,
+
+        status:
+          existing.status,
+
+        tanggalKirim:
+          existing.tanggal_kirim || ""
+
+      });
+
+
+      alert(
+        "⚠️ Pendaftaran masih menunggu verifikasi panitia."
+      );
+
+
+      return;
+
+    }
+
+
+    // ========================================
+    // 8. SUDAH TERVERIFIKASI
+    // ========================================
+
+    if (
+      existing.status ===
+      "Terverifikasi"
+    ) {
+
+      setSudahKirim({
+
+        sudahKirim: true,
+
+        status:
+          existing.status,
+
+        tanggalKirim:
+          existing.tanggal_kirim || ""
+
+      });
+
+
+      alert(
+        "✅ Pendaftaran Gudep sudah terverifikasi."
+      );
+
+
+      return;
+
+    }
+
+
+    // ========================================
+    // 9. DITOLAK
+    // ========================================
+
+    if (
+      existing.status ===
+      "Ditolak"
+    ) {
+
+      setSudahKirim({
+
+        sudahKirim: true,
+
+        status:
+          existing.status,
+
+        tanggalKirim:
+          existing.tanggal_kirim || ""
+
+      });
+
+
+      alert(
+        "❌ Pendaftaran Gudep telah ditolak oleh panitia."
+      );
+
+
+      return;
+
+    }
+
+
+    // ========================================
+    // 10. STATUS LAIN
+    // ========================================
 
     setSudahKirim({
 
@@ -201,115 +490,45 @@ console.log("Pembayaran :", dataPembayaran);
         existing.status || "Menunggu",
 
       tanggalKirim:
-        existing.tanggal_kirim || "",
+        existing.tanggal_kirim || ""
 
     });
 
+
     alert(
-      "⚠️ Pendaftaran Gudep ini sudah pernah dikirim."
+      `Pendaftaran sudah memiliki status: ${
+        existing.status || "Menunggu"
+      }`
     );
 
-    return;
+
+  } catch (error) {
+
+    console.error(
+      "GAGAL PROSES PENDAFTARAN:",
+      error
+    );
+
+
+    alert(
+      "Pendaftaran gagal dikirim: " +
+      (
+        error?.message ||
+        "Terjadi kesalahan."
+      )
+    );
 
   }
-
-  // =====================================
-  // LANJUT PROSES KIRIM
-  // =====================================
-
-  try {
-
-    console.log(
-      "DATA DIKIRIM KE SUPABASE:",
-      {
-        gudep_id: profil.id,
-        nama_gudep: profil.nama_pangkalan,
-        jumlah_pembina: pembina.length,
-        jumlah_regu: regu.length,
-        jumlah_peserta: peserta.length
-      }
-    );
-
-    // LANJUTKAN KODE ANDA YANG LAMA DI SINI
-if(!profil?.id){
-
-  alert(
-    "ID Gudep tidak ditemukan. Silakan simpan Profil Gudep terlebih dahulu."
-  );
-
-  return;
 
 }
 
 
-await savePendaftaran({
-
-  gudep_id: Number(profil.id),
-
-  nama_gudep:
-    profil.nama_pangkalan,
-
-  jumlah_pembina:
-    pembina.length,
-
-  jumlah_regu:
-    regu.length,
-
-  jumlah_peserta:
-    peserta.length,
-
-  status:
-    "Menunggu Verifikasi",
-
-  tanggal_kirim:
-    new Date().toISOString(),
-
-  catatan_admin:
-    ""
-
-});
 
 
-const status = {
-
-  sudahKirim: true,
-
-  status: "Menunggu Verifikasi",
-
-  tanggalKirim:
-    new Date().toLocaleDateString("id-ID"),
-
-};
 
 
-localStorage.setItem(
-  "statusPendaftaran",
-  JSON.stringify(status)
-);
 
 
-setSudahKirim(status);
-
-
-alert(
-  "Pendaftaran berhasil dikirim."
-);
-
-
-}catch(error){
-
-console.error(
-  "Gagal simpan pendaftaran:",
-  error
-);
-
-
-alert(
-  "Pendaftaran gagal dikirim"
-);
-
-}
-  }
 
   if (loading) {
     return (
@@ -446,7 +665,13 @@ alert(
 
         onClick={kirimPendaftaran}
 
-        disabled={!setuju || sudahKirim.sudahKirim}
+        disabled={
+  !setuju ||
+  (
+    sudahKirim.sudahKirim &&
+    sudahKirim.status !== "Perlu Perbaikan"
+  )
+}
 
         className={`w-full py-4 rounded-xl font-bold text-white ${
           sudahKirim.sudahKirim
@@ -456,9 +681,11 @@ alert(
 
       >
 
-        {sudahKirim.sudahKirim
-          ? "✓ PENDAFTARAN SUDAH DIKIRIM"
-          : "🚀 KIRIM PENDAFTARAN"}
+        {sudahKirim.status === "Perlu Perbaikan"
+  ? "🔄 KIRIM ULANG PENDAFTARAN"
+  : sudahKirim.sudahKirim
+    ? "✓ PENDAFTARAN SUDAH DIKIRIM"
+    : "🚀 KIRIM PENDAFTARAN"}
 
       </button>
 

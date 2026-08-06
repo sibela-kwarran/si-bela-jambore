@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 import {
   getPembinaByGudep,
@@ -18,213 +18,598 @@ import {
 } from "../../services/profilGudepService";
 
 import {
+  getPendaftaranById,
   updatePendaftaran,
 } from "../../services/pendaftaranService";
-import {
-  getPendaftaranById
-} from "../../services/pendaftaranService";
+
 
 export default function DetailGudep() {
-const { id } = useParams();
 
-const [profil, setProfil] = useState({});
-const [pembina, setPembina] = useState([]);
-const [regu, setRegu] = useState([]);
-const [peserta, setPeserta] = useState([]);
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-const [catatanAdmin, setCatatanAdmin] = useState("");
-const [status, setStatus] = useState("Menunggu Verifikasi");
-const [pendaftaran, setPendaftaran] = useState(null);
+  const [profil, setProfil] = useState({});
+  const [pembina, setPembina] = useState([]);
+  const [regu, setRegu] = useState([]);
+  const [peserta, setPeserta] = useState([]);
 
-useEffect(() => {
-  loadData();
-}, []);
- 
+  const [catatanAdmin, setCatatanAdmin] = useState("");
+  const [pendaftaran, setPendaftaran] = useState(null);
 
-  async function loadData(){
-
-try{
-
-// ambil data pendaftaran
-const pendaftaranData = await getPendaftaranById(id);
-
-setPendaftaran(pendaftaranData);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
 
-// ambil gudep berdasarkan gudep_id
-const gudepId = pendaftaranData.gudep_id;
+  // ==========================================
+  // LOAD SEMUA DATA
+  // ==========================================
+
+  useEffect(() => {
+
+    if (id) {
+      loadData();
+    }
+
+  }, [id]);
 
 
-const profilData = await getProfilGudepById(gudepId);
-
-setProfil(profilData);
-
-
-const pembinaData = await getPembinaByGudep(gudepId);
-
-setPembina(pembinaData);
-
-
-const reguData = await getReguByGudep(gudepId);
-
-setRegu(reguData);
-
-
-const pesertaData = await getPesertaByGudep(gudepId);
-
-setPeserta(pesertaData);
-
-
-}catch(error){
-
-console.error(
-"Gagal mengambil detail gudep:",
-error
-);
-
-}
-
-}
-
- 
-
-// Data terbaru dari Operator
-
-
-async function updateStatus(statusBaru){
+  async function loadData() {
 
   try {
-console.log("ID YANG DIUPDATE:", id);
-    await updatePendaftaran(id, {
 
-      status: statusBaru,
+    setLoading(true);
 
-      tanggal_verifikasi: new Date()
-        .toISOString(),
-
-      catatan_admin: catatanAdmin || ""
-
-    });
+    console.log("=================================");
+    console.log("MULAI LOAD DETAIL GUDEP");
+    console.log("ID DARI URL:", id);
+    console.log("=================================");
 
 
-    alert("Status berhasil diperbarui");
+    // =====================================
+    // 1. AMBIL DATA PENDAFTARAN
+    // =====================================
+
+    console.log("1. AMBIL PENDAFTARAN...");
+
+    const pendaftaranData =
+      await getPendaftaranById(id);
+
+    console.log(
+      "HASIL PENDAFTARAN:",
+      pendaftaranData
+    );
 
 
-  } catch(error){
+    if (!pendaftaranData) {
+
+      throw new Error(
+        "Data pendaftaran tidak ditemukan."
+      );
+
+    }
+
+
+    setPendaftaran(pendaftaranData);
+
+
+    setCatatanAdmin(
+      pendaftaranData.catatan_admin || ""
+    );
+
+
+    // =====================================
+    // 2. AMBIL GUDEP ID
+    // =====================================
+
+    const gudepId =
+      pendaftaranData.gudep_id;
+
+
+    console.log(
+      "2. GUDEP ID:",
+      gudepId
+    );
+
+
+    if (!gudepId) {
+
+      throw new Error(
+        "gudep_id tidak ditemukan pada data pendaftaran."
+      );
+
+    }
+
+
+    // =====================================
+    // 3. PROFIL GUDEP
+    // =====================================
+
+    console.log(
+      "3. AMBIL PROFIL GUDEP..."
+    );
+
+    const profilData =
+      await getProfilGudepById(gudepId);
+
+    console.log(
+      "HASIL PROFIL:",
+      profilData
+    );
+
+    setProfil(
+      profilData || {}
+    );
+
+
+    // =====================================
+    // 4. PEMBINA
+    // =====================================
+
+    console.log(
+      "4. AMBIL DATA PEMBINA..."
+    );
+
+    const pembinaData =
+      await getPembinaByGudep(gudepId);
+
+    console.log(
+      "HASIL PEMBINA:",
+      pembinaData
+    );
+
+    setPembina(
+      pembinaData || []
+    );
+
+
+    // =====================================
+    // 5. REGU
+    // =====================================
+
+    console.log(
+      "5. AMBIL DATA REGU..."
+    );
+
+    const reguData =
+      await getReguByGudep(gudepId);
+
+    console.log(
+      "HASIL REGU:",
+      reguData
+    );
+
+    setRegu(
+      reguData || []
+    );
+
+
+    // =====================================
+    // 6. PESERTA
+    // =====================================
+
+    console.log(
+      "6. AMBIL DATA PESERTA..."
+    );
+
+    const pesertaData =
+      await getPesertaByGudep(gudepId);
+
+    console.log(
+      "HASIL PESERTA:",
+      pesertaData
+    );
+
+    setPeserta(
+      pesertaData || []
+    );
+
+
+    console.log(
+      "================================="
+    );
+
+    console.log(
+      "SEMUA DATA DETAIL BERHASIL"
+    );
+
+    console.log(
+      "================================="
+    );
+
+
+  } catch (error) {
 
     console.error(
-      "Gagal update status:",
-      error
+      "================================="
+    );
+
+    console.error(
+      "ERROR DETAIL GUDEP:"
+    );
+
+    console.error(error);
+
+    console.error(
+      "================================="
     );
 
 
     alert(
-      "Gagal mengubah status"
+      "Gagal mengambil data: " +
+      (error?.message || "Error tidak diketahui")
     );
 
-  
 
+  } finally {
 
-
-    
-
-    // Pesan sesuai status
-    if (statusBaru === "Disetujui") {
-
-  alert("✅ Pendaftaran berhasil disetujui.");
-
-} else if (statusBaru === "Perlu Perbaikan") {
-
-  alert("🟡 Pendaftaran dikembalikan untuk diperbaiki.");
-
-} else if (statusBaru === "Ditolak") {
-
-  alert("❌ Pendaftaran telah ditolak.");
-    }
-
-    window.location.reload();
+    setLoading(false);
 
   }
 
 }
 
 
+  // ==========================================
+  // UPDATE STATUS PENDAFTARAN
+  // ==========================================
+
+  async function updateStatus(statusBaru) {
+
+    if (!pendaftaran?.id) {
+
+      alert(
+        "Data pendaftaran tidak ditemukan."
+      );
+
+      return;
+
+    }
+
+
+    let pesan = "";
+
+    if (statusBaru === "Terverifikasi") {
+
+      pesan =
+        "Apakah Anda yakin ingin menyetujui pendaftaran ini?";
+
+    } else if (
+      statusBaru === "Perlu Perbaikan"
+    ) {
+
+      pesan =
+        "Apakah Anda ingin meminta operator melakukan perbaikan?";
+
+    } else if (
+      statusBaru === "Ditolak"
+    ) {
+
+      pesan =
+        "Apakah Anda yakin ingin menolak pendaftaran ini?";
+
+    }
+
+
+    if (!window.confirm(pesan)) {
+      return;
+    }
+
+
+    try {
+
+      setSaving(true);
+
+
+      console.log(
+        "UPDATE PENDAFTARAN:",
+        pendaftaran.id
+      );
+
+      console.log(
+        "STATUS BARU:",
+        statusBaru
+      );
+
+
+      const hasil =
+        await updatePendaftaran(
+          pendaftaran.id,
+          {
+
+            status: statusBaru,
+
+            tanggal_verifikasi:
+              new Date().toISOString(),
+
+            catatan_admin:
+              catatanAdmin || "",
+
+          }
+        );
+
+
+      console.log(
+        "HASIL UPDATE:",
+        hasil
+      );
+
+
+      // ======================================
+      // UPDATE STATE DI HALAMAN
+      // ======================================
+
+      setPendaftaran(prev => ({
+
+        ...prev,
+
+        status: statusBaru,
+
+        tanggal_verifikasi:
+          new Date().toISOString(),
+
+        catatan_admin:
+          catatanAdmin || "",
+
+      }));
+
+
+      // ======================================
+      // PESAN
+      // ======================================
+
+      if (
+        statusBaru === "Terverifikasi"
+      ) {
+
+        alert(
+          "✅ Pendaftaran berhasil disetujui."
+        );
+
+      } else if (
+        statusBaru === "Perlu Perbaikan"
+      ) {
+
+        alert(
+          "🟡 Pendaftaran dikembalikan untuk diperbaiki."
+        );
+
+      } else if (
+        statusBaru === "Ditolak"
+      ) {
+
+        alert(
+          "❌ Pendaftaran telah ditolak."
+        );
+
+      }
+
+
+    } catch (error) {
+
+      console.error(
+        "GAGAL UPDATE STATUS:",
+        error
+      );
+
+      alert(
+        "Gagal mengubah status pendaftaran."
+      );
+
+    } finally {
+
+      setSaving(false);
+
+    }
+
+  }
+
+
+  // ==========================================
+  // LOADING
+  // ==========================================
+
+  if (loading) {
+
+    return (
+
+      <div className="p-10 text-center">
+
+        <div className="text-xl font-semibold">
+
+          Memuat data pendaftaran...
+
+        </div>
+
+      </div>
+
+    );
+
+  }
+
+
+  // ==========================================
+  // DATA TURUNAN
+  // ==========================================
+
+  const pesertaPutra =
+    peserta.filter(
+      item => item.jk === "Putra"
+    );
+
+  const pesertaPutri =
+    peserta.filter(
+      item => item.jk === "Putri"
+    );
+
+
+  // ==========================================
+  // RENDER
+  // ==========================================
+
   return (
 
     <div className="space-y-6">
 
-      <h1 className="text-3xl font-bold text-amber-700">
-        Detail Pendaftaran Gugus Depan
-      </h1>
 
-      {/* ====================== */}
+      {/* ===================================== */}
+      {/* HEADER */}
+      {/* ===================================== */}
+
+      <div className="flex justify-between items-center">
+
+        <div>
+
+          <h1 className="text-3xl font-bold text-amber-700">
+
+            Detail Pendaftaran Gugus Depan
+
+          </h1>
+
+          <p className="text-gray-500 mt-1">
+
+            Pemeriksaan data pendaftaran Gugus Depan.
+
+          </p>
+
+        </div>
+
+
+        <button
+
+          onClick={() =>
+            navigate("/admin/verifikasi-gudep")
+          }
+
+          className="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-lg"
+
+        >
+
+          ← Kembali
+
+        </button>
+
+      </div>
+
+
+
+      {/* ===================================== */}
       {/* PROFIL GUGUS DEPAN */}
-      {/* ====================== */}
+      {/* ===================================== */}
 
       <div className="bg-white rounded-xl shadow p-6">
 
         <h2 className="text-xl font-bold text-green-700 mb-4">
+
           🏫 Profil Gugus Depan
+
         </h2>
+
 
         <table className="w-full">
 
           <tbody>
 
             <tr>
+
               <td className="font-semibold py-2 w-56">
                 Nama Pangkalan
               </td>
-              <td>{profil.nama_pangkalan}</td>
+
+              <td>
+                {profil.nama_pangkalan || "-"}
+              </td>
+
             </tr>
 
+
             <tr>
+
               <td className="font-semibold py-2">
                 Gudep Putra
               </td>
-              <td>{profil.gudep_putra || "-"}</td>
+
+              <td>
+                {profil.gudep_putra || "-"}
+              </td>
+
             </tr>
 
+
             <tr>
+
               <td className="font-semibold py-2">
                 Gudep Putri
               </td>
-              <td>{profil.gudep_putri || "-"}</td>
+
+              <td>
+                {profil.gudep_putri || "-"}
+              </td>
+
             </tr>
 
+
             <tr>
+
               <td className="font-semibold py-2">
                 Kwarran
               </td>
-              <td>{profil.kwarran}</td>
+
+              <td>
+                {profil.kwarran || "-"}
+              </td>
+
             </tr>
 
+
             <tr>
+
               <td className="font-semibold py-2">
                 Kwarcab
               </td>
-              <td>{profil.kwarcab}</td>
+
+              <td>
+                {profil.kwarcab || "-"}
+              </td>
+
             </tr>
 
+
             <tr>
+
               <td className="font-semibold py-2">
                 Kabupaten
               </td>
-              <td>{profil.kabupaten}</td>
+
+              <td>
+                {profil.kabupaten || "-"}
+              </td>
+
             </tr>
 
+
             <tr>
+
               <td className="font-semibold py-2">
                 Provinsi
               </td>
-              <td>{profil.provinsi}</td>
+
+              <td>
+                {profil.provinsi || "-"}
+              </td>
+
             </tr>
 
+
             <tr>
+
               <td className="font-semibold py-2">
                 Alamat
               </td>
-              <td>{profil.alamat}</td>
+
+              <td>
+                {profil.alamat || "-"}
+              </td>
+
             </tr>
 
           </tbody>
@@ -232,507 +617,636 @@ console.log("ID YANG DIUPDATE:", id);
         </table>
 
       </div>
-{/* ====================== */}
-{/* DATA PEMBINA */}
-{/* ====================== */}
 
-<div className="bg-white rounded-xl shadow p-6">
 
-  <h2 className="text-xl font-bold text-blue-700 mb-4">
-    👨‍🏫 Data Pembina
-  </h2>
 
-  <table className="w-full border">
+      {/* ===================================== */}
+      {/* DATA PEMBINA */}
+      {/* ===================================== */}
 
-    <thead className="bg-blue-600 text-white">
+      <div className="bg-white rounded-xl shadow p-6">
 
-      <tr>
+        <h2 className="text-xl font-bold text-blue-700 mb-4">
 
-        <th className="border p-3 w-16">
-          No
-        </th>
+          👨‍🏫 Data Pembina
 
-        <th className="border p-3">
-          Nama Pembina
-        </th>
+        </h2>
 
-        <th className="border p-3 w-32">
-          JK
-        </th>
 
-        <th className="border p-3 w-48">
-          Jabatan
-        </th>
+        <table className="w-full border">
 
-        <th className="border p-3 w-48">
-          No. HP
-        </th>
+          <thead className="bg-blue-600 text-white">
 
-      </tr>
+            <tr>
 
-    </thead>
+              <th className="border p-3 w-16">
+                No
+              </th>
 
-    <tbody>
+              <th className="border p-3">
+                Nama Pembina
+              </th>
 
-      {pembina.length === 0 ? (
+              <th className="border p-3 w-32">
+                JK
+              </th>
 
-        <tr>
+              <th className="border p-3 w-48">
+                Jabatan
+              </th>
 
-          <td
-            colSpan="5"
-            className="text-center p-5"
-          >
-            Belum ada data pembina
-          </td>
-
-        </tr>
-
-      ) : (
-
-        pembina.map((item, index) => (
-
-          <tr key={index}>
-
-            <td className="border p-3 text-center">
-              {index + 1}
-            </td>
-
-            <td className="border p-3">
-              {item.nama}
-            </td>
-
-            <td className="border p-3 text-center">
-              {item.jk}
-            </td>
-
-            <td className="border p-3">
-              {item.jabatan}
-            </td>
-
-            <td className="border p-3">
-              {item.hp}
-            </td>
-
-          </tr>
-
-        ))
-
-      )}
-
-    </tbody>
-
-  </table>
-
-</div>
-{/* ====================== */}
-{/* DATA REGU */}
-{/* ====================== */}
-
-<div className="bg-white rounded-xl shadow p-6">
-
-  <h2 className="text-xl font-bold text-orange-700 mb-4">
-    🏕 Data Regu
-  </h2>
-
-  <table className="w-full border">
-
-    <thead className="bg-orange-600 text-white">
-
-  <tr>
-
-    <th className="border p-3 w-16">
-      No
-    </th>
-
-    <th className="border p-3">
-      Nama Regu
-    </th>
-
-    <th className="border p-3 w-40">
-      Jenis
-    </th>
-
-    <th className="border p-3 w-48">
-      Jumlah Anggota
-    </th>
-
-  </tr>
-
-</thead>
-    <tbody>
-
-      {regu.length === 0 ? (
-
-        <tr>
-
-          <td
-            colSpan="4"
-            className="text-center p-5"
-          >
-            Belum ada data regu
-          </td>
-
-        </tr>
-
-      ) : (
-
-        regu.map((item, index) => (
-
-          <tr key={index}>
-
-  <td className="border p-3 text-center">
-    {index + 1}
-  </td>
-
-  <td className="border p-3">
-    {item.nama}
-  </td>
-
-  <td className="border p-3 text-center">
-    {item.jenis}
-  </td>
-
-  <td className="border p-3 text-center">
-    {
-      peserta.filter(
-        p => p.regu === item.nama
-      ).length
-    }
-  </td>
-
-</tr>
-
-        ))
-
-      )}
-
-    </tbody>
-
-  </table>
-
-</div>
-{/* ====================== */}
-{/* DATA PESERTA PUTRA */}
-{/* ====================== */}
-
-<div className="bg-white rounded-xl shadow p-6">
-
-  <h2 className="text-xl font-bold text-blue-700 mb-4">
-    👦 Data Peserta Putra
-  </h2>
-
-  <table className="w-full border">
-
-    <thead className="bg-blue-600 text-white">
-
-      <tr>
-
-        <th className="border p-3 w-16">
-          No
-        </th>
-
-        <th className="border p-3">
-          Nama Peserta
-        </th>
-
-        <th className="border p-3 w-24">
-          Kelas
-        </th>
-
-        <th className="border p-3 w-40">
-          Regu
-        </th>
-
-        <th className="border p-3 w-32">
-          Status
-        </th>
-
-      </tr>
-
-    </thead>
-
-    <tbody>
-
-      {peserta.filter(p => p.jk === "Putra").length === 0 ? (
-
-        <tr>
-
-          <td
-            colSpan="5"
-            className="text-center p-5"
-          >
-            Belum ada peserta putra
-          </td>
-
-        </tr>
-
-      ) : (
-
-        peserta
-          .filter(p => p.jk === "Putra")
-          .map((item, index) => (
-
-            <tr key={index}>
-
-              <td className="border p-3 text-center">
-                {index + 1}
-              </td>
-
-              <td className="border p-3">
-                {item.nama}
-              </td>
-
-              <td className="border p-3 text-center">
-                {item.kelas}
-              </td>
-
-              <td className="border p-3 text-center">
-                {item.regu}
-              </td>
-
-              <td className="border p-3 text-center">
-                {item.status}
-              </td>
+              <th className="border p-3 w-48">
+                No. HP
+              </th>
 
             </tr>
 
-        ))
-
-      )}
-
-    </tbody>
-
-  </table>
-
-</div>
+          </thead>
 
 
+          <tbody>
 
-{/* ====================== */}
-{/* DATA PESERTA PUTRI */}
-{/* ====================== */}
+            {pembina.length === 0 ? (
 
-<div className="bg-white rounded-xl shadow p-6">
+              <tr>
 
-  <h2 className="text-xl font-bold text-pink-700 mb-4">
-    👧 Data Peserta Putri
-  </h2>
+                <td
+                  colSpan="5"
+                  className="text-center p-5"
+                >
 
-  <table className="w-full border">
+                  Belum ada data pembina
 
-    <thead className="bg-pink-600 text-white">
+                </td>
 
-      <tr>
+              </tr>
 
-        <th className="border p-3 w-16">
-          No
-        </th>
+            ) : (
 
-        <th className="border p-3">
-          Nama Peserta
-        </th>
+              pembina.map(
+                (item, index) => (
 
-        <th className="border p-3 w-24">
-          Kelas
-        </th>
+                  <tr key={item.id || index}>
 
-        <th className="border p-3 w-40">
-          Regu
-        </th>
+                    <td className="border p-3 text-center">
+                      {index + 1}
+                    </td>
 
-        <th className="border p-3 w-32">
-          Status
-        </th>
+                    <td className="border p-3">
+                      {item.nama || "-"}
+                    </td>
 
-      </tr>
+                    <td className="border p-3 text-center">
+                      {item.jk || "-"}
+                    </td>
 
-    </thead>
+                    <td className="border p-3">
+                      {item.jabatan || "-"}
+                    </td>
 
-    <tbody>
+                    <td className="border p-3">
+                      {item.hp || "-"}
+                    </td>
 
-      {peserta.filter(item => item.jk === "Putri").length === 0 ? (
+                  </tr>
 
-        <tr>
+                )
+              )
 
-          <td
-            colSpan="5"
-            className="text-center p-5"
-          >
-            Belum ada peserta putri
-          </td>
+            )}
 
-        </tr>
+          </tbody>
 
-      ) : (
+        </table>
 
-        peserta
-          .filter(item => item.jk === "Putri")
-          .map((item, index) => (
+      </div>
 
-            <tr key={index}>
 
-              <td className="border p-3 text-center">
-                {index + 1}
-              </td>
 
-              <td className="border p-3">
-                {item.nama}
-              </td>
+      {/* ===================================== */}
+      {/* DATA REGU */}
+      {/* ===================================== */}
 
-              <td className="border p-3 text-center">
-                {item.kelas}
-              </td>
+      <div className="bg-white rounded-xl shadow p-6">
 
-              <td className="border p-3 text-center">
-                {item.regu}
-              </td>
+        <h2 className="text-xl font-bold text-orange-700 mb-4">
 
-              <td className="border p-3 text-center">
-                {item.status}
-              </td>
+          🏕 Data Regu
+
+        </h2>
+
+
+        <table className="w-full border">
+
+          <thead className="bg-orange-600 text-white">
+
+            <tr>
+
+              <th className="border p-3 w-16">
+                No
+              </th>
+
+              <th className="border p-3">
+                Nama Regu
+              </th>
+
+              <th className="border p-3 w-40">
+                Jenis
+              </th>
+
+              <th className="border p-3 w-48">
+                Jumlah Anggota
+              </th>
 
             </tr>
 
-          ))
-
-      )}
-
-    </tbody>
-
-  </table>
-
-</div>
-<div className="mb-5">
-
-  <label className="font-semibold block mb-2">
-    Catatan Admin
-  </label>
-
-  <textarea
-    rows={4}
-    value={catatanAdmin}
-    onChange={(e) =>
-      setCatatanAdmin(e.target.value)
-    }
-    placeholder="Tuliskan catatan untuk operator..."
-    className="w-full border rounded-lg p-3"
-  />
-
-</div>
-
-{/* ====================== */}
-{/* STATUS VERIFIKASI */}
-{/* ====================== */}
-
-<div className="bg-white rounded-xl shadow p-6 mb-6">
-
-<h2 className="text-xl font-bold text-green-700 mb-5">
-STATUS VERIFIKASI PENDAFTARAN
-</h2>
+          </thead>
 
 
-<p className="mb-3">
-Nama Gudep :
+          <tbody>
 
-<span className="font-semibold ml-2">
-{pendaftaran?.nama_gudep || "-"}
-</span>
+            {regu.length === 0 ? (
 
-</p>
+              <tr>
 
+                <td
+                  colSpan="4"
+                  className="text-center p-5"
+                >
 
-<p className="mb-3">
-Tanggal Verifikasi :
+                  Belum ada data regu
 
-<span className="font-semibold ml-2">
+                </td>
 
-{
-pendaftaran?.tanggal_verifikasi
-?
-new Date(
-pendaftaran.tanggal_verifikasi
-)
-.toLocaleDateString("id-ID")
-:
-"-"
-}
+              </tr>
 
-</span>
+            ) : (
 
-</p>
+              regu.map(
+                (item, index) => {
+
+                  const jumlahAnggota =
+                    peserta.filter(
+                      p =>
+                        p.regu === item.nama
+                    ).length;
 
 
-<p className="mb-3">
-Status :
+                  return (
 
-<span className="font-semibold ml-2">
+                    <tr
+                      key={item.id || index}
+                    >
 
-{
-pendaftaran?.status 
-||
-"Menunggu Verifikasi"
-}
+                      <td className="border p-3 text-center">
+                        {index + 1}
+                      </td>
 
-</span>
+                      <td className="border p-3">
+                        {item.nama || "-"}
+                      </td>
 
-</p>
+                      <td className="border p-3 text-center">
+                        {item.jenis || "-"}
+                      </td>
+
+                      <td className="border p-3 text-center">
+                        {jumlahAnggota}
+                      </td>
+
+                    </tr>
+
+                  );
+
+                }
+
+              )
+
+            )}
+
+          </tbody>
+
+        </table>
+
+      </div>
 
 
-<p>
-Catatan Panitia :
 
-<span className="font-semibold ml-2">
+      {/* ===================================== */}
+      {/* PESERTA PUTRA */}
+      {/* ===================================== */}
 
-{
-pendaftaran?.catatan_admin
-||
-"Belum ada catatan."
-}
+      <div className="bg-white rounded-xl shadow p-6">
 
-</span>
+        <h2 className="text-xl font-bold text-blue-700 mb-4">
 
-</p>
+          👦 Data Peserta Putra
+
+        </h2>
 
 
-</div>
+        <table className="w-full border">
+
+          <thead className="bg-blue-600 text-white">
+
+            <tr>
+
+              <th className="border p-3 w-16">
+                No
+              </th>
+
+              <th className="border p-3">
+                Nama Peserta
+              </th>
+
+              <th className="border p-3 w-24">
+                Kelas
+              </th>
+
+              <th className="border p-3 w-40">
+                Regu
+              </th>
+
+              <th className="border p-3 w-32">
+                Status
+              </th>
+
+            </tr>
+
+          </thead>
 
 
-{/* ====================== */}
-{/* VERIFIKASI ADMIN */}
-{/* ====================== */}
+          <tbody>
 
-<div className="bg-white rounded-xl shadow p-6">
+            {pesertaPutra.length === 0 ? (
 
-  <h2 className="text-xl font-bold text-red-700 mb-5">
-    ✅ Verifikasi Pendaftaran
-  </h2>
+              <tr>
 
-  <div className="flex gap-4 flex-wrap">
+                <td
+                  colSpan="5"
+                  className="text-center p-5"
+                >
 
-    <button
-  onClick={() => updateStatus("Terverifikasi")}
-  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold"
->
-  ✅ Setujui
-</button>
+                  Belum ada peserta putra
 
-   <button
-  onClick={() => updateStatus("Perlu Perbaikan")}
-  className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-lg font-semibold"
->
-  🔄 Minta Perbaikan
-</button>
+                </td>
 
-    <button
-  onClick={() => updateStatus("Ditolak")}
-  className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold"
->
-  ❌ Tolak
-</button>
+              </tr>
 
-  </div>
+            ) : (
 
-</div>
+              pesertaPutra.map(
+                (item, index) => (
+
+                  <tr
+                    key={item.id || index}
+                  >
+
+                    <td className="border p-3 text-center">
+                      {index + 1}
+                    </td>
+
+                    <td className="border p-3">
+                      {item.nama || "-"}
+                    </td>
+
+                    <td className="border p-3 text-center">
+                      {item.kelas || "-"}
+                    </td>
+
+                    <td className="border p-3 text-center">
+                      {item.regu || "-"}
+                    </td>
+
+                    <td className="border p-3 text-center">
+                      {item.status || "-"}
+                    </td>
+
+                  </tr>
+
+                )
+              )
+
+            )}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+
+      {/* ===================================== */}
+      {/* PESERTA PUTRI */}
+      {/* ===================================== */}
+
+      <div className="bg-white rounded-xl shadow p-6">
+
+        <h2 className="text-xl font-bold text-pink-700 mb-4">
+
+          👧 Data Peserta Putri
+
+        </h2>
+
+
+        <table className="w-full border">
+
+          <thead className="bg-pink-600 text-white">
+
+            <tr>
+
+              <th className="border p-3 w-16">
+                No
+              </th>
+
+              <th className="border p-3">
+                Nama Peserta
+              </th>
+
+              <th className="border p-3 w-24">
+                Kelas
+              </th>
+
+              <th className="border p-3 w-40">
+                Regu
+              </th>
+
+              <th className="border p-3 w-32">
+                Status
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            {pesertaPutri.length === 0 ? (
+
+              <tr>
+
+                <td
+                  colSpan="5"
+                  className="text-center p-5"
+                >
+
+                  Belum ada peserta putri
+
+                </td>
+
+              </tr>
+
+            ) : (
+
+              pesertaPutri.map(
+                (item, index) => (
+
+                  <tr
+                    key={item.id || index}
+                  >
+
+                    <td className="border p-3 text-center">
+                      {index + 1}
+                    </td>
+
+                    <td className="border p-3">
+                      {item.nama || "-"}
+                    </td>
+
+                    <td className="border p-3 text-center">
+                      {item.kelas || "-"}
+                    </td>
+
+                    <td className="border p-3 text-center">
+                      {item.regu || "-"}
+                    </td>
+
+                    <td className="border p-3 text-center">
+                      {item.status || "-"}
+                    </td>
+
+                  </tr>
+
+                )
+              )
+
+            )}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+
+      {/* ===================================== */}
+      {/* CATATAN ADMIN */}
+      {/* ===================================== */}
+
+      <div className="bg-white rounded-xl shadow p-6">
+
+        <label className="font-semibold block mb-2">
+
+          Catatan Admin
+
+        </label>
+
+
+        <textarea
+
+          rows={4}
+
+          value={catatanAdmin}
+
+          onChange={
+            e =>
+              setCatatanAdmin(
+                e.target.value
+              )
+          }
+
+          placeholder="Tuliskan catatan untuk operator..."
+
+          className="w-full border rounded-lg p-3"
+
+        />
+
+      </div>
+
+
+
+      {/* ===================================== */}
+      {/* STATUS PENDAFTARAN */}
+      {/* ===================================== */}
+
+      <div className="bg-white rounded-xl shadow p-6">
+
+        <h2 className="text-xl font-bold text-green-700 mb-5">
+
+          STATUS VERIFIKASI PENDAFTARAN
+
+        </h2>
+
+
+        <p className="mb-3">
+
+          Nama Gudep :
+
+          <span className="font-semibold ml-2">
+
+            {profil.nama_pangkalan || "-"}
+
+          </span>
+
+        </p>
+
+
+        <p className="mb-3">
+
+          Tanggal Verifikasi :
+
+          <span className="font-semibold ml-2">
+
+            {pendaftaran?.tanggal_verifikasi
+
+              ? new Date(
+                  pendaftaran.tanggal_verifikasi
+                ).toLocaleDateString(
+                  "id-ID"
+                )
+
+              : "-"
+
+            }
+
+          </span>
+
+        </p>
+
+
+        <p className="mb-3">
+
+          Status :
+
+          <span className="font-semibold ml-2">
+
+            {pendaftaran?.status ||
+              "Menunggu Verifikasi"}
+
+          </span>
+
+        </p>
+
+
+        <p>
+
+          Catatan Panitia :
+
+          <span className="font-semibold ml-2">
+
+            {pendaftaran?.catatan_admin ||
+              "Belum ada catatan."}
+
+          </span>
+
+        </p>
+
+      </div>
+
+
+
+      {/* ===================================== */}
+      {/* TOMBOL VERIFIKASI */}
+      {/* ===================================== */}
+
+      <div className="bg-white rounded-xl shadow p-6">
+
+        <h2 className="text-xl font-bold text-red-700 mb-5">
+
+          ✅ Verifikasi Pendaftaran
+
+        </h2>
+
+
+        <div className="flex gap-4 flex-wrap">
+
+
+          <button
+
+            disabled={saving}
+
+            onClick={() =>
+              updateStatus(
+                "Terverifikasi"
+              )
+            }
+
+            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold"
+
+          >
+
+            ✅ Setujui
+
+          </button>
+
+
+          <button
+
+            disabled={saving}
+
+            onClick={() =>
+              updateStatus(
+                "Perlu Perbaikan"
+              )
+            }
+
+            className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold"
+
+          >
+
+            🔄 Minta Perbaikan
+
+          </button>
+
+
+          <button
+
+            disabled={saving}
+
+            onClick={() =>
+              updateStatus(
+                "Ditolak"
+              )
+            }
+
+            className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold"
+
+          >
+
+            ❌ Tolak
+
+          </button>
+
+
+        </div>
+
+
+        {saving && (
+
+          <p className="mt-4 text-gray-500">
+
+            Menyimpan perubahan...
+
+          </p>
+
+        )}
+
+      </div>
+
+
     </div>
 
   );
