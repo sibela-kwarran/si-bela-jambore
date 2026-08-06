@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-
 import {
- getKaplingByGudep
+  getKaplingByGudep
 } from "../../services/kaplingService";
 
 
@@ -18,301 +17,598 @@ export default function KartuKapling() {
   const [loading, setLoading] = useState(true);
 
 
-  console.log("GUDDEP KAPLING :", id);
+  // ==========================================
+  // LOAD DATA KAPLING
+  // ==========================================
+
+  useEffect(() => {
+
+    loadKapling();
+
+  }, [id]);
 
 
-  useEffect(()=>{
+  async function loadKapling() {
 
-loadKapling();
+    try {
 
-},[]);
-
-
-
-async function loadKapling(){
-
-try{
-
-const hasil = await getKaplingByGudep(id);
+      console.log(
+        "GUDDEP KAPLING :",
+        id
+      );
 
 
-console.log(
-"DATA KARTU KAPLING :",
-hasil
-);
+      const hasil =
+        await getKaplingByGudep(id);
 
 
-setData(hasil);
+      console.log(
+        "DATA KARTU KAPLING :",
+        hasil
+      );
 
 
-}catch(error){
-
-console.error(error);
-
-}
-
-finally{
-
-setLoading(false);
-
-}
+      setData(hasil);
 
 
+    } catch (error) {
+
+      console.error(
+        "GAGAL LOAD KARTU KAPLING:",
+        error
+      );
+
+      setData(null);
 
 
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  }
+
+
+  // ==========================================
+  // LOADING
+  // ==========================================
+
+  if (loading) {
+
+    return (
+
+      <div className="p-6 md:p-10 text-center">
+
+        <p className="text-gray-500 text-sm md:text-xl">
+          Memuat kartu kapling...
+        </p>
+
+      </div>
+
+    );
+
+  }
+
+
+  // ==========================================
+  // DATA TIDAK DITEMUKAN
+  // ==========================================
+
+  if (!data) {
+
+    return (
+
+      <div className="min-h-screen bg-gray-100 py-6 md:py-10 px-4">
+
+        <div className="max-w-3xl mx-auto">
+
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-10 text-center">
+
+            <h2 className="text-xl md:text-2xl font-bold text-red-600">
+
+              Data Kapling Tidak Ditemukan
+
+            </h2>
+
+
+            <p className="mt-3 text-sm md:text-base text-gray-600">
+
+              Data kartu kapling untuk Gudep ini belum tersedia.
+
+            </p>
+
+
+            <button
+              onClick={() =>
+                navigate("/operator/status")
+              }
+              className="mt-6 bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-bold"
+            >
+
+              ⬅ Kembali
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    );
+
+  }
+
+
+  // ==========================================
+  // KAPLING BELUM DIBUAT
+  // ==========================================
+
+  if (!data.kapling_putra) {
+
+    return (
+
+      <div className="min-h-screen bg-gray-100 py-6 md:py-10 px-4">
+
+        <div className="max-w-3xl mx-auto">
+
+
+          <div className="text-center mb-6 md:mb-8">
+
+            <h2 className="text-xs md:text-sm tracking-[4px] uppercase text-gray-500">
+
+              Jambore Ranting
+
+            </h2>
+
+
+            <h1 className="text-3xl md:text-4xl font-extrabold text-green-700 mt-2">
+
+              KARTU KAPLING
+
+            </h1>
+
+
+            <p className="text-sm md:text-base text-gray-500 mt-2">
+
+              Kwarran Cikarang Utara
+
+            </p>
+
+          </div>
+
+
+          <div className="bg-yellow-100 border border-yellow-300 rounded-xl p-6 md:p-8 text-center">
+
+            <h2 className="text-xl md:text-2xl font-bold text-yellow-700">
+
+              Kapling Belum Dibuat
+
+            </h2>
+
+
+            <p className="mt-3 text-sm md:text-base text-gray-700">
+
+              Silakan menunggu panitia melakukan Generate Kapling.
+
+            </p>
+
+          </div>
+
+
+          <div className="flex justify-center mt-6 md:mt-8 no-print">
+
+            <button
+              onClick={() =>
+                navigate("/operator/status")
+              }
+              className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-xl shadow font-bold"
+            >
+
+              ⬅ Kembali
+
+            </button>
+
+          </div>
+
+
+        </div>
+
+      </div>
+
+    );
+
+  }
+
+
+  // ==========================================
+  // KARTU KAPLING
+  // ==========================================
 
   return (
 
-    <div className="p-10 text-center text-xl">
-      Memuat kartu kapling...
-    </div>
+    <div className="min-h-screen bg-gray-100 py-5 md:py-10 px-3 md:px-4">
 
-  );
-
-}
-  return (
-
-    <div className="min-h-screen bg-gray-100 py-10 px-4">
 
       <div className="max-w-5xl mx-auto">
 
-        {/* ================= HEADER ================= */}
 
-        <div className="text-center mb-8">
+        {/* =====================================
+            JUDUL HALAMAN
+        ===================================== */}
 
-          <h2 className="text-sm tracking-[5px] uppercase text-gray-500">
+        <div className="text-center mb-5 md:mb-8">
+
+          <h2 className="text-xs md:text-sm tracking-[3px] md:tracking-[5px] uppercase text-gray-500">
+
             Jambore Ranting
+
           </h2>
 
-          <h1 className="text-4xl font-extrabold text-green-700 mt-2">
+
+          <h1 className="text-2xl md:text-4xl font-extrabold text-green-700 mt-2">
+
             KARTU KAPLING
+
           </h1>
 
-          <p className="text-gray-500 mt-2">
+
+          <p className="text-xs md:text-base text-gray-500 mt-1 md:mt-2">
+
             Kwarran Cikarang Utara
+
           </p>
 
         </div>
 
-        {/* ================= CEK KAPLING ================= */}
 
-        {
-!data?.kapling_putra ? (
+        {/* =====================================
+            KARTU
+        ===================================== */}
 
-<div className="bg-yellow-100 border border-yellow-300 rounded-xl p-8 text-center">
+        <div
+          id="print-area"
+          className="
+            bg-white
+            border-2
+            md:border-4
+            border-green-700
+            rounded-xl
+            md:rounded-2xl
+            shadow-xl
+            overflow-hidden
+            w-full
+            mx-auto
+          "
+        >
 
-<h2 className="text-2xl font-bold text-yellow-700">
-Kapling Belum Dibuat
-</h2>
 
-<p>
-Silakan menunggu panitia melakukan Generate Kapling.
-</p>
+          {/* ===================================
+              HEADER KARTU
+          =================================== */}
 
-</div>
+          <div className="bg-green-700 text-white text-center py-4 md:py-5 px-3">
 
-) : (
+            <h1 className="text-xl md:text-3xl font-extrabold">
 
-          <>
-        
-          {/* ================= KARTU ================= */}
+              JAMBORE RANTING
 
-<div
-  id="print-area"
-  className="bg-white border-4 border-green-700 rounded-2xl shadow-xl overflow-hidden max-w-6xl mx-auto"
->
+            </h1>
 
-  {/* HEADER KARTU */}
 
-  <div className="bg-green-700 text-white text-center py-5">
+            <h2 className="text-sm md:text-xl mt-1">
 
-    <h1 className="text-3xl font-extrabold">
-      JAMBORE RANTING
-    </h1>
+              KWARRAN CIKARANG UTARA
 
-    <h2 className="text-xl mt-1">
-      KWARRAN CIKARANG UTARA
-    </h2>
+            </h2>
 
-    <p className="mt-1 text-sm tracking-wider">
-      KARTU KAPLING PERKEMAHAN
-    </p>
 
-  </div>
+            <p className="mt-1 text-[10px] md:text-sm tracking-wider">
 
-  {/* NAMA GUDEP */}
+              KARTU KAPLING PERKEMAHAN
 
-  <div className="bg-green-50 py-3 border-b">
+            </p>
 
-    <h2 className="text-center text-2xl font-bold text-green-700">
+          </div>
 
-      {
-data?.profil_gudep?.nama_pangkalan
-}
 
-    </h2>
+          {/* ===================================
+              NAMA GUDEP
+          =================================== */}
 
-  </div>
+          <div className="bg-green-50 py-3 px-3 border-b">
 
-  {/* ISI */}
+            <h2 className="text-center text-lg md:text-2xl font-bold text-green-700 break-words">
 
-  <div className="grid grid-cols-2 gap-4 p-5">
-    {/* ================= BLOK PUTRA ================= */}
+              {data?.profil_gudep?.nama_pangkalan || "-"}
 
-<div className="bg-green-50 border-2 border-green-600 rounded-xl p-4">
+            </h2>
 
-  <h3 className="text-center text-2xl font-bold text-green-700 mb-6">
-    🏕 BLOK PUTRA
-  </h3>
+          </div>
 
-  <div className="space-y-4">
 
-    <div>
+          {/* ===================================
+              ISI KARTU
+          =================================== */}
 
-      <p className="text-gray-500 text-sm">
-        Kecamatan
-      </p>
+          <div
+            className="
+              grid
+              grid-cols-1
+              md:grid-cols-2
+              gap-3
+              md:gap-4
+              p-3
+              md:p-5
+            "
+          >
 
-      <p className="font-bold text-lg">
-        {data?.kecamatan_putra || "-"}
-      </p>
 
-    </div>
+            {/* =================================
+                BLOK PUTRA
+            ================================= */}
 
-    <div>
+            <div className="bg-green-50 border-2 border-green-600 rounded-xl p-3 md:p-4">
 
-      <p className="text-gray-500 text-sm">
-        Kelurahan
-      </p>
+              <h3 className="text-center text-lg md:text-2xl font-bold text-green-700 mb-4 md:mb-6">
 
-      <p className="font-bold text-lg">
-        {data?.kelurahan_putra || "-"}
-      </p>
+                🏕 BLOK PUTRA
 
-    </div>
+              </h3>
 
-  </div>
 
-  <div className="mt-4 text-center">
+              <div className="space-y-3 md:space-y-4">
 
-    <p className="text-gray-500">
-      NOMOR KAPLING
-    </p>
 
-    <div className="text-5xl font-extrabold text-green-700 mt-1">
-      {data?.kapling_putra || "-"}
-    </div>
+                <div>
 
-  </div>
+                  <p className="text-gray-500 text-xs md:text-sm">
 
-</div>
+                    Kecamatan
 
-{/* ================= BLOK PUTRI ================= */}
+                  </p>
 
-<div className="bg-pink-50 border-2 border-pink-500 rounded-xl p-4">
 
-  <h3 className="text-center text-2xl font-bold text-pink-600 mb-6">
-    🌸 BLOK PUTRI
-  </h3>
+                  <p className="font-bold text-sm md:text-lg break-words">
 
-  <div className="space-y-4">
+                    {data?.kecamatan_putra || "-"}
 
-    <div>
+                  </p>
 
-      <p className="text-gray-500 text-sm">
-        Kecamatan
-      </p>
+                </div>
 
-      <p className="font-bold text-lg">
-        {data?.kecamatan_putri || "-"}
-      </p>
 
-    </div>
+                <div>
 
-    <div>
+                  <p className="text-gray-500 text-xs md:text-sm">
 
-      <p className="text-gray-500 text-sm">
-        Kelurahan
-      </p>
+                    Kelurahan
 
-      <p className="font-bold text-lg">
-        {data?.kelurahan_putri || "-"}
-      </p>
+                  </p>
 
-    </div>
 
-  </div>
+                  <p className="font-bold text-sm md:text-lg break-words">
 
-  <div className="mt-8 text-center">
+                    {data?.kelurahan_putra || "-"}
 
-    <p className="text-gray-500">
-      NOMOR KAPLING
-    </p>
+                  </p>
 
-    <div className="text-5xl font-extrabold text-pink-600 mt-1">
-       {data?.kapling_putri || "-"}
-    </div>
+                </div>
 
-  </div>
 
-</div>
-    </div>
+              </div>
 
-  {/* ================= FOOTER ================= */}
 
-  <div className="bg-gray-100 border-t px-5 py-3">
+              <div className="mt-4 md:mt-6 text-center">
 
-    <div className="text-center">
+                <p className="text-gray-500 text-xs md:text-sm">
 
-      <p className="text-gray-600">
+                  NOMOR KAPLING
 
-        Pembina wajib membawa kartu ini sebagai bukti resmi
-        penempatan kapling saat registrasi ulang dan pendirian tenda.
+                </p>
 
-      </p>
 
-      <div className="mt-5">
+                <div className="text-4xl md:text-5xl font-extrabold text-green-700 mt-1">
 
-        <span className="inline-block bg-green-700 text-white px-6 py-2 rounded-full font-bold">
+                  {data?.kapling_putra || "-"}
 
-          JAMBORE RANTING KWARRAN CIKARANG UTARA
+                </div>
 
-        </span>
+              </div>
+
+
+            </div>
+
+
+            {/* =================================
+                BLOK PUTRI
+            ================================= */}
+
+            <div className="bg-pink-50 border-2 border-pink-500 rounded-xl p-3 md:p-4">
+
+              <h3 className="text-center text-lg md:text-2xl font-bold text-pink-600 mb-4 md:mb-6">
+
+                🌸 BLOK PUTRI
+
+              </h3>
+
+
+              <div className="space-y-3 md:space-y-4">
+
+
+                <div>
+
+                  <p className="text-gray-500 text-xs md:text-sm">
+
+                    Kecamatan
+
+                  </p>
+
+
+                  <p className="font-bold text-sm md:text-lg break-words">
+
+                    {data?.kecamatan_putri || "-"}
+
+                  </p>
+
+                </div>
+
+
+                <div>
+
+                  <p className="text-gray-500 text-xs md:text-sm">
+
+                    Kelurahan
+
+                  </p>
+
+
+                  <p className="font-bold text-sm md:text-lg break-words">
+
+                    {data?.kelurahan_putri || "-"}
+
+                  </p>
+
+                </div>
+
+
+              </div>
+
+
+              <div className="mt-4 md:mt-6 text-center">
+
+                <p className="text-gray-500 text-xs md:text-sm">
+
+                  NOMOR KAPLING
+
+                </p>
+
+
+                <div className="text-4xl md:text-5xl font-extrabold text-pink-600 mt-1">
+
+                  {data?.kapling_putri || "-"}
+
+                </div>
+
+              </div>
+
+
+            </div>
+
+
+          </div>
+
+
+          {/* ===================================
+              FOOTER
+          =================================== */}
+
+          <div className="bg-gray-100 border-t px-3 md:px-5 py-3 md:py-4">
+
+            <div className="text-center">
+
+              <p className="text-[10px] md:text-sm text-gray-600 leading-relaxed">
+
+                Pembina wajib membawa kartu ini sebagai bukti resmi
+                penempatan kapling saat registrasi ulang dan pendirian tenda.
+
+              </p>
+
+
+              <div className="mt-3 md:mt-5">
+
+                <span className="inline-block bg-green-700 text-white px-3 md:px-6 py-2 rounded-full font-bold text-[9px] md:text-sm">
+
+                  JAMBORE RANTING KWARRAN CIKARANG UTARA
+
+                </span>
+
+              </div>
+
+
+            </div>
+
+          </div>
+
+
+        </div>
+
+
+        {/* =====================================
+            TOMBOL
+        ===================================== */}
+
+        <div
+          className="
+            flex
+            flex-col
+            md:flex-row
+            justify-between
+            gap-3
+            mt-5
+            md:mt-8
+            no-print
+          "
+        >
+
+
+          <button
+            onClick={() =>
+              navigate("/operator/status")
+            }
+            className="
+              w-full
+              md:w-auto
+              bg-gray-600
+              hover:bg-gray-700
+              text-white
+              px-6
+              py-3
+              rounded-xl
+              shadow
+              font-bold
+              text-sm
+              md:text-base
+            "
+          >
+
+            ⬅ Kembali
+
+          </button>
+
+
+          <button
+            onClick={() => window.print()}
+            className="
+              w-full
+              md:w-auto
+              bg-green-700
+              hover:bg-green-800
+              text-white
+              px-6
+              py-3
+              rounded-xl
+              shadow
+              font-bold
+              text-sm
+              md:text-base
+            "
+          >
+
+            🖨 Print Out Kartu
+
+          </button>
+
+
+        </div>
+
 
       </div>
 
-    </div>
-
-  </div>
-
-</div>
-
-          </>
-
-        )}
-
-      </div>
-{/* TOMBOL */}
-
-<div className="flex justify-between mt-8 no-print">
-
-  <button
-    onClick={() => navigate("/operator/status")}
-    className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-xl shadow font-bold"
-  >
-    ⬅ Kembali
-  </button>
-
-  <button
-    onClick={() => window.print()}
-    className="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-xl shadow font-bold"
-  >
-    🖨 Print Out Kartu
-  </button>
-
-</div>
     </div>
 
   );
 
 }
+
