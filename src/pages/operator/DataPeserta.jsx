@@ -546,6 +546,9 @@ function editPeserta(item) {
               "4",
               "5",
               "6",
+              "VII",
+    "VIII",
+    "IX",
             ]}
           />
 
