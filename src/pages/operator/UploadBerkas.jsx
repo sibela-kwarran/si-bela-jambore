@@ -311,7 +311,7 @@ return (
 
 <div>
 
-<h1 className="text-3xl font-bold text-green-700">
+<h1 className="text-2xl sm:text-3xl font-bold text-green-700">
 Upload Berkas PDF
 </h1>
 
@@ -328,10 +328,10 @@ Upload dokumen persyaratan pendaftaran Jambore.
 {/* SURAT TUGAS */}
 
 
-<div className="bg-white rounded-xl shadow p-6">
+<div className="bg-white rounded-xl shadow p-4 sm:p-6">
 
 
-<h2 className="text-xl font-bold">
+<h2 className="text-lg sm:text-xl font-bold">
 1. Surat Tugas Mabigus
 </h2>
 
@@ -343,14 +343,14 @@ Download template, isi kemudian upload kembali.
 
 
 
-<div className="mt-5 flex gap-3">
+<div className="mt-5 flex flex-col sm:flex-row gap-2 sm:gap-3">
 
 
 <button
   onClick={() =>
     downloadTemplate("/template/Surat_Tugas_Mabigus.docx")
   }
-  className="bg-blue-600 text-white px-5 py-3 rounded-lg"
+  className="bg-blue-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg"
 >
   ⬇ Download Template
 </button>
@@ -360,22 +360,16 @@ Download template, isi kemudian upload kembali.
 
 
 <label
-
-className="bg-green-700 text-white px-5 py-3 rounded-lg cursor-pointer"
-
+  className="bg-green-700 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg cursor-pointer text-center"
 >
+  ⬆ Upload Berkas PDF
 
-⬆ Upload Berkas PDF
-
-
-<input
-  type="file"
-  accept=".pdf"
-  hidden
-  onChange={(e)=>uploadBerkas(e,"suratTugas")}
-/>
-
-
+  <input
+    type="file"
+    accept=".pdf"
+    hidden
+    onChange={(e) => uploadBerkas(e, "suratTugas")}
+  />
 </label>
 
 
@@ -383,15 +377,10 @@ className="bg-green-700 text-white px-5 py-3 rounded-lg cursor-pointer"
 
 
 <button
-
-onClick={()=>hapusBerkas("suratTugas")}
-
-className="bg-red-600 text-white px-5 py-3 rounded-lg"
-
+  onClick={() => hapusBerkas("suratTugas")}
+  className="bg-red-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg"
 >
-
-🗑 Hapus
-
+  🗑 Hapus
 </button>
 
 
@@ -428,7 +417,7 @@ berkas.suratTugas &&
 
 
 
-<div className="bg-white rounded-xl shadow p-6">
+<div className="bg-white rounded-xl shadow p-4 sm:p-6">
 
 
 <h2 className="text-xl font-bold">
@@ -449,7 +438,7 @@ Template akan mengikuti jumlah peserta yang telah didaftarkan.
 
 
 
-<div className="mt-5 flex gap-3">
+<div className="mt-5 flex flex-col sm:flex-row gap-2 sm:gap-3">
 
 
 
@@ -457,7 +446,7 @@ Template akan mengikuti jumlah peserta yang telah didaftarkan.
   onClick={() =>
     downloadTemplate("/template/Surat_Izin_Orang_Tua.docx")
   }
-  className="bg-blue-600 text-white px-5 py-3 rounded-lg"
+  className="bg-blue-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg"
 >
   ⬇ Download Template
 </button>
@@ -468,7 +457,7 @@ Template akan mengikuti jumlah peserta yang telah didaftarkan.
 
 <label
 
-className="bg-green-700 text-white px-5 py-3 rounded-lg cursor-pointer"
+className="bg-green-700 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg cursor-pointer"
 
 >
 
@@ -493,7 +482,7 @@ className="bg-green-700 text-white px-5 py-3 rounded-lg cursor-pointer"
 
 onClick={()=>hapusBerkas("suratIzin")}
 
-className="bg-red-600 text-white px-5 py-3 rounded-lg"
+className="bg-red-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg"
 
 >
 
@@ -535,15 +524,15 @@ berkas.suratIzin &&
 
 
 
-<div className="bg-white rounded-xl shadow p-6">
+<div className="bg-white rounded-xl shadow p-4 sm:p-6">
 
 
-<div className="flex justify-between">
+<div className="flex justify-between items-center gap-3">
 
 
 <div>
 
-<h2 className="text-xl font-bold">
+<h2 className="text-lg sm:text-xl font-bold">
 
 Progress Kelengkapan Berkas
 
@@ -561,7 +550,7 @@ Progress Kelengkapan Berkas
 
 
 
-<div className="text-3xl font-bold text-green-700">
+<div className="text-2xl sm:text-3xl font-bold text-green-700">
 
 {persen}%
 

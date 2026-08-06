@@ -480,7 +480,7 @@ function editPeserta(item) {
 
         </h2>
 
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
 
           <Input
             label="Nama Lengkap"
@@ -617,23 +617,22 @@ function editPeserta(item) {
 
     )}
 
-    <table className="w-full border">
+    <div className="w-full overflow-x-auto">
+  <table className="w-full min-w-[750px] border text-xs sm:text-sm">
 
       <thead className="bg-green-700 text-white">
+  <tr>
 
-        <tr>
+    <th className="p-2 sm:p-3">No</th>
+    <th className="p-2 sm:p-3">Nama Lengkap</th>
+    <th className="p-2 sm:p-3">JK</th>
+    <th className="p-2 sm:p-3">Kelas</th>
+    <th className="p-2 sm:p-3">Regu</th>
+    <th className="p-2 sm:p-3">Status</th>
+    <th className="p-2 sm:p-3">Aksi</th>
 
-          <th className="p-3">No</th>
-          <th className="p-3">Nama Lengkap</th>
-          <th className="p-3">JK</th>
-          <th className="p-3">Kelas</th>
-          <th className="p-3">Regu</th>
-          <th className="p-3">Status</th>
-          <th className="p-3">Aksi</th>
-
-        </tr>
-
-      </thead>
+  </tr>
+</thead>
 
       <tbody>
 
@@ -656,47 +655,49 @@ function editPeserta(item) {
 
             <tr key={index}>
 
-              <td className="border p-3">
-                {index + 1}
-              </td>
+              <td className="border p-2 sm:p-3 text-center">
+  {index + 1}
+</td>
 
-              <td className="border p-3">
-                {item.nama}
-              </td>
+<td className="border p-2 sm:p-3">
+  {item.nama}
+</td>
 
-              <td className="border p-3">
-                {item.jk}
-              </td>
+<td className="border p-2 sm:p-3 text-center">
+  {item.jk}
+</td>
 
-              <td className="border p-3">
-                {item.kelas}
-              </td>
+<td className="border p-2 sm:p-3 text-center">
+  {item.kelas}
+</td>
 
-              <td className="border p-3">
-                {item.regu}
-              </td>
+<td className="border p-2 sm:p-3">
+  {item.regu}
+</td>
 
-              <td className="border p-3">
-                {item.status}
-              </td>
+<td className="border p-2 sm:p-3 text-center">
+  {item.status}
+</td>
 
-              <td className="border p-3 space-x-2">
+<td className="border p-2 sm:p-3">
+  <div className="flex gap-1 sm:gap-2 justify-center">
 
-                <button
-  onClick={() => editPeserta(item)}
-  className="bg-blue-600 text-white px-3 py-1 rounded"
->
-  Edit
-</button>
+    <button
+      onClick={() => editPeserta(item)}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm"
+    >
+      Edit
+    </button>
 
-                <button
-  onClick={() => hapusPeserta(item)}
-  className="bg-red-600 text-white px-3 py-1 rounded"
->
-  Hapus
-</button>
+    <button
+      onClick={() => hapusPeserta(item)}
+      className="bg-red-600 hover:bg-red-700 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm"
+    >
+      Hapus
+    </button>
 
-              </td>
+  </div>
+</td>
 
             </tr>
 
@@ -709,7 +710,7 @@ function editPeserta(item) {
     </table>
 
   </div>
-
+ </div>
 </div>
   );
 

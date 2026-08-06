@@ -294,7 +294,7 @@ setDataPembina(hasil);
           className="mt-6 border rounded-xl p-6 bg-gray-50"
         >
 
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
 
             <div>
 
@@ -411,7 +411,8 @@ setDataPembina(hasil);
 
       )}
 
-      <table className="w-full mt-8 border">
+      <div className="mt-8 w-full overflow-x-auto">
+  <table className="w-full min-w-[650px] border text-xs sm:text-sm">
 
         <thead className="bg-green-700 text-white">
 
@@ -466,29 +467,28 @@ setDataPembina(hasil);
 
               <tr key={item.id}>
 
-                <td className="border p-3 text-center">
-                  {index + 1}
-                </td>
+               <td className="border p-2 sm:p-3 text-center">
+  {index + 1}
+</td>
 
-                <td className="border p-3">
-                  {item.nama}
-                </td>
+<td className="border p-2 sm:p-3">
+  {item.nama}
+</td>
 
-                <td className="border p-3 text-center">
-                  {item.jk}
-                </td>
+<td className="border p-2 sm:p-3 text-center">
+  {item.jk}
+</td>
 
-                <td className="border p-3">
-                  {item.jabatan}
-                </td>
+<td className="border p-2 sm:p-3">
+  {item.jabatan}
+</td>
 
-                <td className="border p-3">
-                  {item.hp}
-                </td>
+<td className="border p-2 sm:p-3">
+  {item.hp}
+</td>
 
-                <td className="border p-3">
-
-                  <div className="flex gap-2 justify-center">
+<td className="border p-2 sm:p-3">
+  <div className="flex gap-1 sm:gap-2 justify-center">
 
                     <button
                       onClick={() => editPembina(item)}
@@ -517,7 +517,7 @@ setDataPembina(hasil);
         </tbody>
 
       </table>
-
+</div>
     </div>
 
   </div>

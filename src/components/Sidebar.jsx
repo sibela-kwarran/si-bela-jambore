@@ -10,7 +10,6 @@ import {
   FaMoneyBillWave,
   FaClipboardCheck,
   FaSearch,
-  FaIdCard,
   FaSignOutAlt,
 } from "react-icons/fa";
 
@@ -18,107 +17,133 @@ const menuItems = [
   {
     title: "Dashboard",
     path: "/operator/dashboard",
-    icon: <FaTachometerAlt className="text-blue-400 text-xl" />,
+    icon: <FaTachometerAlt />,
   },
   {
     title: "Profil Gugus Depan",
     path: "/operator/profil",
-    icon: <FaSchool className="text-green-300 text-xl" />,
+    icon: <FaSchool />,
   },
   {
     title: "Data Pembina",
     path: "/operator/pembina",
-    icon: <FaUserTie className="text-purple-300 text-xl" />,
+    icon: <FaUserTie />,
   },
   {
     title: "Data Regu",
     path: "/operator/regu",
-    icon: <FaUsers className="text-orange-300 text-xl" />,
+    icon: <FaUsers />,
   },
   {
     title: "Data Peserta",
     path: "/operator/peserta",
-    icon: <FaUserGraduate className="text-cyan-300 text-xl" />,
+    icon: <FaUserGraduate />,
   },
   {
     title: "Upload Berkas",
     path: "/operator/upload",
-    icon: <FaFolderOpen className="text-yellow-300 text-xl" />,
+    icon: <FaFolderOpen />,
   },
   {
     title: "Pembayaran",
     path: "/operator/pembayaran",
-    icon: <FaMoneyBillWave className="text-lime-300 text-xl" />,
+    icon: <FaMoneyBillWave />,
   },
   {
     title: "Konfirmasi Data",
     path: "/operator/konfirmasi",
-    icon: <FaClipboardCheck className="text-emerald-300 text-xl" />,
+    icon: <FaClipboardCheck />,
   },
   {
     title: "Status Verifikasi",
     path: "/operator/status",
-    icon: <FaSearch className="text-red-300 text-xl" />,
+    icon: <FaSearch />,
   },
- 
 ];
 
 export default function Sidebar() {
 
-const navigate = useNavigate();
-const handleLogout = () => {
+  const navigate = useNavigate();
 
-  if (!window.confirm("Yakin ingin keluar dari SI BELA?")) {
-    return;
-  }
+  const handleLogout = () => {
 
-  localStorage.removeItem("loginUser");
-  localStorage.removeItem("loginRole");
+    if (!window.confirm("Yakin ingin keluar dari SI BELA?")) {
+      return;
+    }
 
-  navigate("/");
+    localStorage.removeItem("loginUser");
+    localStorage.removeItem("loginRole");
 
-};
+    navigate("/");
+  };
+
   return (
-    <aside className="w-72 bg-gradient-to-b from-green-800 to-green-600 text-white shadow-2xl flex flex-col">
 
-      {/* Logo */}
-      <div className="py-8 text-center border-b border-green-500">
+    <aside
+      className="
+        w-64
+        h-screen
+        bg-gradient-to-b from-green-800 to-green-600
+        text-white
+        shadow-2xl
+        flex
+        flex-col
+        shrink-0
+      "
+    >
+
+      {/* =========================
+          LOGO
+      ========================= */}
+
+      <div className="py-5 text-center border-b border-green-500">
 
         <div className="flex justify-center">
 
-  <img
-    src="/logo/sibela.png"
-    alt="Logo SI BELA"
-    className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover"
-  />
+          <img
+            src="/logo/sibela.png"
+            alt="Logo SI BELA"
+            className="
+              w-16
+              h-16
+              rounded-full
+              border-2
+              border-white
+              shadow-lg
+              object-cover
+            "
+          />
 
-</div>
+        </div>
 
-        <h1 className="mt-4 text-3xl font-bold">
+        <h1 className="mt-2 text-2xl font-bold">
           SI BELA
         </h1>
 
-        <p className="text-sm text-green-100">
+        <p className="text-xs text-green-100">
           Sistem Informasi Berkas
         </p>
 
-        <p className="text-sm text-green-100">
+        <p className="text-xs text-green-100">
           Pendaftaran & Administrasi
         </p>
 
       </div>
 
-      {/* Operator */}
 
-      <div className="p-5 border-b border-green-500">
+      {/* =========================
+          OPERATOR
+      ========================= */}
 
-        <div className="bg-green-700 rounded-xl p-3">
+      <div className="px-3 py-3 border-b border-green-500">
 
-          <p className="text-xs text-green-200">
+        <div className="bg-green-700 rounded-lg px-3 py-2">
+
+          <p className="text-[10px] text-green-200">
             Login Sebagai
           </p>
 
-          <h2 className="font-semibold text-lg">
+          <h2 className="font-semibold text-sm">
             Operator Gugus Depan
           </h2>
 
@@ -126,48 +151,85 @@ const handleLogout = () => {
 
       </div>
 
-      {/* Menu */}
 
-      <nav className="flex-1 py-4 overflow-y-auto">
+      {/* =========================
+          MENU
+      ========================= */}
 
-        {menuItems.map((menu) => (
+      <nav className="flex-1 py-2 overflow-y-auto">
 
-          <NavLink
-            key={menu.path}
-            to={menu.path}
-            className={({ isActive }) =>
-              `flex items-center gap-4 px-6 py-3 mx-3 rounded-xl transition-all duration-300 ${
-                isActive
-                  ? "bg-white text-green-700 shadow-lg font-semibold"
-                  : "hover:bg-green-700 hover:translate-x-1"
-              }`
-            }
-          >
-            {menu.icon}
-            <span>{menu.title}</span>
-          </NavLink>
+        <div className="space-y-1">
 
-        ))}
+          {menuItems.map((menu) => (
+
+            
+<NavLink
+  key={menu.path}
+  to={menu.path}
+  className={({ isActive }) =>
+    `flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg text-sm transition-all duration-200 ${
+      isActive
+        ? "bg-white !text-green-700 shadow-md font-semibold"
+        : "text-white hover:bg-green-700 hover:translate-x-1"
+    }`
+  }
+>
+
+
+
+              <span className="text-lg shrink-0">
+                {menu.icon}
+              </span>
+
+              <span className="truncate">
+                {menu.title}
+              </span>
+
+            </NavLink>
+
+          ))}
+
+        </div>
 
       </nav>
 
-      {/* Logout */}
 
-      <div className="p-4 border-t border-green-500">
+      {/* =========================
+          LOGOUT
+      ========================= */}
+
+      <div className="p-3 border-t border-green-500">
 
         <button
-  onClick={handleLogout}
-  className="flex items-center justify-center gap-3 w-full bg-red-500 hover:bg-red-600 rounded-xl py-3 font-semibold transition"
->
+          onClick={handleLogout}
+          className="
+            flex
+            items-center
+            justify-center
+            gap-2
+            w-full
+            bg-red-500
+            hover:bg-red-600
+            rounded-lg
+            py-2.5
+            text-sm
+            font-semibold
+            transition
+          "
+        >
 
-  <FaSignOutAlt />
+          <FaSignOutAlt />
 
-  Logout
+          Logout
 
-</button>
+        </button>
 
       </div>
 
     </aside>
+
   );
 }
+
+
+

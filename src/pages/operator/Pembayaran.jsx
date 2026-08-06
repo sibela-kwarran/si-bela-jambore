@@ -622,7 +622,7 @@ export default function Pembayaran() {
 
       <div>
 
-        <h1 className="text-3xl font-bold text-green-700">
+        <h1 className="text-2xl sm:text-3xl font-bold text-green-700">
 
           Pembayaran
 
@@ -641,7 +641,7 @@ export default function Pembayaran() {
       {/* INFORMASI PEMBAYARAN */}
       {/* ================================== */}
 
-      <div className="bg-white rounded-xl shadow p-6">
+      <div className="bg-white rounded-xl shadow p-4 sm:p-6">
 
         <h2 className="text-xl font-bold mb-6">
 
@@ -650,7 +650,7 @@ export default function Pembayaran() {
         </h2>
 
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
 
 
           <Info
@@ -731,9 +731,9 @@ export default function Pembayaran() {
         {/* RINCIAN PER REGU */}
         {/* ================================= */}
 
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-5">
+        <div className="mt-5 sm:mt-6 bg-blue-50 border border-blue-200 rounded-xl p-3 sm:p-5">
 
-          <h3 className="font-bold text-blue-800 text-lg mb-4">
+          <h3 className="font-bold text-blue-800 text-base sm:text-lg mb-4">
 
             📋 Rincian Peserta Per Regu
 
@@ -772,12 +772,9 @@ export default function Pembayaran() {
                   return (
 
                     <div
-                      key={
-                        regu.id ||
-                        index
-                      }
-                      className="flex justify-between items-center border-b pb-2"
-                    >
+  key={regu.id || index}
+  className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 border-b pb-2"
+>
 
                       <span>
 
@@ -823,7 +820,7 @@ export default function Pembayaran() {
         {/* RINCIAN PEMBAYARAN */}
         {/* ================================= */}
 
-        <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-5">
+        <div className="mt-5 sm:mt-6 bg-green-50 border border-green-200 rounded-xl p-3 sm:p-5">
 
           <h3 className="font-bold text-green-800 text-lg mb-3">
 
@@ -835,7 +832,7 @@ export default function Pembayaran() {
           <div className="space-y-2 text-gray-700">
 
 
-            <div className="flex justify-between">
+            <div className="flex justify-between items-start gap-3">
 
               <span>
                 Biaya {jumlahRegu} regu
@@ -853,7 +850,7 @@ export default function Pembayaran() {
             </div>
 
 
-            <div className="flex justify-between">
+            <div className="flex justify-between items-start gap-3">
 
               <span>
                 Kuota dasar
@@ -868,7 +865,7 @@ export default function Pembayaran() {
             </div>
 
 
-            <div className="flex justify-between">
+            <div className="flex justify-between items-start gap-3">
 
               <span>
                 Peserta terdaftar
@@ -883,7 +880,7 @@ export default function Pembayaran() {
             </div>
 
 
-            <div className="flex justify-between">
+            <div className="flex justify-between items-start gap-3">
 
               <span>
                 Peserta tambahan
@@ -899,7 +896,7 @@ export default function Pembayaran() {
             </div>
 
 
-            <div className="border-t border-green-200 pt-3 mt-3 flex justify-between">
+            <div className="border-t border-green-200 pt-3 mt-3 flex justify-between items-center gap-3">
 
               <span className="font-bold text-green-800">
 
@@ -907,7 +904,7 @@ export default function Pembayaran() {
 
               </span>
 
-              <span className="font-bold text-xl text-green-800">
+              <span className="font-bold text-lg sm:text-xl text-green-800 text-right break-words">
 
                 Rp{" "}
                 {totalBayar.toLocaleString(
@@ -929,9 +926,9 @@ export default function Pembayaran() {
       {/* UPLOAD BUKTI */}
       {/* ================================== */}
 
-      <div className="bg-white rounded-xl shadow p-6">
+      <div className="bg-white rounded-xl shadow p-4 sm:p-6">
 
-        <h2 className="text-xl font-bold mb-5">
+        <h2 className="text-lg sm:text-xl font-bold mb-5">
 
           Upload Bukti Transfer
 
@@ -948,7 +945,7 @@ export default function Pembayaran() {
           />
 
 
-          <span className="cursor-pointer bg-green-700 hover:bg-green-800 text-white px-5 py-3 rounded-lg inline-block">
+          <span className="cursor-pointer bg-green-700 hover:bg-green-800 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg inline-block text-sm sm:text-base">
 
             ⬆ Upload Bukti Transfer
 
@@ -993,12 +990,12 @@ export default function Pembayaran() {
             </p>
 
 
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
 
 
               <button
                 onClick={lihatBukti}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm sm:text-base"
               >
 
                 👁 Lihat
@@ -1008,7 +1005,7 @@ export default function Pembayaran() {
 
               <button
                 onClick={hapusBukti}
-                className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg"
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm sm:text-base"
               >
 
                 🗑 Hapus
@@ -1106,7 +1103,7 @@ export default function Pembayaran() {
                   <img
                     src={preview}
                     alt="Preview Bukti Pembayaran"
-                    className="max-w-lg rounded-lg border shadow"
+                    className="w-full max-w-lg rounded-lg border shadow"
                   />
 
                 )}
@@ -1155,18 +1152,14 @@ function Info({
 
   return (
 
-    <div className="border rounded-lg p-4">
+    <div className="border rounded-lg p-3 sm:p-4">
 
-      <p className="text-gray-500">
-
+      <p className="text-gray-500 text-sm">
         {title}
-
       </p>
 
-      <h3 className="text-xl font-bold text-green-700">
-
+      <h3 className="text-lg sm:text-xl font-bold text-green-700 break-words">
         {value}
-
       </h3>
 
     </div>
@@ -1174,3 +1167,5 @@ function Info({
   );
 
 }
+
+  

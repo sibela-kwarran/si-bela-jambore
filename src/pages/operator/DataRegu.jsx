@@ -202,7 +202,7 @@ async function loadData() {
             className="mt-6 border rounded-xl p-6 bg-gray-50"
           >
 
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
 
               <div>
 
@@ -306,18 +306,19 @@ placeholder="Contoh: 8"
         )}
 
       </div>
-<table className="w-full mt-8 border">
+<div className="mt-8 w-full overflow-x-auto">
+  <table className="w-full min-w-[600px] border text-xs sm:text-sm">
 
 <thead className="bg-green-700 text-white">
 
 <tr>
 
-<th className="p-3">No</th>
-<th className="p-3">Nama Regu</th>
-<th className="p-3">Golongan</th>
-<th className="p-3">Jenis</th>
-<th className="p-3">Jumlah Anggota</th>
-<th className="p-3">Aksi</th>
+<th className="p-2 sm:p-3">No</th>
+<th className="p-2 sm:p-3">Nama Regu</th>
+<th className="p-2 sm:p-3">Golongan</th>
+<th className="p-2 sm:p-3">Jenis</th>
+<th className="p-2 sm:p-3">Jumlah Anggota</th>
+<th className="p-2 sm:p-3">Aksi</th>
 
 </tr>
 
@@ -347,54 +348,44 @@ dataRegu.map((item,index)=>(
 
 <tr key={item.id}>
 
-<td className="border p-3">
-{index+1}
+<td className="border p-2 sm:p-3 text-center">
+  {index + 1}
 </td>
 
-<td className="border p-3">
-{item.nama}
+<td className="border p-2 sm:p-3">
+  {item.nama}
 </td>
 
-<td className="border p-3">
-{item.golongan}
+<td className="border p-2 sm:p-3">
+  {item.golongan}
 </td>
 
-<td className="border p-3">
-{item.jenis}
-</td>
-<td className="border p-3 text-center">
-{item.jumlah} Orang
+<td className="border p-2 sm:p-3">
+  {item.jenis}
 </td>
 
-<td className="border p-3 space-x-2">
+<td className="border p-2 sm:p-3 text-center">
+  {item.jumlah} Orang
+</td>
 
+<td className="border p-2 sm:p-3">
+  <div className="flex gap-1 sm:gap-2 justify-center">
 
-<button
+    <button
+      onClick={() => editRegu(item)}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm"
+    >
+      Edit
+    </button>
 
-onClick={() => editRegu(item)}
+    <button
+      onClick={() => hapusRegu(item)}
+      className="bg-red-600 hover:bg-red-700 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm"
+    >
+      Hapus
+    </button>
 
-className="bg-blue-600 text-white px-3 py-1 rounded"
-
->
-
-Edit
-
-</button>
-
-
-<button
-
-onClick={() => hapusRegu(item)}
-
-className="bg-red-600 text-white px-3 py-1 rounded"
-
->
-
-Hapus
-
-</button>
-
-
+  </div>
 </td>
 
 </tr>
@@ -406,6 +397,7 @@ Hapus
 </tbody>
 
 </table>
+    </div>
     </div>
   );
 }
