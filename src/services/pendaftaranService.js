@@ -104,6 +104,53 @@ export async function getPendaftaranByGudep(gudepId) {
 
 
 // ======================================================
+// TANDAI PENDAFTARAN SEBAGAI PERLU PERBAIKAN
+// Digunakan ketika operator ingin mengedit data
+// setelah pendaftaran pernah dikirim.
+// ======================================================
+export async function tandaiPerluPerbaikan(gudepId) {
+
+  console.log(
+    "MENANDAI PENDAFTARAN PERLU PERBAIKAN:",
+    gudepId
+  );
+
+  const { data, error } = await supabase
+    .from("pendaftaran")
+    .update({
+      status: "Perlu Perbaikan",
+    })
+    .eq("gudep_id", gudepId)
+    .select()
+    .maybeSingle();
+
+  if (error) {
+
+    console.error(
+      "ERROR TANDAI PERLU PERBAIKAN:",
+      error
+    );
+
+    throw error;
+  }
+
+  return data;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ======================================================
 // SEMUA PENDAFTARAN UNTUK ADMIN
 // ======================================================
 export async function getSemuaPendaftaran() {

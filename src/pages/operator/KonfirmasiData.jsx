@@ -7,11 +7,15 @@ import { getPeserta } from "../../services/pesertaService";
 import { getBerkas } from "../../services/berkasService";
 import { getPembayaran } from "../../services/pembayaranService";
 
+
 import {
   savePendaftaran,
   getPendaftaranByGudep,
   kirimUlangPendaftaran,
+  tandaiPerluPerbaikan,
 } from "../../services/pendaftaranService";
+
+
 
 export default function KonfirmasiData() {
 
@@ -160,6 +164,95 @@ console.log("Pembayaran :", dataPembayaran);
 
     }
   }
+
+
+// ======================================================
+// OPERATOR INGIN MENGEDIT DATA SETELAH PENDAFTARAN DIKIRIM
+// ======================================================
+async function editPendaftaran() {
+
+  if (!profil?.id) {
+
+    alert(
+      "ID Gudep tidak ditemukan."
+    );
+
+    return;
+  }
+
+  try {
+
+    const konfirmasi = window.confirm(
+      "Data pendaftaran sudah pernah dikirim.\n\n" +
+      "Jika Anda ingin mengubah data Pembina, Regu, Peserta, " +
+      "atau data lainnya, status pendaftaran akan diubah menjadi " +
+      "\"Perlu Perbaikan\" dan harus dikirim ulang setelah selesai diedit.\n\n" +
+      "Lanjutkan?"
+    );
+
+    if (!konfirmasi) return;
+
+
+    // ==========================================
+    // UPDATE STATUS DI SUPABASE
+    // ==========================================
+
+    await tandaiPerluPerbaikan(
+      profil.id
+    );
+
+
+    // ==========================================
+    // UPDATE STATE
+    // ==========================================
+
+    setSudahKirim({
+
+      sudahKirim: true,
+
+      status: "Perlu Perbaikan",
+
+      tanggalKirim:
+        sudahKirim.tanggalKirim || ""
+
+    });
+
+
+    // ==========================================
+    // RESET PERSETUJUAN
+    // ==========================================
+
+    setSetuju(false);
+
+
+    alert(
+      "✏️ Mode edit diaktifkan.\n\n" +
+      "Silakan lakukan perubahan data. " +
+      "Setelah selesai, kembali ke menu Konfirmasi Data " +
+      "dan kirim ulang pendaftaran."
+    );
+
+  } catch (error) {
+
+    console.error(
+      "GAGAL MENGAKTIFKAN EDIT:",
+      error
+    );
+
+    alert(
+      "Gagal mengaktifkan mode edit: " +
+      (
+        error?.message ||
+        "Terjadi kesalahan."
+      )
+    );
+
+  }
+
+}
+
+
+
 
   async function kirimPendaftaran() {
 
@@ -661,33 +754,139 @@ console.log("Pembayaran :", dataPembayaran);
 
       </div>
 
-      <button
+      
+<button
 
-        onClick={kirimPendaftaran}
+  onClick={
 
-        disabled={
-  !setuju ||
-  (
     sudahKirim.sudahKirim &&
     sudahKirim.status !== "Perlu Perbaikan"
-  )
-}
 
-        className={`w-full py-4 rounded-xl font-bold text-white ${
-          sudahKirim.sudahKirim
-            ? "bg-green-600"
-            : "bg-blue-600 hover:bg-blue-700"
-        }`}
+      ? async () => {
 
-      >
+          try {
 
-        {sudahKirim.status === "Perlu Perbaikan"
-  ? "🔄 KIRIM ULANG PENDAFTARAN"
-  : sudahKirim.sudahKirim
-    ? "✓ PENDAFTARAN SUDAH DIKIRIM"
-    : "🚀 KIRIM PENDAFTARAN"}
+            if (!profil?.id) {
 
-      </button>
+              alert(
+                "ID Gudep tidak ditemukan."
+              );
+
+              return;
+            }
+
+            const konfirmasi =
+              window.confirm(
+                "Pendaftaran sudah dikirim.\n\n" +
+                "Jika Anda ingin mengedit data, " +
+                "status pendaftaran akan diubah menjadi " +
+                "\"Perlu Perbaikan\" dan harus dikirim ulang " +
+                "setelah selesai diperbaiki.\n\n" +
+                "Lanjutkan?"
+              );
+
+            if (!konfirmasi) return;
+
+
+            // ==============================
+            // UBAH STATUS DI SUPABASE
+            // ==============================
+
+            await tandaiPerluPerbaikan(
+              profil.id
+            );
+
+
+            // ==============================
+            // UPDATE STATUS DI TAMPILAN
+            // ==============================
+
+            setSudahKirim({
+
+              sudahKirim: true,
+
+              status:
+                "Perlu Perbaikan",
+
+              tanggalKirim:
+                sudahKirim.tanggalKirim || ""
+
+            });
+
+
+            // Reset checkbox
+            setSetuju(false);
+
+
+            alert(
+              "✏️ Data siap diedit.\n\n" +
+              "Silakan lakukan perubahan data. " +
+              "Setelah selesai, kembali ke menu Konfirmasi Data " +
+              "untuk mengirim ulang."
+            );
+
+          } catch (error) {
+
+            console.error(
+              "GAGAL MENGAKTIFKAN EDIT:",
+              error
+            );
+
+            alert(
+              "Gagal mengaktifkan edit: " +
+              (
+                error?.message ||
+                "Terjadi kesalahan."
+              )
+            );
+
+          }
+
+        }
+
+      : kirimPendaftaran
+
+  }
+
+  disabled={
+    sudahKirim.status === "Perlu Perbaikan"
+      ? !setuju
+      : false
+  }
+
+  className={`w-full py-4 rounded-xl font-bold text-white ${
+    
+    sudahKirim.status === "Perlu Perbaikan"
+
+      ? !setuju
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-blue-600 hover:bg-blue-700"
+
+      : sudahKirim.sudahKirim
+
+        ? "bg-orange-500 hover:bg-orange-600"
+
+        : "bg-blue-600 hover:bg-blue-700"
+
+  }`}
+
+>
+
+  {sudahKirim.status === "Perlu Perbaikan"
+
+    ? "🔄 KIRIM ULANG PENDAFTARAN"
+
+    : sudahKirim.sudahKirim
+
+      ? "✏️ EDIT DATA PENDAFTARAN"
+
+      : "🚀 KIRIM PENDAFTARAN"
+
+  }
+
+</button>
+
+
 
     </div>
 
