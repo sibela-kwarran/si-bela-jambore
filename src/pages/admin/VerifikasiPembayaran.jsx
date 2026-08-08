@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 
 import {
-  getPeserta
-} from "../../services/pesertaService";
+  getSemuaPembayaran,
+  updatePembayaran
+} from "../../services/pembayaranService";
 
 import {
-  getSemuaPembayaran,
- updatePembayaran
-} from "../../services/pembayaranService";
+  getReguByGudep
+} from "../../services/reguService";
 
 export default function VerifikasiPembayaran() {
 const [dataPembayaran,setDataPembayaran] = useState([]);
+const [dataRegu,setDataRegu] = useState({});
+
 
 const [peserta,setPeserta] = useState([]);
 
@@ -88,37 +90,124 @@ async function loadData() {
 
     setDataPembayaran(data);
 
+
+    // ==========================================
+    // AMBIL DATA REGU MASING-MASING GUDEP
+    // ==========================================
+
+    const hasilRegu = {};
+
+    await Promise.all(
+
+      data.map(async (item) => {
+
+        const gudepId =
+          item.gudep_id ||
+          item.profil_gudep?.id;
+
+        if (!gudepId) return;
+
+        try {
+
+          const regu =
+            await getReguByGudep(gudepId);
+
+          hasilRegu[gudepId] = regu || [];
+
+        } catch (err) {
+
+          console.error(
+            "Gagal mengambil regu Gudep:",
+            gudepId,
+            err
+          );
+
+          hasilRegu[gudepId] = [];
+
+        }
+
+      })
+
+    );
+
+
+    setDataRegu(hasilRegu);
+
+
+    console.log(
+      "DATA REGU ADMIN:",
+      hasilRegu
+    );
+
   } catch(err) {
 
-    console.error(err);
+    console.error(
+      "Gagal mengambil data:",
+      err
+    );
 
   }
 
 }
 
-  const data = dataPembayaran.map((item) => ({
+  const data = dataPembayaran.map((item) => {
 
-  id: item.id,
+  // ==========================================
+  // ID GUDEP
+  // ==========================================
 
-  gudep:
-    item.profil_gudep?.nama_pangkalan || "-",
+  const gudepId =
+    item.gudep_id ||
+    item.profil_gudep?.id;
 
-  ketua:
-    item.profil_gudep?.nama_mabigus || "-",
 
-  peserta:
-    item.jumlah_peserta || 0,
+  // ==========================================
+  // AMBIL REGU GUDEP TERSEBUT
+  // ==========================================
 
-  total:
-    item.nominal || 0,
+  const reguGudep =
+    dataRegu[gudepId] || [];
 
-  status:
-    item.status || "Belum Bayar",
 
-  bukti:
-    item.bukti || null,
+  // ==========================================
+  // HITUNG TOTAL PESERTA
+  // ==========================================
 
-}));
+  const jumlahPeserta =
+    reguGudep.reduce(
+      (total, regu) =>
+        total + Number(regu.jumlah || 0),
+      0
+    );
+
+
+  return {
+
+    id: item.id,
+
+    gudepId: gudepId,
+
+    gudep:
+      item.profil_gudep?.nama_pangkalan || "-",
+
+    ketua:
+      item.profil_gudep?.nama_mabigus || "-",
+
+    peserta:
+      jumlahPeserta,
+
+    total:
+      item.nominal || 0,
+
+    status:
+      item.status || "Belum Bayar",
+
+    bukti:
+      item.bukti || null,
+
+  };
+
+});
 
 const hasil = data.filter((item) =>
   item.gudep
