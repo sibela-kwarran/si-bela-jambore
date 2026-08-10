@@ -100,33 +100,20 @@ setDataPembina(hasil);
 
     try {
 
-      const jumlahPutra = dataPembina.filter(
+      // ==========================================
+// MAKSIMAL 12 PEMBINA PER GUDEP
+// ==========================================
 
-        item => item.jk === "Putra"
+if (
+  editId === null &&
+  dataPembina.length >= 12
+) {
+  alert(
+    "Maksimal 12 pembina untuk setiap Gudep."
+  );
 
-      ).length;
-
-      const jumlahPutri = dataPembina.filter(
-
-        item => item.jk === "Putri"
-
-      ).length;
-
-      if (
-
-        editId === null &&
-
-        form.jk === "Putra" &&
-
-        jumlahPutra >= 3
-
-      ) {
-
-        alert("Maksimal 3 Pembina Putra");
-
-        return;
-
-      }
+  return;
+}
 
       if (
 
@@ -263,30 +250,77 @@ setDataPembina(hasil);
     <div className="bg-white rounded-xl shadow p-6">
 
       <button
-        onClick={() => {
+  disabled={dataPembina.length >= 12}
+  onClick={() => {
 
-          setEditId(null);
+    if (dataPembina.length >= 12) {
+      alert(
+        "Maksimal 12 pembina untuk setiap Gudep."
+      );
+      return;
+    }
 
-          setForm({
+    setEditId(null);
 
-            nama: "",
+    setForm({
+      nama: "",
+      jk: "Putra",
+      jabatan: "Pembina",
+      hp: "",
+    });
 
-            jk: "Putra",
+    setShowForm(true);
 
-            jabatan: "Pembina",
+  }}
+  className={`px-5 py-3 rounded-lg text-white ${
+    dataPembina.length >= 12
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-green-700 hover:bg-green-800"
+  }`}
+>
+  {dataPembina.length >= 12
+    ? "✓ Maksimal 12 Pembina"
+    : "+ Tambah Pembina"}
+</button>
+{/* ==========================================
+    JUMLAH PEMBINA
+========================================== */}
 
-            hp: "",
+<div className="mt-4">
 
-          });
+  <div className="flex justify-between items-center mb-2">
 
-          setShowForm(true);
+    <span className="font-semibold text-gray-700">
+      Jumlah Pembina
+    </span>
 
-        }}
-        className="bg-green-700 hover:bg-green-800 text-white px-5 py-3 rounded-lg"
-      >
-        + Tambah Pembina
-      </button>
+    <span
+      className={`font-bold ${
+        dataPembina.length >= 12
+          ? "text-red-600"
+          : "text-green-700"
+      }`}
+    >
+      {dataPembina.length} / 12
+    </span>
 
+  </div>
+
+  <div className="w-full bg-gray-200 rounded-full h-3">
+
+    <div
+      className="bg-green-600 h-3 rounded-full transition-all"
+      style={{
+        width: `${Math.min(
+          (dataPembina.length / 12) * 100,
+          100
+        )}%`
+      }}
+    />
+
+  </div>
+
+</div>
       {showForm && (
 
         <form
