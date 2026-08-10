@@ -80,7 +80,86 @@ loadData();
 
 },[]);
 
+async function ubahTanggalPembayaran() {
 
+  if (!selected) {
+    return;
+  }
+
+  const tanggal =
+    window.prompt(
+      "Masukkan tanggal pembayaran sesuai kwitansi (format YYYY-MM-DD):",
+      selected.tanggalPembayaran || ""
+    );
+
+  if (tanggal === null) {
+    return;
+  }
+
+  if (!tanggal) {
+    alert("Tanggal pembayaran harus diisi.");
+    return;
+  }
+
+  // Validasi format tanggal
+  const tanggalValid =
+    /^\d{4}-\d{2}-\d{2}$/.test(tanggal);
+
+  if (!tanggalValid) {
+    alert(
+      "Format tanggal salah.\nGunakan format YYYY-MM-DD.\nContoh: 2026-08-08"
+    );
+    return;
+  }
+
+  try {
+
+    await updatePembayaran(
+      selected.id,
+      {
+        tanggal_pembayaran: tanggal
+      }
+    );
+
+    // Update tampilan detail
+    setSelected(prev => ({
+      ...prev,
+      tanggalPembayaran: tanggal
+    }));
+
+    // Update data tabel
+    setDataPembayaran(prev =>
+      prev.map(item =>
+        item.id === selected.id
+          ? {
+              ...item,
+              tanggal_pembayaran: tanggal
+            }
+          : item
+      )
+    );
+
+    alert(
+      "Tanggal pembayaran berhasil disimpan."
+    );
+
+    // Reload agar urutan prioritas ikut diperbarui
+    await loadData();
+
+  } catch (err) {
+
+    console.error(
+      "GAGAL UPDATE TANGGAL PEMBAYARAN:",
+      err
+    );
+
+    alert(
+      "Gagal menyimpan tanggal pembayaran."
+    );
+
+  }
+
+}
 
 async function loadData() {
 
@@ -479,6 +558,15 @@ const hasil = data.filter((item) =>
       : "Belum diisi"
   }
 />
+<button
+  onClick={ubahTanggalPembayaran}
+  className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg"
+>
+  📅{" "}
+  {selected.tanggalPembayaran
+    ? "Edit Tanggal Pembayaran"
+    : "Isi Tanggal Pembayaran"}
+</button>
     <Info
       title="Total Bayar"
       value={`Rp ${selected.total.toLocaleString("id-ID")}`}
