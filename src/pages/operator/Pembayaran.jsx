@@ -31,19 +31,21 @@ export default function Pembayaran() {
   const [profil, setProfil] = useState({});
 
   const [pembayaran, setPembayaran] = useState({
-    bank: "BANK BJB",
-    rekening: "0148423563101",
-    atasNama: "KWARRAN CIKARANG UTARA",
+  bank: "BANK BJB",
+  rekening: "0148423563101",
+  atasNama: "KWARRAN CIKARANG UTARA",
 
-    biayaPerRegu: 750000,
+  biayaPerRegu: 750000,
 
-    bukti: null,
+  bukti: null,
 
-    status: "Belum Bayar",
+  status: "Belum Bayar",
 
-    tanggal: null,
-  });
+  tanggal: null,
 
+  // Tanggal yang tercantum pada kwitansi
+  tanggalPembayaran: "",
+});
 
   // ==========================================
   // KONSTANTA PEMBAYARAN
@@ -270,100 +272,119 @@ export default function Pembayaran() {
   // LOAD DATA PEMBAYARAN
   // ==========================================
 
-  async function loadDataPembayaran() {
+  
+async function loadDataPembayaran() {
 
-    try {
+  try {
 
-      const data =
-        await getPembayaran();
+    const data =
+      await getPembayaran();
 
-      console.log(
-        "DATA PEMBAYARAN:",
-        data
-      );
-
-
-      if (!data) {
-
-        return;
-
-      }
+    console.log(
+      "DATA PEMBAYARAN:",
+      data
+    );
 
 
-      setPembayaran({
+    if (!data) {
 
-        bank:
-          data.bank ||
-          "BANK BJB",
-
-        rekening:
-          data.rekening ||
-          "0148423563101",
-
-        atasNama:
-          data.atas_nama ||
-          "KWARRAN CIKARANG UTARA",
-
-        biayaPerRegu:
-          Number(
-            data.biaya_per_regu
-          ) ||
-          BIAYA_PER_REGU,
-
-        nominal:
-          Number(data.nominal) ||
-          0,
-
-        status:
-          data.status ||
-          "Belum Bayar",
-
-        tanggal:
-          data.tanggal ||
-          null,
-
-        bukti:
-          data.bukti
-            ? {
-
-                nama:
-                  "Bukti Pembayaran",
-
-                file:
-                  data.bukti,
-
-                tipe:
-                  data.bukti.startsWith(
-                    "data:application/pdf"
-                  )
-                    ? "application/pdf"
-                    : "image",
-
-                tanggal:
-                  data.tanggal
-                    ? new Date(
-                        data.tanggal
-                      ).toLocaleString(
-                        "id-ID"
-                      )
-                    : "",
-
-              }
-            : null,
-
-      });
-
-
-    } catch (err) {
-
-      console.error(
-        "ERROR LOAD PEMBAYARAN:",
-        err
-      );
+      return;
 
     }
 
+
+    setPembayaran({
+
+      bank:
+        data.bank ||
+        "BANK BJB",
+
+      rekening:
+        data.rekening ||
+        "0148423563101",
+
+      atasNama:
+        data.atas_nama ||
+        "KWARRAN CIKARANG UTARA",
+
+      biayaPerRegu:
+        Number(
+          data.biaya_per_regu
+        ) ||
+        BIAYA_PER_REGU,
+
+      nominal:
+        Number(
+          data.nominal
+        ) ||
+        0,
+
+      status:
+        data.status ||
+        "Belum Bayar",
+
+      // --------------------------------
+      // TANGGAL UPLOAD
+      // --------------------------------
+
+      tanggal:
+        data.tanggal ||
+        null,
+
+      // --------------------------------
+      // TANGGAL PEMBAYARAN KWITANSI
+      // --------------------------------
+
+      tanggalPembayaran:
+        data.tanggal_pembayaran ||
+        "",
+
+      // --------------------------------
+      // BUKTI PEMBAYARAN
+      // --------------------------------
+
+      bukti:
+        data.bukti
+          ? {
+
+              nama:
+                "Bukti Pembayaran",
+
+              file:
+                data.bukti,
+
+              tipe:
+                data.bukti.startsWith(
+                  "data:application/pdf"
+                )
+                  ? "application/pdf"
+                  : "image",
+
+              tanggal:
+                data.tanggal
+                  ? new Date(
+                      data.tanggal
+                    ).toLocaleString(
+                      "id-ID"
+                    )
+                  : "",
+
+            }
+          : null,
+
+    });
+
+
+  } catch (err) {
+
+    console.error(
+      "ERROR LOAD PEMBAYARAN:",
+      err
+    );
+
   }
+
+}
 
 
   // ==========================================
@@ -372,57 +393,199 @@ export default function Pembayaran() {
 
   async function uploadBukti(e) {
 
-    try {
+  try {
 
-      const file =
-        e.target.files?.[0];
-
-
-      if (!file) {
-
-        return;
-
-      }
+    const file =
+      e.target.files?.[0];
 
 
-      if (!profil?.id) {
+    if (!file) {
 
-        alert(
-          "Data profil Gudep belum ditemukan."
+      return;
+
+    }
+
+
+    // ==========================================
+    // CEK PROFIL GUDEP
+    // ==========================================
+
+    if (!profil?.id) {
+
+      alert(
+        "Data profil Gudep belum ditemukan."
+      );
+
+      e.target.value = "";
+
+      return;
+
+    }
+
+
+    // ==========================================
+    // CEK TANGGAL PEMBAYARAN
+    // ==========================================
+
+    if (
+      !pembayaran.tanggalPembayaran
+    ) {
+
+      alert(
+        "Silakan isi tanggal pembayaran sesuai tanggal yang tercantum pada kwitansi."
+      );
+
+      e.target.value = "";
+
+      return;
+
+    }
+
+
+    // ==========================================
+    // CEK FORMAT FILE
+    // ==========================================
+
+    const tipeDiizinkan = [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+    ];
+
+
+    if (
+      !tipeDiizinkan.includes(
+        file.type
+      )
+    ) {
+
+      alert(
+        "Bukti pembayaran harus berupa PDF, JPG, JPEG, atau PNG."
+      );
+
+      e.target.value = "";
+
+      return;
+
+    }
+
+
+    // ==========================================
+    // BACA FILE
+    // ==========================================
+
+    const reader =
+      new FileReader();
+
+
+    reader.onload = async () => {
+
+      try {
+
+        // ======================================
+        // DATA PEMBAYARAN
+        // ======================================
+
+        const dataBaru = {
+
+          gudep_id:
+            profil.id,
+
+          bank:
+            pembayaran.bank,
+
+          rekening:
+            pembayaran.rekening,
+
+          atas_nama:
+            pembayaran.atasNama,
+
+          nominal:
+            totalBayar,
+
+          bukti:
+            reader.result,
+
+          status:
+            "Menunggu Verifikasi",
+
+          // ------------------------------------
+          // TANGGAL UPLOAD SISTEM
+          // ------------------------------------
+
+          tanggal:
+            new Date(),
+
+          // ------------------------------------
+          // TANGGAL PEMBAYARAN SESUAI KWITANSI
+          // ------------------------------------
+
+          tanggal_pembayaran:
+            pembayaran.tanggalPembayaran,
+
+        };
+
+
+        console.log(
+          "DATA PEMBAYARAN AKAN DISIMPAN:",
+          dataBaru
         );
 
-        return;
 
-      }
+        // ======================================
+        // CEK DATA PEMBAYARAN LAMA
+        // ======================================
+
+        const lama =
+          await getPembayaran();
 
 
-      const reader =
-        new FileReader();
+        if (lama) {
+
+          await updatePembayaran(
+            lama.id,
+            dataBaru
+          );
+
+        } else {
+
+          await savePembayaran(
+            dataBaru
+          );
+
+        }
 
 
-      reader.onload = async () => {
+        // ======================================
+        // UPDATE STATE
+        // ======================================
 
-        try {
+        setPembayaran(
+          prev => ({
 
-          const dataBaru = {
-
-            gudep_id:
-              profil.id,
-
-            bank:
-              pembayaran.bank,
-
-            rekening:
-              pembayaran.rekening,
-
-            atas_nama:
-              pembayaran.atasNama,
+            ...prev,
 
             nominal:
               totalBayar,
 
-            bukti:
-              reader.result,
+            bukti: {
+
+              nama:
+                file.name,
+
+              tipe:
+                file.type,
+
+              file:
+                reader.result,
+
+              tanggal:
+                new Date()
+                  .toLocaleString(
+                    "id-ID"
+                  ),
+
+            },
 
             status:
               "Menunggu Verifikasi",
@@ -430,120 +593,73 @@ export default function Pembayaran() {
             tanggal:
               new Date(),
 
-          };
+            tanggalPembayaran:
+              pembayaran.tanggalPembayaran,
+
+          })
+        );
 
 
-          console.log(
-            "DATA PEMBAYARAN AKAN DISIMPAN:",
-            dataBaru
-          );
+        // ======================================
+        // LOAD ULANG DATA
+        // ======================================
+
+        await loadDataPembayaran();
 
 
-          const lama =
-            await getPembayaran();
+        alert(
+          "✅ Bukti pembayaran berhasil disimpan."
+        );
 
 
-          if (lama) {
+      } catch (err) {
 
-            await updatePembayaran(
-              lama.id,
-              dataBaru
-            );
-
-          } else {
-
-            await savePembayaran(
-              dataBaru
-            );
-
-          }
+        console.error(
+          "ERROR SIMPAN PEMBAYARAN:",
+          err
+        );
 
 
-          // ==================================
-          // UPDATE STATE
-          // ==================================
+        alert(
+          "❌ Gagal menyimpan pembayaran.\n\n" +
+          (
+            err?.message ||
+            "Terjadi kesalahan."
+          )
+        );
 
-          setPembayaran(
-            prev => ({
+      }
 
-              ...prev,
-
-              nominal:
-                totalBayar,
-
-              bukti: {
-
-                nama:
-                  file.name,
-
-                tipe:
-                  file.type,
-
-                file:
-                  reader.result,
-
-                tanggal:
-                  new Date()
-                    .toLocaleString(
-                      "id-ID"
-                    ),
-
-              },
-
-              status:
-                "Menunggu Verifikasi",
-
-              tanggal:
-                new Date(),
-
-            })
-          );
+    };
 
 
-          await loadDataPembayaran();
-
-
-          alert(
-            "Bukti pembayaran berhasil disimpan."
-          );
-
-
-        } catch (err) {
-
-          console.error(
-            "ERROR SIMPAN PEMBAYARAN:",
-            err
-          );
-
-
-          alert(
-            "Gagal menyimpan pembayaran."
-          );
-
-        }
-
-      };
-
-
-      reader.readAsDataURL(file);
-
-
-    } catch (err) {
-
-      console.error(
-        "ERROR UPLOAD BUKTI:",
-        err
-      );
-
+    reader.onerror = () => {
 
       alert(
-        "Gagal membaca file."
+        "❌ Gagal membaca file bukti pembayaran."
       );
 
-    }
+    };
+
+
+    reader.readAsDataURL(file);
+
+
+  } catch (err) {
+
+    console.error(
+      "ERROR UPLOAD BUKTI:",
+      err
+    );
+
+
+    alert(
+      "❌ Gagal membaca file."
+    );
 
   }
 
+}
 
   // ==========================================
   // HAPUS BUKTI
@@ -928,30 +1044,74 @@ export default function Pembayaran() {
 
       <div className="bg-white rounded-xl shadow p-4 sm:p-6">
 
-        <h2 className="text-lg sm:text-xl font-bold mb-5">
+  <h2 className="text-lg sm:text-xl font-bold mb-5">
 
-          Upload Bukti Transfer
+    Upload Bukti Transfer
 
-        </h2>
-
-
-        <label className="inline-block">
-
-          <input
-            type="file"
-            accept=".jpg,.jpeg,.png,.pdf"
-            onChange={uploadBukti}
-            className="hidden"
-          />
+  </h2>
 
 
-          <span className="cursor-pointer bg-green-700 hover:bg-green-800 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg inline-block text-sm sm:text-base">
+  {/* ================================== */}
+  {/* TANGGAL PEMBAYARAN */}
+  {/* ================================== */}
 
-            ⬆ Upload Bukti Transfer
+  <div className="mb-5">
 
-          </span>
+    <label className="block font-semibold text-gray-700 mb-2">
 
-        </label>
+      📅 Tanggal Pembayaran Sesuai Kwitansi
+
+    </label>
+
+
+    <input
+      type="date"
+      value={
+        pembayaran.tanggalPembayaran || ""
+      }
+      onChange={(e) =>
+        setPembayaran(prev => ({
+          ...prev,
+          tanggalPembayaran:
+            e.target.value,
+        }))
+      }
+      className="border border-gray-300 rounded-lg px-4 py-2.5 w-full sm:w-auto"
+    />
+
+
+    <p className="text-sm text-gray-500 mt-2">
+
+      Masukkan tanggal pembayaran yang tercantum
+      pada kwitansi/bukti pembayaran,
+      bukan tanggal upload berkas.
+
+    </p>
+
+  </div>
+
+
+  {/* ================================== */}
+  {/* TOMBOL UPLOAD */}
+  {/* ================================== */}
+
+  <label className="inline-block">
+
+    <input
+      type="file"
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={uploadBukti}
+      className="hidden"
+    />
+
+
+    <span className="cursor-pointer bg-green-700 hover:bg-green-800 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg inline-block text-sm sm:text-base">
+
+      ⬆ Upload Bukti Transfer
+
+    </span>
+
+  </label>
 
 
         {pembayaran.bukti && (
@@ -967,7 +1127,26 @@ export default function Pembayaran() {
 
             </p>
 
+<p>
 
+  <b>Tanggal Pembayaran :</b>{" "}
+
+  {pembayaran.tanggalPembayaran
+    ? new Date(
+        pembayaran.tanggalPembayaran +
+        "T00:00:00"
+      ).toLocaleDateString(
+        "id-ID",
+        {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        }
+      )
+    : "-"
+  }
+
+</p>
             <p>
 
               <b>Tanggal Upload :</b>{" "}

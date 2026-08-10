@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 
 import {
- uploadFile,
- getBerkas,
- saveBerkas,
- updateBerkas,
- deleteBerkas,
- deleteFile,
+  uploadFile,
+  getBerkas,
+  saveBerkas,
+  updateBerkas,
+  deleteBerkas,
+  deleteFile,
+  MAX_FILE_SIZE,
 } from "../../services/berkasService";
 
 import {
@@ -14,8 +15,9 @@ import {
 } from "../../services/profilGudepService";
 
 
-
-
+// ======================================================
+// DOWNLOAD TEMPLATE
+// ======================================================
 
 function downloadTemplate(file) {
 
@@ -23,16 +25,34 @@ function downloadTemplate(file) {
 
   link.href = file;
 
-  link.download = file.split("/").pop();
+  link.download = file
+    .split("/")
+    .pop();
 
   document.body.appendChild(link);
 
   link.click();
 
   document.body.removeChild(link);
-
 }
 
+
+// ======================================================
+// FORMAT UKURAN FILE
+// ======================================================
+
+function formatMB(bytes) {
+
+  return (
+    bytes /
+    (1024 * 1024)
+  ).toFixed(2);
+}
+
+
+// ======================================================
+// KOMPONEN
+// ======================================================
 
 export default function UploadBerkas() {
 
@@ -41,9 +61,16 @@ export default function UploadBerkas() {
     suratIzin: null,
   });
 
+  const [profil, setProfil] =
+    useState({});
 
-  const [profil, setProfil] = useState({});
+  const [loading, setLoading] =
+    useState(false);
 
+
+  // ====================================================
+  // LOAD DATA
+  // ====================================================
 
   useEffect(() => {
 
@@ -52,174 +79,321 @@ export default function UploadBerkas() {
   }, []);
 
 
+  async function loadData() {
 
-  async function loadData(){
+    try {
 
-  try {
+      const profilGudep =
+        await getProfilGudep();
 
-    const profilGudep = await getProfilGudep();
-
-    setProfil(profilGudep || {});
-
-
-    const data = await getBerkas();
-
-    console.log("DATA BERKAS SUPABASE:", data);
+      setProfil(
+        profilGudep || {}
+      );
 
 
-    if(data && data.length > 0){
+      const data =
+        await getBerkas();
 
-      const item = data[0];
+      console.log(
+        "DATA BERKAS SUPABASE:",
+        data
+      );
 
-      console.log("ITEM BERKAS:", item);
+
+      if (
+        data &&
+        data.length > 0
+      ) {
+
+        const item = data[0];
+
+        console.log(
+          "ITEM BERKAS:",
+          item
+        );
 
 
-      setBerkas({
+        setBerkas({
 
- suratTugas: item.surat_tugas
- ? {
-     id:item.id,
-     nama:"Surat_Tugas_Mabigus.pdf",
-     url:item.surat_tugas
- }
- : null,
+          suratTugas:
+            item.surat_tugas
+              ? {
+                  id: item.id,
+                  nama:
+                    "Surat_Tugas_Mabigus.pdf",
+                  url:
+                    item.surat_tugas,
+                }
+              : null,
 
- suratIzin: item.surat_izin
- ? {
-     id:item.id,
-     nama:"Surat_Izin_Orang_Tua.pdf",
-     url:item.surat_izin
- }
- : null
+          suratIzin:
+            item.surat_izin
+              ? {
+                  id: item.id,
+                  nama:
+                    "Surat_Izin_Orang_Tua.pdf",
+                  url:
+                    item.surat_izin,
+                }
+              : null,
 
-});
+        });
+
+      }
+
+    } catch (err) {
+
+      console.error(
+        "LOAD BERKAS ERROR:",
+        err
+      );
 
     }
 
-
-  } catch(err){
-
-    console.error("LOAD BERKAS ERROR:", err);
-
   }
 
-}
+
+  // ====================================================
+  // UPLOAD BERKAS
+  // ====================================================
+
+  async function uploadBerkas(
+    e,
+    jenis
+  ) {
+
+    const file =
+      e.target.files?.[0];
 
 
+    // reset input agar file yang sama
+    // bisa dipilih kembali
+    e.target.value = "";
 
 
+    if (!file) return;
 
-  async function uploadBerkas(e, jenis){
+
+    // ==================================================
+    // CEK PDF
+    // ==================================================
+
+    if (
+      file.type !==
+      "application/pdf"
+    ) {
+
+      alert(
+        "❌ Berkas harus dalam format PDF."
+      );
+
+      return;
+    }
+
+
+    // ==================================================
+    // CEK UKURAN
+    // ==================================================
+
+    if (
+      file.size >
+      MAX_FILE_SIZE
+    ) {
+
+      alert(
+        `❌ Ukuran file terlalu besar.\n\n` +
+        `Ukuran file: ${formatMB(file.size)} MB\n` +
+        `Maksimal: 5 MB`
+      );
+
+      return;
+    }
+
+
+    // ==================================================
+    // CEK PROFIL GUDEP
+    // ==================================================
+
+    if (!profil?.id) {
+
+      alert(
+        "Data Gudep belum ditemukan. Silakan login kembali."
+      );
+
+      return;
+    }
 
 
     try {
 
-
-      const file = e.target.files[0];
-
-
-      if(!file) return;
+      setLoading(true);
 
 
+      // =================================================
+      // BERKAS LAMA
+      // =================================================
 
-      if(file.type !== "application/pdf"){
+      const dataLama =
+        await getBerkas();
 
-        alert("Berkas harus PDF");
+      const itemLama =
+        dataLama?.length > 0
+          ? dataLama[0]
+          : null;
 
-        return;
+
+      const urlLama =
+        jenis === "suratTugas"
+          ? itemLama?.surat_tugas
+          : itemLama?.surat_izin;
+
+
+      // =================================================
+      // UPLOAD FILE BARU
+      // =================================================
+
+      console.log(
+        "UPLOAD BERKAS:",
+        file.name
+      );
+
+      const url =
+        await uploadFile(
+          file,
+          jenis
+        );
+
+
+      console.log(
+        "URL FILE BARU:",
+        url
+      );
+
+
+      // =================================================
+      // DATA DATABASE
+      // =================================================
+
+      const data = {
+
+        gudep_id:
+          profil.id,
+
+        surat_tugas:
+          jenis === "suratTugas"
+            ? url
+            : itemLama?.surat_tugas ||
+              null,
+
+        surat_izin:
+          jenis === "suratIzin"
+            ? url
+            : itemLama?.surat_izin ||
+              null,
+
+        status:
+          "Lengkap",
+
+      };
+
+
+      console.log(
+        "DATA BERKAS DIKIRIM:",
+        JSON.stringify(
+          data,
+          null,
+          2
+        )
+      );
+
+
+      // =================================================
+      // SIMPAN / UPDATE DATABASE
+      // =================================================
+
+      if (itemLama) {
+
+        await updateBerkas(
+          itemLama.id,
+          data
+        );
+
+      } else {
+
+        await saveBerkas(
+          data
+        );
 
       }
 
 
+      // =================================================
+      // HAPUS FILE LAMA
+      // =================================================
 
-      // Upload ke Storage
+      if (
+        urlLama &&
+        urlLama !== url
+      ) {
 
-      const url = await uploadFile(
-        file,
-        jenis
-      );
+        try {
 
+          await deleteFile(
+            urlLama
+          );
 
+          console.log(
+            "FILE LAMA BERHASIL DIHAPUS"
+          );
 
-      console.log(
-        "PROFIL SAAT UPLOAD:",
-        profil
-      );
+        } catch (
+          deleteError
+        ) {
 
-
-
-      const data = {
-
-  gudep_id: profil.id,
-
-  surat_tugas:
-    jenis === "suratTugas"
-      ? url
-      : berkas.suratTugas?.url || null,
-
-  surat_izin:
-    jenis === "suratIzin"
-      ? url
-      : berkas.suratIzin?.url || null,
-
-  status:"Lengkap"
-
-};
-
-
-
-      console.log(
- "DATA BERKAS DIKIRIM:",
- JSON.stringify(data,null,2)
-);
-
-
-
-      const dataLama = await getBerkas();
-
-
-if(dataLama.length > 0){
-
-  await updateBerkas(
-    dataLama[0].id,
-    data
-  );
-
-}else{
-
-  await saveBerkas(data);
-
-}
-
-
-
-      setBerkas((prev)=>({
-
-
-        ...prev,
-
-
-        [jenis]:{
-
-
-          nama:file.name,
-
-
-          url:url
-
+          // File baru sudah tersimpan,
+          // jadi jangan gagalkan upload.
+          console.warn(
+            "FILE LAMA GAGAL DIHAPUS:",
+            deleteError
+          );
 
         }
 
-
-      }));
-
+      }
 
 
-      alert("Berkas berhasil diupload");
+      // =================================================
+      // UPDATE UI
+      // =================================================
+
+      setBerkas(
+        (prev) => ({
+
+          ...prev,
+
+          [jenis]: {
+
+            id:
+              itemLama?.id,
+
+            nama:
+              file.name,
+
+            url:
+              url,
+
+          },
+
+        })
+      );
 
 
-    } catch(err){
+      alert(
+        "✅ Berkas berhasil diupload."
+      );
 
+
+    } catch (err) {
 
       console.error(
         "UPLOAD ERROR:",
@@ -228,369 +402,502 @@ if(dataLama.length > 0){
 
 
       alert(
-        "Gagal upload berkas"
+        "❌ Gagal upload berkas.\n\n" +
+        (
+          err?.message ||
+          "Terjadi kesalahan."
+        )
       );
 
+    } finally {
+
+      setLoading(false);
 
     }
 
+  }
+
+
+  // ====================================================
+  // HAPUS BERKAS
+  // ====================================================
+
+  async function hapusBerkas(
+    jenis
+  ) {
+
+    const file =
+      berkas[jenis];
+
+
+    if (!file) {
+
+      alert(
+        "Berkas tidak ditemukan."
+      );
+
+      return;
+    }
+
+
+    const konfirmasi =
+      window.confirm(
+        `Apakah Anda yakin ingin menghapus ${
+          jenis === "suratTugas"
+            ? "Surat Tugas Mabigus"
+            : "Surat Izin Orang Tua"
+        }?`
+      );
+
+
+    if (!konfirmasi) {
+      return;
+    }
+
+
+    try {
+
+      setLoading(true);
+
+
+      // =================================================
+      // AMBIL DATA DATABASE TERBARU
+      // =================================================
+
+      const dataLama =
+        await getBerkas();
+
+      const item =
+        dataLama?.length > 0
+          ? dataLama[0]
+          : null;
+
+
+      if (!item) {
+
+        setBerkas(
+          (prev) => ({
+            ...prev,
+            [jenis]: null,
+          })
+        );
+
+        return;
+      }
+
+
+      // =================================================
+      // TENTUKAN FIELD YANG DIHAPUS
+      // =================================================
+
+      const field =
+        jenis === "suratTugas"
+          ? "surat_tugas"
+          : "surat_izin";
+
+
+      const urlYangDihapus =
+        item[field];
+
+
+      // =================================================
+      // DATA BARU DATABASE
+      // =================================================
+
+      const dataUpdate = {
+
+        gudep_id:
+          item.gudep_id,
+
+        surat_tugas:
+          jenis === "suratTugas"
+            ? null
+            : item.surat_tugas ||
+              null,
+
+        surat_izin:
+          jenis === "suratIzin"
+            ? null
+            : item.surat_izin ||
+              null,
+
+        status:
+          (
+            jenis === "suratTugas"
+              ? !item.surat_izin
+              : !item.surat_tugas
+          )
+            ? "Belum Lengkap"
+            : "Lengkap",
+
+      };
+
+
+      // =================================================
+      // UPDATE DATABASE
+      // =================================================
+
+      const masihAdaBerkas =
+        dataUpdate.surat_tugas ||
+        dataUpdate.surat_izin;
+
+
+      if (masihAdaBerkas) {
+
+        await updateBerkas(
+          item.id,
+          dataUpdate
+        );
+
+      } else {
+
+        // Kalau keduanya sudah kosong,
+        // hapus row database.
+        await deleteBerkas(
+          item.id
+        );
+
+      }
+
+
+      // =================================================
+      // HAPUS FILE STORAGE
+      // =================================================
+
+      if (urlYangDihapus) {
+
+        try {
+
+          await deleteFile(
+            urlYangDihapus
+          );
+
+        } catch (
+          storageError
+        ) {
+
+          console.warn(
+            "FILE STORAGE GAGAL DIHAPUS:",
+            storageError
+          );
+
+        }
+
+      }
+
+
+      // =================================================
+      // UPDATE UI
+      // =================================================
+
+      setBerkas(
+        (prev) => ({
+
+          ...prev,
+
+          [jenis]: null,
+
+        })
+      );
+
+
+      alert(
+        "✅ Berkas berhasil dihapus."
+      );
+
+
+    } catch (err) {
+
+      console.error(
+        "GAGAL HAPUS:",
+        err
+      );
+
+
+      alert(
+        "❌ Gagal menghapus berkas.\n\n" +
+        (
+          err?.message ||
+          "Terjadi kesalahan."
+        )
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
 
   }
 
 
-
-
-
- async function hapusBerkas(jenis){
-
-try{
-
-const file = berkas[jenis];
-
-console.log("BERKAS DIHAPUS:",file);
-
-
-if(!file){
- alert("Berkas tidak ditemukan");
- return;
-}
-
-
-// hapus database
-await deleteBerkas(file.id);
-
-
-// hapus storage
-await deleteFile(file.url);
-
-
-
-setBerkas(prev=>({
- ...prev,
- [jenis]:null
-}));
-
-
-alert("Berkas berhasil dihapus");
-
-
-}catch(err){
-
-console.error(
-"GAGAL HAPUS:",
-err
-);
-
-alert("Gagal menghapus berkas");
-
-}
-
-}
-
-
-
+  // ====================================================
+  // PROGRESS
+  // ====================================================
 
   const jumlahUpload =
-    (berkas.suratTugas ? 1 : 0) +
-    (berkas.suratIzin ? 1 : 0);
+    (berkas.suratTugas
+      ? 1
+      : 0) +
+    (berkas.suratIzin
+      ? 1
+      : 0);
 
 
+  const persen =
+    (jumlahUpload / 2) *
+    100;
 
-  const persen = (jumlahUpload / 2) * 100;
 
+  // ====================================================
+  // RENDER
+  // ====================================================
 
+  return (
 
+    <div className="space-y-6">
 
 
+      {/* ================================================
+          SURAT TUGAS
+      ================================================= */}
 
+      <div className="space-y-3">
 
-return (
+        <h3 className="text-lg font-bold">
+          1. Surat Tugas Mabigus
+        </h3>
 
-<div className="space-y-6">
 
+        <div className="flex flex-wrap gap-3">
 
-<div>
+          <button
+            type="button"
+            onClick={() =>
+              downloadTemplate(
+                "/template/Surat_Tugas_Mabigus.docx"
+              )
+            }
+            className="bg-blue-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg hover:bg-blue-700"
+          >
+            ⬇ Download Template
+          </button>
 
-<h1 className="text-2xl sm:text-3xl font-bold text-green-700">
-Upload Berkas PDF
-</h1>
 
-<p className="text-gray-500">
-Upload dokumen persyaratan pendaftaran Jambore.
-</p>
+          <label
+            className={`bg-green-700 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg cursor-pointer text-center ${
+              loading
+                ? "opacity-50 pointer-events-none"
+                : "hover:bg-green-800"
+            }`}
+          >
 
-</div>
+            ⬆ Upload Berkas PDF
 
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              hidden
+              disabled={loading}
+              onChange={(e) =>
+                uploadBerkas(
+                  e,
+                  "suratTugas"
+                )
+              }
+            />
 
+          </label>
 
 
+          <button
+            type="button"
+            disabled={
+              loading ||
+              !berkas.suratTugas
+            }
+            onClick={() =>
+              hapusBerkas(
+                "suratTugas"
+              )
+            }
+            className="bg-red-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg disabled:opacity-50 hover:bg-red-700"
+          >
+            🗑 Hapus
+          </button>
 
-{/* SURAT TUGAS */}
+        </div>
 
 
-<div className="bg-white rounded-xl shadow p-4 sm:p-6">
+        <p className="text-sm text-gray-500">
+          Format: PDF • Maksimal 5 MB
+        </p>
 
 
-<h2 className="text-lg sm:text-xl font-bold">
-1. Surat Tugas Mabigus
-</h2>
+        {berkas.suratTugas && (
 
+          <div className="text-sm text-green-700 font-medium">
 
-<p className="text-gray-500 mt-2">
-Download template, isi kemudian upload kembali.
-</p>
+            ✅ {berkas.suratTugas.nama}
 
+          </div>
 
+        )}
 
+      </div>
 
-<div className="mt-5 flex flex-col sm:flex-row gap-2 sm:gap-3">
 
+      {/* ================================================
+          SURAT IZIN
+      ================================================= */}
 
-<button
-  onClick={() =>
-    downloadTemplate("/template/Surat_Tugas_Mabigus.docx")
-  }
-  className="bg-blue-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg"
->
-  ⬇ Download Template
-</button>
+      <div className="space-y-3">
 
+        <h3 className="text-lg font-bold">
+          2. Surat Izin Orang Tua
+        </h3>
 
 
+        <p className="text-sm text-gray-600">
+          Template akan mengikuti jumlah
+          peserta yang telah didaftarkan.
+        </p>
 
 
-<label
-  className="bg-green-700 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg cursor-pointer text-center"
->
-  ⬆ Upload Berkas PDF
+        <div className="flex flex-wrap gap-3">
 
-  <input
-    type="file"
-    accept=".pdf"
-    hidden
-    onChange={(e) => uploadBerkas(e, "suratTugas")}
-  />
-</label>
+          <button
+            type="button"
+            onClick={() =>
+              downloadTemplate(
+                "/template/Surat_Izin_Orang_Tua.docx"
+              )
+            }
+            className="bg-blue-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg hover:bg-blue-700"
+          >
+            ⬇ Download Template
+          </button>
 
 
+          <label
+            className={`bg-green-700 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg cursor-pointer ${
+              loading
+                ? "opacity-50 pointer-events-none"
+                : "hover:bg-green-800"
+            }`}
+          >
 
+            ⬆ Upload Berkas PDF
 
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              hidden
+              disabled={loading}
+              onChange={(e) =>
+                uploadBerkas(
+                  e,
+                  "suratIzin"
+                )
+              }
+            />
 
-<button
-  onClick={() => hapusBerkas("suratTugas")}
-  className="bg-red-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg"
->
-  🗑 Hapus
-</button>
+          </label>
 
 
+          <button
+            type="button"
+            disabled={
+              loading ||
+              !berkas.suratIzin
+            }
+            onClick={() =>
+              hapusBerkas(
+                "suratIzin"
+              )
+            }
+            className="bg-red-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg disabled:opacity-50 hover:bg-red-700"
+          >
+            🗑 Hapus
+          </button>
 
-</div>
+        </div>
 
 
+        <p className="text-sm text-gray-500">
+          Format: PDF • Maksimal 5 MB
+        </p>
 
 
-{
+        {berkas.suratIzin && (
 
-berkas.suratTugas &&
+          <div className="text-sm text-green-700 font-medium">
 
-<p className="mt-3 text-green-700">
+            ✅ {berkas.suratIzin.nama}
 
-✅ {berkas.suratTugas.nama}
+          </div>
 
-</p>
+        )}
 
-}
+      </div>
 
 
-</div>
+      {/* ================================================
+          PROGRESS
+      ================================================= */}
 
+      <div className="pt-4">
 
+        <div className="flex justify-between items-center mb-2">
 
+          <span className="font-semibold">
+            Progress Kelengkapan Berkas
+          </span>
 
+          <span className="font-bold">
+            {persen}%
+          </span>
 
+        </div>
 
 
+        <p className="text-sm text-gray-600 mb-2">
 
+          {jumlahUpload} dari 2 berkas
+          telah tersedia
 
-{/* SURAT IZIN */}
+        </p>
 
 
+        <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
 
-<div className="bg-white rounded-xl shadow p-4 sm:p-6">
+          <div
+            className="bg-green-600 h-4 rounded-full transition-all duration-300"
+            style={{
+              width: `${persen}%`,
+            }}
+          />
 
+        </div>
 
-<h2 className="text-xl font-bold">
+      </div>
 
-2. Surat Izin Orang Tua
 
-</h2>
+      {/* ================================================
+          LOADING
+      ================================================= */}
 
+      {loading && (
 
+        <div className="text-sm text-blue-600 font-medium">
 
-<p className="text-gray-500 mt-2">
+          ⏳ Sedang memproses berkas...
 
-Template akan mengikuti jumlah peserta yang telah didaftarkan.
+        </div>
 
-</p>
+      )}
 
+    </div>
 
-
-
-
-<div className="mt-5 flex flex-col sm:flex-row gap-2 sm:gap-3">
-
-
-
-<button
-  onClick={() =>
-    downloadTemplate("/template/Surat_Izin_Orang_Tua.docx")
-  }
-  className="bg-blue-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg"
->
-  ⬇ Download Template
-</button>
-
-
-
-
-
-<label
-
-className="bg-green-700 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg cursor-pointer"
-
->
-
-⬆ Upload Berkas PDF
-
-
-<input
-  type="file"
-  accept=".pdf"
-  hidden
-  onChange={(e)=>uploadBerkas(e,"suratIzin")}
-/>
-
-
-</label>
-
-
-
-
-
-<button
-
-onClick={()=>hapusBerkas("suratIzin")}
-
-className="bg-red-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg"
-
->
-
-🗑 Hapus
-
-</button>
-
-
-
-</div>
-
-
-
-{
-
-berkas.suratIzin &&
-
-<p className="mt-3 text-green-700">
-
-✅ {berkas.suratIzin.nama}
-
-</p>
-
-}
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
-{/* PROGRESS */}
-
-
-
-<div className="bg-white rounded-xl shadow p-4 sm:p-6">
-
-
-<div className="flex justify-between items-center gap-3">
-
-
-<div>
-
-<h2 className="text-lg sm:text-xl font-bold">
-
-Progress Kelengkapan Berkas
-
-</h2>
-
-
-<p className="text-gray-500">
-
-{jumlahUpload} dari 2 berkas telah tersedia
-
-</p>
-
-
-</div>
-
-
-
-<div className="text-2xl sm:text-3xl font-bold text-green-700">
-
-{persen}%
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-<div className="w-full bg-gray-200 rounded-full h-4 mt-5">
-
-
-<div
-
-className="bg-green-600 h-4 rounded-full"
-
-style={{
-
-width:`${persen}%`
-
-}}
-
-/>
-
-
-</div>
-
-
-</div>
-
-
-
-</div>
-
-
-);
-
-
+  );
 }

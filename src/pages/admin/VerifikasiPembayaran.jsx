@@ -182,32 +182,83 @@ async function loadData() {
 
 
   return {
+  id: item.id,
 
-    id: item.id,
+  gudepId: gudepId,
 
-    gudepId: gudepId,
+  gudep:
+    item.profil_gudep?.nama_pangkalan || "-",
 
-    gudep:
-      item.profil_gudep?.nama_pangkalan || "-",
+  ketua:
+    item.profil_gudep?.nama_mabigus || "-",
 
-    ketua:
-      item.profil_gudep?.nama_mabigus || "-",
+  peserta:
+    jumlahPeserta,
 
-    peserta:
-      jumlahPeserta,
+  total:
+    item.nominal || 0,
 
-    total:
-      item.nominal || 0,
+  status:
+    item.status || "Belum Bayar",
 
-    status:
-      item.status || "Belum Bayar",
+  bukti:
+    item.bukti || null,
 
-    bukti:
-      item.bukti || null,
+  // ==========================================
+  // TANGGAL PEMBAYARAN SESUAI KWITANSI
+  // ==========================================
 
-  };
+  tanggalPembayaran:
+    item.tanggal_pembayaran || null,
+
+  // ==========================================
+  // TANGGAL DATA MASUK SISTEM
+  // ==========================================
+
+  tanggalUpload:
+    item.tanggal || item.created_at || null,
+};
+});
+// ==========================================
+// URUTKAN BERDASARKAN TANGGAL PEMBAYARAN
+// PALING AWAL = PRIORITAS PALING TINGGI
+// ==========================================
+
+data.sort((a, b) => {
+
+  // Yang belum memiliki tanggal
+  // ditempatkan paling belakang
+
+  if (
+    !a.tanggalPembayaran &&
+    !b.tanggalPembayaran
+  ) {
+    return 0;
+  }
+
+  if (!a.tanggalPembayaran) {
+    return 1;
+  }
+
+  if (!b.tanggalPembayaran) {
+    return -1;
+  }
+
+  const tanggalA =
+    new Date(
+      a.tanggalPembayaran
+    ).getTime();
+
+  const tanggalB =
+    new Date(
+      b.tanggalPembayaran
+    ).getTime();
+
+  return tanggalA - tanggalB;
 
 });
+
+
 
 const hasil = data.filter((item) =>
   item.gudep
@@ -245,21 +296,23 @@ const hasil = data.filter((item) =>
 
             <tr>
 
-              <th className="p-3">No</th>
+  <th className="p-3">Prioritas</th>
 
-              <th>Gudep</th>
+  <th>Gudep</th>
 
-              <th>Mabigus</th>
+  <th>Mabigus</th>
 
-              <th>Peserta</th>
+  <th>Tgl. Pembayaran</th>
 
-              <th>Total</th>
+  <th>Peserta</th>
 
-              <th>Status</th>
+  <th>Total</th>
 
-              <th>Aksi</th>
+  <th>Status</th>
 
-            </tr>
+  <th>Aksi</th>
+
+</tr>
 
           </thead>
 
@@ -270,7 +323,7 @@ const hasil = data.filter((item) =>
               <tr>
 
                 <td
-                  colSpan="7"
+                  colSpan="8"
                   className="text-center p-6"
                 >
                   Belum ada data pembayaran
@@ -288,27 +341,76 @@ const hasil = data.filter((item) =>
                 >
 
                   <td className="p-3 text-center">
-                    {index + 1}
-                  </td>
 
-                  <td>{item.gudep}</td>
+  <span className="font-bold text-lg">
 
-                  <td>{item.ketua}</td>
+    {index + 1}
 
-                  <td className="text-center">
-                    {item.peserta}
-                  </td>
+  </span>
 
-                  <td>
+</td>
 
-                    Rp{" "}
 
-                    {item.total.toLocaleString(
-                      "id-ID"
-                    )}
+<td>
 
-                  </td>
+  <span className="font-semibold">
 
+    {item.gudep}
+
+  </span>
+
+</td>
+
+
+<td>
+
+  {item.ketua}
+
+</td>
+
+
+<td>
+
+  {item.tanggalPembayaran
+    ? new Date(
+        item.tanggalPembayaran +
+        "T00:00:00"
+      ).toLocaleDateString(
+        "id-ID",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }
+      )
+    : (
+      <span className="text-red-500">
+        Belum diisi
+      </span>
+    )
+  }
+
+</td>
+
+
+<td className="text-center">
+
+  {item.peserta}
+
+</td>
+
+
+<td>
+
+  Rp{" "}
+
+  {Number(
+    item.total
+  ).toLocaleString(
+    "id-ID"
+  )}
+
+</td>
                   <td>
 
                     <StatusBadge
@@ -359,7 +461,24 @@ const hasil = data.filter((item) =>
     <Info title="Ketua" value={selected.ketua} />
 
     <Info title="Jumlah Peserta" value={selected.peserta} />
-
+<Info
+  title="Tanggal Pembayaran"
+  value={
+    selected.tanggalPembayaran
+      ? new Date(
+          selected.tanggalPembayaran +
+          "T00:00:00"
+        ).toLocaleDateString(
+          "id-ID",
+          {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          }
+        )
+      : "Belum diisi"
+  }
+/>
     <Info
       title="Total Bayar"
       value={`Rp ${selected.total.toLocaleString("id-ID")}`}
