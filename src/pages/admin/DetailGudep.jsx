@@ -252,157 +252,205 @@ export default function DetailGudep() {
   // ==========================================
   // UPDATE STATUS PENDAFTARAN
   // ==========================================
+async function updateStatus(statusBaru) {
 
-  async function updateStatus(statusBaru) {
+  if (!pendaftaran?.id) {
 
-    if (!pendaftaran?.id) {
+    alert(
+      "Data pendaftaran tidak ditemukan."
+    );
 
-      alert(
-        "Data pendaftaran tidak ditemukan."
+    return;
+
+  }
+
+
+  // ==================================================
+  // CATATAN OTOMATIS SAAT TERVERIFIKASI
+  // ==================================================
+
+  const catatanVerifikasi =
+    "Berkas data pendaftaran sudah lengkap, Selamat mengikuti perkemahan Jamran Kwarran Cikarang Utara, patuhi Tata tertib selama perkemahan berlangsung.";
+
+
+  let pesan = "";
+
+  if (statusBaru === "Terverifikasi") {
+
+    pesan =
+      "Apakah Anda yakin ingin menyetujui pendaftaran ini?";
+
+  } else if (
+    statusBaru === "Perlu Perbaikan"
+  ) {
+
+    pesan =
+      "Apakah Anda ingin meminta operator melakukan perbaikan?";
+
+  } else if (
+    statusBaru === "Ditolak"
+  ) {
+
+    pesan =
+      "Apakah Anda yakin ingin menolak pendaftaran ini?";
+
+  }
+
+
+  if (!window.confirm(pesan)) {
+    return;
+  }
+
+
+  try {
+
+    setSaving(true);
+
+
+    console.log(
+      "UPDATE PENDAFTARAN:",
+      pendaftaran.id
+    );
+
+    console.log(
+      "STATUS BARU:",
+      statusBaru
+    );
+
+
+    // ==================================================
+    // TENTUKAN CATATAN YANG AKAN DISIMPAN
+    // ==================================================
+
+    let catatanFinal =
+      catatanAdmin || "";
+
+
+    // ==================================================
+    // JIKA TERVERIFIKASI
+    // MAKA CATATAN OTOMATIS
+    // ==================================================
+
+    if (
+      statusBaru === "Terverifikasi"
+    ) {
+
+      catatanFinal =
+        catatanVerifikasi;
+
+      // langsung tampilkan di textarea
+      setCatatanAdmin(
+        catatanVerifikasi
       );
-
-      return;
 
     }
 
 
-    let pesan = "";
+    // ==================================================
+    // SIMPAN KE DATABASE
+    // ==================================================
 
-    if (statusBaru === "Terverifikasi") {
+    const tanggalVerifikasi =
+      new Date().toISOString();
 
-      pesan =
-        "Apakah Anda yakin ingin menyetujui pendaftaran ini?";
+
+    const hasil =
+      await updatePendaftaran(
+        pendaftaran.id,
+        {
+
+          status:
+            statusBaru,
+
+          tanggal_verifikasi:
+            tanggalVerifikasi,
+
+          catatan_admin:
+            catatanFinal,
+
+        }
+      );
+
+
+    console.log(
+      "HASIL UPDATE:",
+      hasil
+    );
+
+
+    // ==================================================
+    // UPDATE STATE
+    // ==================================================
+
+    setPendaftaran(
+      prev => ({
+
+        ...prev,
+
+        status:
+          statusBaru,
+
+        tanggal_verifikasi:
+          tanggalVerifikasi,
+
+        catatan_admin:
+          catatanFinal,
+
+      })
+    );
+
+
+    // ==================================================
+    // PESAN BERHASIL
+    // ==================================================
+
+    if (
+      statusBaru === "Terverifikasi"
+    ) {
+
+      alert(
+        "✅ Pendaftaran berhasil disetujui.\n\nCatatan verifikasi otomatis telah disimpan."
+      );
 
     } else if (
       statusBaru === "Perlu Perbaikan"
     ) {
 
-      pesan =
-        "Apakah Anda ingin meminta operator melakukan perbaikan?";
+      alert(
+        "🟡 Pendaftaran dikembalikan untuk diperbaiki."
+      );
 
     } else if (
       statusBaru === "Ditolak"
     ) {
 
-      pesan =
-        "Apakah Anda yakin ingin menolak pendaftaran ini?";
-
-    }
-
-
-    if (!window.confirm(pesan)) {
-      return;
-    }
-
-
-    try {
-
-      setSaving(true);
-
-
-      console.log(
-        "UPDATE PENDAFTARAN:",
-        pendaftaran.id
-      );
-
-      console.log(
-        "STATUS BARU:",
-        statusBaru
-      );
-
-
-      const hasil =
-        await updatePendaftaran(
-          pendaftaran.id,
-          {
-
-            status: statusBaru,
-
-            tanggal_verifikasi:
-              new Date().toISOString(),
-
-            catatan_admin:
-              catatanAdmin || "",
-
-          }
-        );
-
-
-      console.log(
-        "HASIL UPDATE:",
-        hasil
-      );
-
-
-      // ======================================
-      // UPDATE STATE DI HALAMAN
-      // ======================================
-
-      setPendaftaran(prev => ({
-
-        ...prev,
-
-        status: statusBaru,
-
-        tanggal_verifikasi:
-          new Date().toISOString(),
-
-        catatan_admin:
-          catatanAdmin || "",
-
-      }));
-
-
-      // ======================================
-      // PESAN
-      // ======================================
-
-      if (
-        statusBaru === "Terverifikasi"
-      ) {
-
-        alert(
-          "✅ Pendaftaran berhasil disetujui."
-        );
-
-      } else if (
-        statusBaru === "Perlu Perbaikan"
-      ) {
-
-        alert(
-          "🟡 Pendaftaran dikembalikan untuk diperbaiki."
-        );
-
-      } else if (
-        statusBaru === "Ditolak"
-      ) {
-
-        alert(
-          "❌ Pendaftaran telah ditolak."
-        );
-
-      }
-
-
-    } catch (error) {
-
-      console.error(
-        "GAGAL UPDATE STATUS:",
-        error
-      );
-
       alert(
-        "Gagal mengubah status pendaftaran."
+        "❌ Pendaftaran telah ditolak."
       );
 
-    } finally {
-
-      setSaving(false);
-
     }
+
+
+  } catch (error) {
+
+    console.error(
+      "GAGAL UPDATE STATUS:",
+      error
+    );
+
+
+    alert(
+      "Gagal mengubah status pendaftaran."
+    );
+
+
+  } finally {
+
+    setSaving(false);
 
   }
 
+}
 
   // ==========================================
   // LOADING
