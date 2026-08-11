@@ -399,7 +399,7 @@ export default function VerifikasiPembayaran() {
 
 
     // ================================================
-    // VALIDASI NOMOR 01 - 15
+    // VALIDASI NOMOR 01 - 90
     // ================================================
 
     const angka =
@@ -409,11 +409,11 @@ export default function VerifikasiPembayaran() {
     if (
       !Number.isInteger(angka) ||
       angka < 1 ||
-      angka > 15
+      angka > 90
     ) {
 
       alert(
-        "Nomor kapling harus berupa angka 01 sampai 15."
+        "Nomor kapling harus berupa angka 01 sampai 90."
       );
 
       return;
