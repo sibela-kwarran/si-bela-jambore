@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 
 import {
@@ -25,53 +26,36 @@ import {
 // FORMAT NOMOR KAPLING
 // ======================================================
 
-function formatNomorKapling(
-  nomor,
-  jenis
-) {
-
-  const nomorFormat =
-    String(nomor).padStart(
-      3,
-      "0"
-    );
+function formatNomorKapling(nomor, jenis) {
+  const nomorFormat = String(nomor).padStart(3, "0");
 
   return jenis === "putra"
     ? `PA${nomorFormat}`
     : `PI${nomorFormat}`;
-
 }
-
 
 // ======================================================
 // CARI INDEX KELURAHAN
 // ======================================================
 
-function getIndexKelurahan(
-  jenis,
-  namaKelurahan
-) {
-
+function getIndexKelurahan(jenis, namaKelurahan) {
   const daftarKelurahan =
-    wilayahCikarangUtara?.[
-      jenis
-    ]?.kelurahan || [];
+    wilayahCikarangUtara?.[jenis]?.kelurahan || [];
 
   return daftarKelurahan.findIndex(
-    kel =>
-      String(kel)
-        .trim()
-        .toLowerCase() ===
-      String(namaKelurahan)
-        .trim()
-        .toLowerCase()
+    (kel) =>
+      String(kel).trim().toLowerCase() ===
+      String(namaKelurahan).trim().toLowerCase()
   );
-
 }
-
 
 // ======================================================
 // NOMOR GLOBAL
+//
+// Kelurahan 1 = 001 - 015
+// Kelurahan 2 = 016 - 030
+// Kelurahan 3 = 031 - 045
+// dst.
 // ======================================================
 
 function getNomorGlobalKapling(
@@ -79,29 +63,26 @@ function getNomorGlobalKapling(
   namaKelurahan,
   nomorLokal
 ) {
-
   const indexKelurahan =
     getIndexKelurahan(
       jenis,
       namaKelurahan
     );
 
-  if (
-    indexKelurahan < 0
-  ) {
-
-    return Number(
-      nomorLokal
-    );
-
+  if (indexKelurahan < 0) {
+    return Number(nomorLokal);
   }
 
   return (
-    indexKelurahan * 15
-  ) +
-  Number(nomorLokal);
-
+    indexKelurahan * 15 +
+    Number(nomorLokal)
+  );
 }
+
+// ======================================================
+// KOMPONEN
+// ======================================================
+
 export default function PenempatanBlok() {
 
   // =====================================================
@@ -117,6 +98,10 @@ export default function PenempatanBlok() {
   const [modalOpen, setModalOpen] = useState(false);
 
   const [selectedGudep, setSelectedGudep] = useState(null);
+
+  // true = sedang edit
+  // false = penempatan baru
+  const [modeEdit, setModeEdit] = useState(false);
 
   const [formPenempatan, setFormPenempatan] = useState({
     kecamatanPutra:
@@ -134,7 +119,6 @@ export default function PenempatanBlok() {
     kaplingPutri: [],
   });
 
-
   // =====================================================
   // LOAD DATA
   // =====================================================
@@ -143,186 +127,349 @@ export default function PenempatanBlok() {
     loadData();
   }, []);
 
-
   async function loadData() {
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    console.log("=================================");
-    console.log("MULAI LOAD PENEMPATAN BLOK");
-    console.log("=================================");
+      // -----------------------------------------------
+      // SEMUA PENEMPATAN
+      // -----------------------------------------------
 
-    console.log("1️⃣ GET BLOK");
-    const blok = await getBlok();
-    console.log("✅ HASIL GET BLOK:", blok);
+      const blok =
+        await getBlok();
 
-    setSemuaBlok(blok || []);
-
-    console.log("2️⃣ GET PENDAFTARAN");
-    const pendaftaran = await getSemuaPendaftaran();
-    console.log("✅ HASIL PENDAFTARAN:", pendaftaran);
-
-    console.log("3️⃣ GET PEMBAYARAN");
-    const pembayaran = await getSemuaPembayaran();
-    console.log("✅ HASIL PEMBAYARAN:", pembayaran);
-
-    const terverifikasi = (pendaftaran || []).filter(
-      item =>
-        String(item.status || "")
-          .trim()
-          .toLowerCase() === "terverifikasi"
-    );
-
-    console.log(
-      "4️⃣ GUDEP TERVERIFIKASI:",
-      terverifikasi
-    );
-
-    const hasil = [];
-
-    for (const item of terverifikasi) {
-      const gudepId = item.gudep_id;
-
-      console.log(
-        "5️⃣ CEK REGU GUDEP:",
-        gudepId
+      setSemuaBlok(
+        blok || []
       );
 
-      const regu = await getJenisRegu(gudepId);
+      // -----------------------------------------------
+      // PENDAFTARAN
+      // -----------------------------------------------
 
-      console.log(
-        "6️⃣ HASIL REGU:",
-        gudepId,
-        regu
-      );
+      const pendaftaran =
+        await getSemuaPendaftaran();
 
-      const sudahDitempatkan =
-        (blok || []).find(
-          p =>
-            Number(p.gudep_id) ===
-            Number(gudepId)
+      // -----------------------------------------------
+      // PEMBAYARAN
+      // -----------------------------------------------
+
+      const pembayaran =
+        await getSemuaPembayaran();
+
+      // -----------------------------------------------
+      // HANYA GUDEP TERVERIFIKASI
+      // -----------------------------------------------
+
+      const terverifikasi =
+        (pendaftaran || []).filter(
+          (item) =>
+            String(
+              item.status || ""
+            )
+              .trim()
+              .toLowerCase() ===
+            "terverifikasi"
         );
 
-      hasil.push({
-        id: item.id,
+      const hasil = [];
 
-        gudep_id: gudepId,
+      // =================================================
+      // PROSES SETIAP GUDEP
+      // =================================================
 
-        namaGudep:
-          item.nama_gudep ||
-          item.profil_gudep?.nama_pangkalan ||
-          "-",
+      for (
+        const item of terverifikasi
+      ) {
 
-        adaPutra:
-          Boolean(regu?.adaPutra),
+        const gudepId =
+          item.gudep_id;
 
-        adaPutri:
-          Boolean(regu?.adaPutri),
+        // ---------------------------------------------
+        // DATA PEMBAYARAN
+        // ---------------------------------------------
 
-        jumlahPutra:
-          Number(regu?.jumlahPutra || 0),
+        const pembayaranGudep =
+          (pembayaran || []).find(
+            (p) =>
+              Number(
+                p.gudep_id
+              ) ===
+              Number(gudepId)
+          );
 
-        jumlahPutri:
-          Number(regu?.jumlahPutri || 0),
+        const nomorKapling =
+          pembayaranGudep?.nomor_kapling ||
+          null;
 
-        status:
-          sudahDitempatkan
-            ? "Sudah Ditempatkan"
-            : "Belum Ditempatkan",
+        // ---------------------------------------------
+        // JUMLAH REGU
+        // ---------------------------------------------
 
-        penempatan:
-          sudahDitempatkan || null,
-      });
+        const regu =
+          await getJenisRegu(
+            gudepId
+          );
+
+        // ---------------------------------------------
+        // CEK SUDAH DITEMPATKAN
+        // ---------------------------------------------
+
+        const sudahDitempatkan =
+          (blok || []).find(
+            (p) =>
+              Number(
+                p.gudep_id
+              ) ===
+              Number(gudepId)
+          );
+
+        hasil.push({
+
+          id: item.id,
+
+          gudep_id:
+            gudepId,
+
+          namaGudep:
+            item.nama_gudep ||
+            item.profil_gudep
+              ?.nama_pangkalan ||
+            "-",
+
+          nomorKapling,
+
+          adaPutra:
+            Boolean(
+              regu?.adaPutra
+            ),
+
+          adaPutri:
+            Boolean(
+              regu?.adaPutri
+            ),
+
+          jumlahPutra:
+            Number(
+              regu?.jumlahPutra || 0
+            ),
+
+          jumlahPutri:
+            Number(
+              regu?.jumlahPutri || 0
+            ),
+
+          status:
+            sudahDitempatkan
+              ? "Sudah Ditempatkan"
+              : "Belum Ditempatkan",
+
+          penempatan:
+            sudahDitempatkan ||
+            null,
+        });
+      }
+
+      setData(hasil);
+
+    } catch (error) {
+
+      console.error(
+        "PENEMPATAN BLOK ERROR:",
+        error
+      );
+
+      alert(
+        "Gagal mengambil data penempatan."
+      );
+
+    } finally {
+
+      setLoading(false);
+
     }
-
-    console.log(
-      "================================="
-    );
-
-    console.log(
-      "DATA PENEMPATAN FINAL:",
-      hasil
-    );
-
-    console.log(
-      "================================="
-    );
-
-    setData(hasil);
-
-  } catch (error) {
-
-    console.error(
-      "❌ PENEMPATAN BLOK ERROR:",
-      error
-    );
-
-    console.error(
-      "MESSAGE:",
-      error?.message
-    );
-
-    alert(
-      "Gagal mengambil data penempatan.\n\n" +
-      (error?.message || "Failed to fetch")
-    );
-
-  } finally {
-
-    setLoading(false);
-
   }
-}
-
 
   // =====================================================
-  // BUKA MODAL
+  // BUAT ARRAY SESUAI JUMLAH REGU
+  // =====================================================
+
+  function buatArrayRegu(jumlah) {
+    return Array.from(
+      {
+        length:
+          Number(jumlah || 0),
+      },
+      () => ""
+    );
+  }
+
+  // =====================================================
+  // BUKA PENEMPATAN BARU
   // =====================================================
 
   function handleTempatkan(item) {
 
-    if (
-      item.status ===
-      "Sudah Ditempatkan"
-    ) {
+    setSelectedGudep(
+      item
+    );
 
-      alert(
-        "Gudep ini sudah ditempatkan."
-      );
-
-      return;
-
-    }
-
-
-    setSelectedGudep(item);
-
+    setModeEdit(
+      false
+    );
 
     setFormPenempatan({
 
       kecamatanPutra:
-        wilayahCikarangUtara?.putra?.kecamatan ||
+        wilayahCikarangUtara
+          ?.putra
+          ?.kecamatan ||
         "",
 
-      kelurahanPutra: "",
+      kelurahanPutra:
+        "",
 
-      kaplingPutra: [],
+      kaplingPutra:
+        buatArrayRegu(
+          item.jumlahPutra
+        ),
 
       kecamatanPutri:
-        wilayahCikarangUtara?.putri?.kecamatan ||
+        wilayahCikarangUtara
+          ?.putri
+          ?.kecamatan ||
         "",
 
-      kelurahanPutri: "",
+      kelurahanPutri:
+        "",
 
-      kaplingPutri: [],
-
+      kaplingPutri:
+        buatArrayRegu(
+          item.jumlahPutri
+        ),
     });
 
-
-    setModalOpen(true);
-
+    setModalOpen(
+      true
+    );
   }
 
+  // =====================================================
+  // BUKA EDIT PENEMPATAN
+  //
+  // DATA LAMA DIMASUKKAN KEMBALI KE FORM
+  // =====================================================
+
+  function handleEditPenempatan(item) {
+
+    const penempatan =
+      item.penempatan;
+
+    if (!penempatan) {
+
+      handleTempatkan(
+        item
+      );
+
+      return;
+    }
+
+    // -----------------------------------------------
+    // AMBIL KAPLING PUTRA
+    // -----------------------------------------------
+
+    const kaplingPutraLama =
+      ambilNomorKapling(
+        penempatan.kapling_putra
+      ).map(
+        (nomor) =>
+          Number(nomor)
+      );
+
+    // -----------------------------------------------
+    // AMBIL KAPLING PUTRI
+    // -----------------------------------------------
+
+    const kaplingPutriLama =
+      ambilNomorKapling(
+        penempatan.kapling_putri
+      ).map(
+        (nomor) =>
+          Number(nomor)
+      );
+
+    // -----------------------------------------------
+    // PASTIKAN JUMLAH ARRAY SESUAI REGU
+    // -----------------------------------------------
+
+    const kaplingPutra =
+      Array.from(
+        {
+          length:
+            Number(
+              item.jumlahPutra || 0
+            ),
+        },
+        (_, index) =>
+          kaplingPutraLama[
+            index
+          ] || ""
+      );
+
+    const kaplingPutri =
+      Array.from(
+        {
+          length:
+            Number(
+              item.jumlahPutri || 0
+            ),
+        },
+        (_, index) =>
+          kaplingPutriLama[
+            index
+          ] || ""
+      );
+
+    setSelectedGudep(
+      item
+    );
+
+    setModeEdit(
+      true
+    );
+
+    setFormPenempatan({
+
+      kecamatanPutra:
+        penempatan.kecamatan_putra ||
+        wilayahCikarangUtara
+          ?.putra
+          ?.kecamatan ||
+        "",
+
+      kelurahanPutra:
+        penempatan.kelurahan_putra ||
+        "",
+
+      kaplingPutra,
+
+      kecamatanPutri:
+        penempatan.kecamatan_putri ||
+        wilayahCikarangUtara
+          ?.putri
+          ?.kecamatan ||
+        "",
+
+      kelurahanPutri:
+        penempatan.kelurahan_putri ||
+        "",
+
+      kaplingPutri,
+    });
+
+    setModalOpen(
+      true
+    );
+  }
 
   // =====================================================
   // NORMALISASI NOMOR
@@ -330,12 +477,14 @@ export default function PenempatanBlok() {
 
   function normalisasiNomor(nomor) {
 
-    return String(nomor || "")
-      .trim()
-      .replace(/^0+/, "") || "0";
+    return (
+      String(nomor || "")
+        .trim()
+        .replace(/^0+/, "") ||
+      "0"
+    );
 
   }
-
 
   // =====================================================
   // AMBIL NOMOR DARI DATA
@@ -348,247 +497,406 @@ export default function PenempatanBlok() {
 
   function ambilNomorKapling(value) {
 
-    if (!value) return [];
+    if (!value) {
+      return [];
+    }
 
     return String(value)
       .split(",")
-      .map(x =>
-        normalisasiNomor(x)
+      .map(
+        (x) =>
+          normalisasiNomor(
+            x
+          )
       )
       .filter(Boolean);
-
   }
-
 
   // =====================================================
   // CEK KAPLING TERPAKAI
   //
-  // PUTRA hanya dibandingkan PUTRA
-  // PUTRI hanya dibandingkan PUTRI
+  // currentGudepId = Gudep yang sedang diedit
   //
-  // PA003 dan PI003 BOLEH BERSAMAAN
+  // Jika sedang edit, data Gudep sendiri DIABAIKAN
+  // sehingga nomor lamanya tetap bisa dipilih.
   // =====================================================
 
   function cekKaplingTerpakai(
-  kelurahan,
-  nomor,
-  jenis
-) {
-
-  if (
-    !kelurahan ||
-    !nomor
+    kelurahan,
+    nomor,
+    jenis,
+    currentGudepId = null
   ) {
 
-    return false;
+    if (
+      !kelurahan ||
+      !nomor
+    ) {
+      return false;
+    }
 
-  }
+    const kolomKelurahan =
+      jenis === "putra"
+        ? "kelurahan_putra"
+        : "kelurahan_putri";
 
+    const kolomKapling =
+      jenis === "putra"
+        ? "kapling_putra"
+        : "kapling_putri";
 
-  const kolomKelurahan =
-    jenis === "putra"
-      ? "kelurahan_putra"
-      : "kelurahan_putri";
-
-
-  const kolomKapling =
-    jenis === "putra"
-      ? "kapling_putra"
-      : "kapling_putri";
-
-
-  const kelurahanTarget =
-    String(kelurahan)
-      .trim()
-      .toLowerCase();
-
-
-  const nomorTarget =
-    Number(nomor);
-
-
-  return (
-    semuaBlok || []
-  ).some(item => {
-
-    const kel =
-      String(
-        item[kolomKelurahan] || ""
-      )
+    const kelurahanTarget =
+      String(kelurahan)
         .trim()
         .toLowerCase();
 
-
-    const kap =
-      Number(
-        item[kolomKapling]
+    const nomorTarget =
+      normalisasiNomor(
+        nomor
       );
-
 
     return (
-      kel === kelurahanTarget &&
-      kap === nomorTarget
+      semuaBlok || []
+    ).some(
+      (item) => {
+
+        // ---------------------------------------------
+        // JIKA SEDANG EDIT
+        // JANGAN HITUNG DATA GUEDEP SENDIRI
+        // ---------------------------------------------
+
+        if (
+          currentGudepId !== null &&
+          Number(
+            item.gudep_id
+          ) ===
+          Number(
+            currentGudepId
+          )
+        ) {
+          return false;
+        }
+
+        const kel =
+          String(
+            item[
+              kolomKelurahan
+            ] || ""
+          )
+            .trim()
+            .toLowerCase();
+
+        if (
+          kel !==
+          kelurahanTarget
+        ) {
+          return false;
+        }
+
+        const nomorTersimpan =
+          ambilNomorKapling(
+            item[
+              kolomKapling
+            ]
+          );
+
+        return nomorTersimpan.includes(
+          nomorTarget
+        );
+      }
     );
-
-  });
-
-}
+  }
 
   // =====================================================
-  // CEK BEBERAPA NOMOR SEKALIGUS
+  // CEK NOMOR DIPAKAI REGU LAIN
+  // DALAM GUDEP YANG SAMA
   // =====================================================
 
-  function adaNomorBentrok(
-    kelurahan,
-    nomorArray,
-    jenis
+  function nomorDipakaiReguLain(
+    nomor,
+    daftarKapling,
+    indexSaatIni
   ) {
 
-    return (nomorArray || []).some(
-      nomor =>
-        cekKaplingTerpakai(
-          kelurahan,
-          nomor,
-          jenis
-        )
-    );
+    const nomorNormal =
+      normalisasiNomor(
+        nomor
+      );
 
+    return (
+      daftarKapling || []
+    ).some(
+      (
+        nilai,
+        index
+      ) =>
+        index !==
+          indexSaatIni &&
+        nilai &&
+        normalisasiNomor(
+          nilai
+        ) ===
+          nomorNormal
+    );
   }
 
-
   // =====================================================
-  // PILIH KAPLING PUTRA
+  // PILIHAN NOMOR KAPLING
   // =====================================================
 
-  function handleKaplingPutraChange(e) {
+  function getPilihanKapling(
+    jenis,
+    kelurahan,
+    daftarKapling,
+    indexRegu
+  ) {
 
-    const values =
-      Array.from(
-        e.target.selectedOptions,
-        option => option.value
-      );
+    return Array.from(
+      {
+        length: 15,
+      },
+      (_, index) => {
 
+        const nomorLokal =
+          index + 1;
 
-    const jumlah =
-      Number(
-        selectedGudep?.jumlahPutra || 0
-      );
-
-
-    if (values.length > jumlah) {
-
-      alert(
-        `Gudep ini memiliki ${jumlah} regu Putra.\n\n` +
-        `Maksimal ${jumlah} nomor kapling Putra yang dapat dipilih.`
-      );
-
-      return;
-
-    }
-
-
-    const kelurahan =
-      formPenempatan.kelurahanPutra;
-
-
-    const bentrok =
-      values.find(
-        nomor =>
-          cekKaplingTerpakai(
+        const nomorGlobal =
+          getNomorGlobalKapling(
+            jenis,
             kelurahan,
-            nomor,
-            "putra"
-          )
-      );
+            nomorLokal
+          );
 
+        const sudahTerpakai =
+          kelurahan
+            ? cekKaplingTerpakai(
+                kelurahan,
+                nomorGlobal,
+                jenis,
+                selectedGudep
+                  ?.gudep_id
+              )
+            : false;
 
-    if (bentrok) {
+        const dipakaiReguLain =
+          nomorDipakaiReguLain(
+            nomorGlobal,
+            daftarKapling,
+            indexRegu
+          );
 
-      alert(
-        `❌ PA${String(bentrok).padStart(3, "0")} sudah digunakan di Kelurahan ${kelurahan}.`
-      );
+        return {
 
-      return;
+          nomorGlobal,
 
-    }
+          sudahTerpakai,
 
+          dipakaiReguLain,
+        };
+      }
+    );
+  }
+
+  // =====================================================
+  // PILIH KAPLING REGU PUTRA
+  // =====================================================
+
+  function handleKaplingPutraChange(
+    indexRegu,
+    value
+  ) {
+
+    const nomor =
+      value === ""
+        ? ""
+        : Number(value);
 
     setFormPenempatan(
-      prev => ({
-        ...prev,
-        kaplingPutra: values,
-      })
-    );
+      (prev) => {
 
+        const baru = [
+          ...prev.kaplingPutra,
+        ];
+
+        baru[indexRegu] =
+          nomor;
+
+        return {
+          ...prev,
+
+          kaplingPutra:
+            baru,
+        };
+      }
+    );
   }
 
-
   // =====================================================
-  // PILIH KAPLING PUTRI
+  // PILIH KAPLING REGU PUTRI
   // =====================================================
 
-  function handleKaplingPutriChange(e) {
+  function handleKaplingPutriChange(
+    indexRegu,
+    value
+  ) {
 
-    const values =
-      Array.from(
-        e.target.selectedOptions,
-        option => option.value
-      );
-
-
-    const jumlah =
-      Number(
-        selectedGudep?.jumlahPutri || 0
-      );
-
-
-    if (values.length > jumlah) {
-
-      alert(
-        `Gudep ini memiliki ${jumlah} regu Putri.\n\n` +
-        `Maksimal ${jumlah} nomor kapling Putri yang dapat dipilih.`
-      );
-
-      return;
-
-    }
-
-
-    const kelurahan =
-      formPenempatan.kelurahanPutri;
-
-
-    const bentrok =
-      values.find(
-        nomor =>
-          cekKaplingTerpakai(
-            kelurahan,
-            nomor,
-            "putri"
-          )
-      );
-
-
-    if (bentrok) {
-
-      alert(
-        `❌ PI${String(bentrok).padStart(3, "0")} sudah digunakan di Kelurahan ${kelurahan}.`
-      );
-
-      return;
-
-    }
-
+    const nomor =
+      value === ""
+        ? ""
+        : Number(value);
 
     setFormPenempatan(
-      prev => ({
-        ...prev,
-        kaplingPutri: values,
-      })
-    );
+      (prev) => {
 
+        const baru = [
+          ...prev.kaplingPutri,
+        ];
+
+        baru[indexRegu] =
+          nomor;
+
+        return {
+          ...prev,
+
+          kaplingPutri:
+            baru,
+        };
+      }
+    );
   }
 
+  // =====================================================
+  // CEK BENTROK DATA TERBARU
+  //
+  // Gudep sendiri dikecualikan ketika EDIT.
+  // =====================================================
+
+  function cekBentrokTerbaru(
+    blokTerbaru,
+    kelurahan,
+    daftarKapling,
+    jenis,
+    currentGudepId
+  ) {
+
+    if (!kelurahan) {
+      return false;
+    }
+
+    const kolomKelurahan =
+      jenis === "putra"
+        ? "kelurahan_putra"
+        : "kelurahan_putri";
+
+    const kolomKapling =
+      jenis === "putra"
+        ? "kapling_putra"
+        : "kapling_putri";
+
+    const targetKelurahan =
+      String(kelurahan)
+        .trim()
+        .toLowerCase();
+
+    return (
+      blokTerbaru || []
+    ).some(
+      (item) => {
+
+        // ---------------------------------------------
+        // DATA GUDEP SENDIRI DIABAIKAN
+        // ---------------------------------------------
+
+        if (
+          currentGudepId !== null &&
+          Number(
+            item.gudep_id
+          ) ===
+          Number(
+            currentGudepId
+          )
+        ) {
+          return false;
+        }
+
+        const kelurahanData =
+          String(
+            item[
+              kolomKelurahan
+            ] || ""
+          )
+            .trim()
+            .toLowerCase();
+
+        if (
+          kelurahanData !==
+          targetKelurahan
+        ) {
+          return false;
+        }
+
+        const nomorTersimpan =
+          ambilNomorKapling(
+            item[
+              kolomKapling
+            ]
+          );
+
+        return (
+          daftarKapling || []
+        ).some(
+          (nomor) =>
+            nomor &&
+            nomorTersimpan.includes(
+              normalisasiNomor(
+                nomor
+              )
+            )
+        );
+      }
+    );
+  }
+
+  // =====================================================
+  // CEK DUPLIKAT NOMOR DALAM SATU GUDEP
+  // =====================================================
+
+  function adaNomorDuplikat(
+    daftarKapling
+  ) {
+
+    const nomorValid =
+      (daftarKapling || [])
+        .filter(Boolean)
+        .map(
+          normalisasiNomor
+        );
+
+    return (
+      new Set(
+        nomorValid
+      ).size !==
+      nomorValid.length
+    );
+  }
+
+  // =====================================================
+  // CEK SEMUA REGU SUDAH MENDAPAT NOMOR
+  // =====================================================
+
+  function semuaReguSudahDipilih(
+    daftarKapling,
+    jumlahRegu
+  ) {
+
+    return (
+      daftarKapling.length ===
+        Number(jumlahRegu) &&
+      daftarKapling.every(
+        Boolean
+      )
+    );
+  }
 
   // =====================================================
   // SIMPAN PENEMPATAN
@@ -596,59 +904,97 @@ export default function PenempatanBlok() {
 
   async function handleSimpanPenempatan() {
 
-    if (!selectedGudep) {
+    if (
+      !selectedGudep
+    ) {
       return;
     }
-
 
     // =================================================
     // VALIDASI PUTRA
     // =================================================
 
     if (
-      selectedGudep.adaPutra &&
-      (
-        !formPenempatan.kelurahanPutra ||
-        formPenempatan.kaplingPutra.length !==
-        selectedGudep.jumlahPutra
-      )
+      selectedGudep.adaPutra
     ) {
 
-      alert(
-        `Silakan pilih ${selectedGudep.jumlahPutra} nomor kapling Putra sesuai jumlah regu.`
-      );
+      const lengkapPutra =
+        semuaReguSudahDipilih(
+          formPenempatan.kaplingPutra,
+          selectedGudep.jumlahPutra
+        );
 
-      return;
+      if (
+        !formPenempatan.kelurahanPutra ||
+        !lengkapPutra
+      ) {
 
+        alert(
+          `Silakan pilih 1 nomor kapling untuk setiap ${selectedGudep.jumlahPutra} Regu Putra.`
+        );
+
+        return;
+      }
+
+      if (
+        adaNomorDuplikat(
+          formPenempatan.kaplingPutra
+        )
+      ) {
+
+        alert(
+          "❌ Nomor kapling Putra tidak boleh sama untuk dua regu."
+        );
+
+        return;
+      }
     }
-
 
     // =================================================
     // VALIDASI PUTRI
     // =================================================
 
     if (
-      selectedGudep.adaPutri &&
-      (
-        !formPenempatan.kelurahanPutri ||
-        formPenempatan.kaplingPutri.length !==
-        selectedGudep.jumlahPutri
-      )
+      selectedGudep.adaPutri
     ) {
 
-      alert(
-        `Silakan pilih ${selectedGudep.jumlahPutri} nomor kapling Putri sesuai jumlah regu.`
-      );
+      const lengkapPutri =
+        semuaReguSudahDipilih(
+          formPenempatan.kaplingPutri,
+          selectedGudep.jumlahPutri
+        );
 
-      return;
+      if (
+        !formPenempatan.kelurahanPutri ||
+        !lengkapPutri
+      ) {
 
+        alert(
+          `Silakan pilih 1 nomor kapling untuk setiap ${selectedGudep.jumlahPutri} Regu Putri.`
+        );
+
+        return;
+      }
+
+      if (
+        adaNomorDuplikat(
+          formPenempatan.kaplingPutri
+        )
+      ) {
+
+        alert(
+          "❌ Nomor kapling Putri tidak boleh sama untuk dua regu."
+        );
+
+        return;
+      }
     }
-
 
     try {
 
-      setLoading(true);
-
+      setLoading(
+        true
+      );
 
       // =================================================
       // AMBIL DATA TERBARU
@@ -657,9 +1003,8 @@ export default function PenempatanBlok() {
       const blokTerbaru =
         await getBlok();
 
-
       // =================================================
-      // CEK ULANG PUTRA
+      // CEK PUTRA
       // =================================================
 
       if (
@@ -667,30 +1012,43 @@ export default function PenempatanBlok() {
       ) {
 
         const bentrokPutra =
-          adaNomorBentrok(
-            formPenempatan.kelurahanPutra,
-            formPenempatan.kaplingPutra,
-            "putra"
+          cekBentrokTerbaru(
+            blokTerbaru,
+
+            formPenempatan
+              .kelurahanPutra,
+
+            formPenempatan
+              .kaplingPutra,
+
+            "putra",
+
+            selectedGudep
+              .gudep_id
           );
 
-
-        if (bentrokPutra) {
+        if (
+          bentrokPutra
+        ) {
 
           alert(
-            "❌ Salah satu nomor kapling Putra sudah digunakan.\n\nSilakan pilih nomor lain."
+            "❌ Salah satu nomor kapling Putra sudah digunakan Gudep lain.\n\nSilakan pilih nomor yang lain."
           );
 
-          setLoading(false);
+          setSemuaBlok(
+            blokTerbaru || []
+          );
+
+          setLoading(
+            false
+          );
 
           return;
-
         }
-
       }
 
-
       // =================================================
-      // CEK ULANG PUTRI
+      // CEK PUTRI
       // =================================================
 
       if (
@@ -698,206 +1056,92 @@ export default function PenempatanBlok() {
       ) {
 
         const bentrokPutri =
-          adaNomorBentrok(
-            formPenempatan.kelurahanPutri,
-            formPenempatan.kaplingPutri,
-            "putri"
+          cekBentrokTerbaru(
+            blokTerbaru,
+
+            formPenempatan
+              .kelurahanPutri,
+
+            formPenempatan
+              .kaplingPutri,
+
+            "putri",
+
+            selectedGudep
+              .gudep_id
           );
 
-
-        if (bentrokPutri) {
+        if (
+          bentrokPutri
+        ) {
 
           alert(
-            "❌ Salah satu nomor kapling Putri sudah digunakan.\n\nSilakan pilih nomor lain."
+            "❌ Salah satu nomor kapling Putri sudah digunakan Gudep lain.\n\nSilakan pilih nomor yang lain."
           );
 
-          setLoading(false);
+          setSemuaBlok(
+            blokTerbaru || []
+          );
+
+          setLoading(
+            false
+          );
 
           return;
-
         }
-
       }
 
-
       // =================================================
-      // CEK DATA TERBARU
+      // FORMAT NOMOR PUTRA
       //
-      // Dipakai supaya aman jika ada perubahan
-      // setelah modal dibuka.
-      // =================================================
-
-      const cekTerbaru =
-        (blokTerbaru || []).some(
-          item => {
-
-            // -------------------------------
-            // PUTRA
-            // -------------------------------
-
-            if (
-              selectedGudep.adaPutra
-            ) {
-
-              const kelPutra =
-                String(
-                  item.kelurahan_putra || ""
-                )
-                  .trim()
-                  .toLowerCase();
-
-
-              const targetKelPutra =
-                String(
-                  formPenempatan.kelurahanPutra
-                )
-                  .trim()
-                  .toLowerCase();
-
-
-              if (
-                kelPutra ===
-                targetKelPutra
-              ) {
-
-                const nomorPutra =
-                  ambilNomorKapling(
-                    item.kapling_putra
-                  );
-
-
-                const bentrok =
-                  formPenempatan.kaplingPutra
-                    .some(
-                      nomor =>
-                        nomorPutra.includes(
-                          normalisasiNomor(
-                            nomor
-                          )
-                        )
-                    );
-
-
-                if (bentrok) {
-                  return true;
-                }
-
-              }
-
-            }
-
-
-            // -------------------------------
-            // PUTRI
-            // -------------------------------
-
-            if (
-              selectedGudep.adaPutri
-            ) {
-
-              const kelPutri =
-                String(
-                  item.kelurahan_putri || ""
-                )
-                  .trim()
-                  .toLowerCase();
-
-
-              const targetKelPutri =
-                String(
-                  formPenempatan.kelurahanPutri
-                )
-                  .trim()
-                  .toLowerCase();
-
-
-              if (
-                kelPutri ===
-                targetKelPutri
-              ) {
-
-                const nomorPutri =
-                  ambilNomorKapling(
-                    item.kapling_putri
-                  );
-
-
-                const bentrok =
-                  formPenempatan.kaplingPutri
-                    .some(
-                      nomor =>
-                        nomorPutri.includes(
-                          normalisasiNomor(
-                            nomor
-                          )
-                        )
-                    );
-
-
-                if (bentrok) {
-                  return true;
-                }
-
-              }
-
-            }
-
-
-            return false;
-
-          }
-        );
-
-
-      if (cekTerbaru) {
-
-        alert(
-          "❌ Nomor kapling baru saja digunakan oleh Gudep lain.\n\nSilakan pilih nomor kapling yang lain."
-        );
-
-        await loadData();
-
-        setLoading(false);
-
-        return;
-
-      }
-
-
-      // =================================================
-      // FORMAT NOMOR
+      // Contoh:
+      // Regu 1 = 026
+      // Regu 2 = 027
       //
-      // ["003","004"]
-      // menjadi
-      // "003,004"
+      // Disimpan:
+      // "026,027"
       // =================================================
 
       const kaplingPutra =
         selectedGudep.adaPutra
-          ? formPenempatan.kaplingPutra
+          ? formPenempatan
+              .kaplingPutra
               .map(
-                nomor =>
-                  String(nomor)
-                    .padStart(3, "0")
+                (nomor) =>
+                  String(
+                    nomor
+                  ).padStart(
+                    3,
+                    "0"
+                  )
               )
               .join(",")
           : null;
 
+      // =================================================
+      // FORMAT NOMOR PUTRI
+      // =================================================
 
       const kaplingPutri =
         selectedGudep.adaPutri
-          ? formPenempatan.kaplingPutri
+          ? formPenempatan
+              .kaplingPutri
               .map(
-                nomor =>
-                  String(nomor)
-                    .padStart(3, "0")
+                (nomor) =>
+                  String(
+                    nomor
+                  ).padStart(
+                    3,
+                    "0"
+                  )
               )
               .join(",")
           : null;
 
-
       // =================================================
       // DATA YANG DISIMPAN
+      //
+      // STRUKTUR LAMA DIPERTAHANKAN
       // =================================================
 
       const dataSimpan = {
@@ -905,84 +1149,93 @@ export default function PenempatanBlok() {
         gudep_id:
           selectedGudep.gudep_id,
 
-
-        // -------------------------------
+        // ---------------------------------------------
         // PUTRA
-        // -------------------------------
+        // ---------------------------------------------
 
         kecamatan_putra:
           selectedGudep.adaPutra
-            ? formPenempatan.kecamatanPutra
+            ? formPenempatan
+                .kecamatanPutra
             : null,
 
         kelurahan_putra:
           selectedGudep.adaPutra
-            ? formPenempatan.kelurahanPutra
+            ? formPenempatan
+                .kelurahanPutra
             : null,
 
         kapling_putra:
           kaplingPutra,
 
-
-        // -------------------------------
+        // ---------------------------------------------
         // PUTRI
-        // -------------------------------
+        // ---------------------------------------------
 
         kecamatan_putri:
           selectedGudep.adaPutri
-            ? formPenempatan.kecamatanPutri
+            ? formPenempatan
+                .kecamatanPutri
             : null,
 
         kelurahan_putri:
           selectedGudep.adaPutri
-            ? formPenempatan.kelurahanPutri
+            ? formPenempatan
+                .kelurahanPutri
             : null,
 
         kapling_putri:
           kaplingPutri,
 
-
         status:
           "Sudah Ditempatkan",
-
       };
 
-
       console.log(
-        "DATA PENEMPATAN FINAL:",
+        modeEdit
+          ? "DATA PERUBAHAN PENEMPATAN:"
+          : "DATA PENEMPATAN BARU:",
         dataSimpan
       );
 
-
       // =================================================
-      // SIMPAN
+      // SIMPAN / UPDATE
+      //
+      // savePenempatanBlok dipakai tetap sama
+      // supaya tidak mengubah service yang sekarang.
       // =================================================
 
       await savePenempatanBlok(
         dataSimpan
       );
 
-
       alert(
-        "✅ Gudep berhasil ditempatkan."
+        modeEdit
+          ? "✅ Perubahan penempatan berhasil disimpan."
+          : "✅ Gudep berhasil ditempatkan."
       );
-
 
       // =================================================
       // TUTUP MODAL
       // =================================================
 
-      setModalOpen(false);
+      setModalOpen(
+        false
+      );
 
-      setSelectedGudep(null);
+      setSelectedGudep(
+        null
+      );
 
+      setModeEdit(
+        false
+      );
 
       // =================================================
       // REFRESH
       // =================================================
 
       await loadData();
-
 
     } catch (error) {
 
@@ -993,20 +1246,39 @@ export default function PenempatanBlok() {
 
       alert(
         "❌ Gagal menyimpan penempatan: " +
-        (
-          error?.message ||
-          "Terjadi kesalahan."
-        )
+          (
+            error?.message ||
+            "Terjadi kesalahan."
+          )
       );
 
     } finally {
 
-      setLoading(false);
+      setLoading(
+        false
+      );
 
     }
-
   }
 
+  // =====================================================
+  // TUTUP MODAL
+  // =====================================================
+
+  function handleTutupModal() {
+
+    setModalOpen(
+      false
+    );
+
+    setSelectedGudep(
+      null
+    );
+
+    setModeEdit(
+      false
+    );
+  }
 
   // =====================================================
   // LOADING
@@ -1024,9 +1296,7 @@ export default function PenempatanBlok() {
         Memuat data penempatan...
       </div>
     );
-
   }
-
 
   // =====================================================
   // TAMPILAN
@@ -1035,7 +1305,6 @@ export default function PenempatanBlok() {
   return (
 
     <div className="space-y-6">
-
 
       {/* =================================================
           HEADER
@@ -1060,7 +1329,6 @@ export default function PenempatanBlok() {
         </p>
 
       </div>
-
 
       {/* =================================================
           CARD JUMLAH
@@ -1097,7 +1365,6 @@ export default function PenempatanBlok() {
 
           </div>
 
-
           <div className="text-right">
 
             <div className="
@@ -1120,7 +1387,6 @@ export default function PenempatanBlok() {
         </div>
 
       </div>
-
 
       {/* =================================================
           TABEL
@@ -1181,7 +1447,6 @@ export default function PenempatanBlok() {
 
             </thead>
 
-
             <tbody>
 
               {data.length === 0 ? (
@@ -1205,10 +1470,15 @@ export default function PenempatanBlok() {
               ) : (
 
                 data.map(
-                  (item, index) => (
+                  (
+                    item,
+                    index
+                  ) => (
 
                     <tr
-                      key={item.gudep_id}
+                      key={
+                        item.gudep_id
+                      }
                       className="
                         hover:bg-gray-50
                       "
@@ -1222,7 +1492,6 @@ export default function PenempatanBlok() {
                         {index + 1}
                       </td>
 
-
                       <td className="
                         border
                         p-3
@@ -1231,8 +1500,9 @@ export default function PenempatanBlok() {
                         {item.namaGudep}
                       </td>
 
-
-                      {/* KAPLING */}
+                      {/* =================================
+                          KAPLING
+                      ================================= */}
 
                       <td className="
                         border
@@ -1245,39 +1515,62 @@ export default function PenempatanBlok() {
                           <div className="space-y-1">
 
                             {item.penempatan.kapling_putra && (
+
                               <div className="
                                 text-blue-700
                                 font-bold
                               ">
+
                                 🧑{" "}
+
                                 {ambilNomorKapling(
-                                  item.penempatan.kapling_putra
+                                  item
+                                    .penempatan
+                                    .kapling_putra
                                 )
                                   .map(
-                                    n =>
-                                      `PA${String(n).padStart(3, "0")}`
+                                    (n) =>
+                                      `PA${String(
+                                        n
+                                      ).padStart(
+                                        3,
+                                        "0"
+                                      )}`
                                   )
-                                  .join(", ")
-                                }
+                                  .join(
+                                    ", "
+                                  )}
+
                               </div>
                             )}
 
-
                             {item.penempatan.kapling_putri && (
+
                               <div className="
                                 text-pink-700
                                 font-bold
                               ">
+
                                 👩{" "}
+
                                 {ambilNomorKapling(
-                                  item.penempatan.kapling_putri
+                                  item
+                                    .penempatan
+                                    .kapling_putri
                                 )
                                   .map(
-                                    n =>
-                                      `PI${String(n).padStart(3, "0")}`
+                                    (n) =>
+                                      `PI${String(
+                                        n
+                                      ).padStart(
+                                        3,
+                                        "0"
+                                      )}`
                                   )
-                                  .join(", ")
-                                }
+                                  .join(
+                                    ", "
+                                  )}
+
                               </div>
                             )}
 
@@ -1295,8 +1588,9 @@ export default function PenempatanBlok() {
 
                       </td>
 
-
-                      {/* PUTRA */}
+                      {/* =================================
+                          PUTRA
+                      ================================= */}
 
                       <td className="
                         border
@@ -1310,7 +1604,9 @@ export default function PenempatanBlok() {
                             text-blue-600
                             font-bold
                           ">
-                            {item.jumlahPutra} Regu
+                            {item.jumlahPutra}
+                            {" "}
+                            Regu
                           </span>
 
                         ) : (
@@ -1325,8 +1621,9 @@ export default function PenempatanBlok() {
 
                       </td>
 
-
-                      {/* PUTRI */}
+                      {/* =================================
+                          PUTRI
+                      ================================= */}
 
                       <td className="
                         border
@@ -1340,7 +1637,9 @@ export default function PenempatanBlok() {
                             text-pink-600
                             font-bold
                           ">
-                            {item.jumlahPutri} Regu
+                            {item.jumlahPutri}
+                            {" "}
+                            Regu
                           </span>
 
                         ) : (
@@ -1355,8 +1654,9 @@ export default function PenempatanBlok() {
 
                       </td>
 
-
-                      {/* STATUS */}
+                      {/* =================================
+                          STATUS
+                      ================================= */}
 
                       <td className="
                         border
@@ -1395,8 +1695,9 @@ export default function PenempatanBlok() {
 
                       </td>
 
-
-                      {/* AKSI */}
+                      {/* =================================
+                          AKSI
+                      ================================= */}
 
                       <td className="
                         border
@@ -1408,25 +1709,31 @@ export default function PenempatanBlok() {
                         "Sudah Ditempatkan" ? (
 
                           <button
-                            disabled
+                            onClick={() =>
+                              handleEditPenempatan(
+                                item
+                              )
+                            }
                             className="
-                              bg-gray-300
-                              text-gray-500
+                              bg-orange-500
+                              hover:bg-orange-600
+                              text-white
                               px-4
                               py-2
                               rounded-lg
                               font-semibold
-                              cursor-not-allowed
                             "
                           >
-                            ✓ Sudah Ditempatkan
+                            ✏️ Ubah Penempatan
                           </button>
 
                         ) : (
 
                           <button
                             onClick={() =>
-                              handleTempatkan(item)
+                              handleTempatkan(
+                                item
+                              )
                             }
                             className="
                               bg-blue-600
@@ -1458,403 +1765,1036 @@ export default function PenempatanBlok() {
 
         </div>
 
-
         {/* =================================================
             MODAL
         ================================================= */}
 
         {modalOpen &&
-        selectedGudep && (
-
-          <div className="
-            fixed
-            inset-0
-            bg-black/50
-            flex
-            items-center
-            justify-center
-            z-50
-            p-4
-          ">
+          selectedGudep && (
 
             <div className="
-              bg-white
-              rounded-2xl
-              shadow-2xl
-              w-full
-              max-w-xl
-              max-h-[90vh]
-              overflow-y-auto
-              p-6
+              fixed
+              inset-0
+              bg-black/50
+              flex
+              items-center
+              justify-center
+              z-50
+              p-4
             ">
 
-
-              {/* HEADER */}
-
               <div className="
-                flex
-                justify-between
-                items-center
-                mb-6
+                bg-white
+                rounded-2xl
+                shadow-2xl
+                w-full
+                max-w-2xl
+                max-h-[90vh]
+                overflow-y-auto
+                p-6
               ">
 
-                <div>
+                {/* =========================================
+                    HEADER MODAL
+                ========================================= */}
 
-                  <h2 className="
-                    text-2xl
-                    font-bold
-                    text-green-700
-                  ">
-                    📍 Tempatkan Gudep
-                  </h2>
+                <div className="
+                  flex
+                  justify-between
+                  items-center
+                  mb-6
+                ">
 
-                  <p className="
-                    text-gray-500
-                    mt-1
-                  ">
-                    {selectedGudep.namaGudep}
-                  </p>
+                  <div>
+
+                    <h2 className="
+                      text-2xl
+                      font-bold
+                      text-green-700
+                    ">
+
+                      {modeEdit
+                        ? "✏️ Ubah Penempatan Gudep"
+                        : "📍 Tempatkan Gudep"}
+
+                    </h2>
+
+                    <p className="
+                      text-gray-500
+                      mt-1
+                    ">
+                      {selectedGudep.namaGudep}
+                    </p>
+
+                  </div>
+
+                  <button
+                    onClick={
+                      handleTutupModal
+                    }
+                    className="
+                      text-gray-500
+                      hover:text-red-600
+                      text-2xl
+                    "
+                  >
+                    ✕
+                  </button>
 
                 </div>
 
+                {/* =========================================
+                    INFO EDIT
+                ========================================= */}
 
-                <button
-                  onClick={() => {
+                {modeEdit && (
 
-                    setModalOpen(false);
+                  <div className="
+                    bg-orange-50
+                    border
+                    border-orange-200
+                    rounded-xl
+                    p-4
+                    mb-5
+                    text-sm
+                    text-orange-800
+                  ">
 
-                    setSelectedGudep(null);
+                    <strong>
+                      ✏️ Mode Ubah Penempatan
+                    </strong>
 
-                  }}
-                  className="
-                    text-gray-500
-                    hover:text-red-600
-                    text-2xl
-                  "
-                >
-                  ✕
-                </button>
+                    <p className="
+                      mt-1
+                    ">
+                      Nomor kapling lama Gudep ini
+                      tetap dapat dipilih. Nomor yang
+                      digunakan Gudep lain tetap tidak
+                      dapat dipilih.
+                    </p>
 
-              </div>
+                  </div>
 
+                )}
 
-              {/* INFO */}
+                {/* =========================================
+                    INFO KETENTUAN
+                ========================================= */}
 
-              <div className="
-                bg-yellow-50
-                border
-                border-yellow-200
-                rounded-xl
-                p-4
-                mb-5
-                text-sm
-                text-yellow-800
-              ">
-
-                <strong>
-                  ℹ️ Ketentuan Kapling:
-                </strong>
-
-                <ul className="
-                  mt-2
-                  list-disc
-                  ml-5
-                  space-y-1
+                <div className="
+                  bg-yellow-50
+                  border
+                  border-yellow-200
+                  rounded-xl
+                  p-4
+                  mb-5
+                  text-sm
+                  text-yellow-800
                 ">
 
-                  <li>
-                    Nomor kapling tersedia
-                    <strong> 001–015</strong>
-                    pada setiap kelurahan.
-                  </li>
+                  <strong>
+                    ℹ️ Ketentuan Kapling:
+                  </strong>
 
-                  <li>
-                    Putra menggunakan kode
-                    <strong> PA</strong>.
-                  </li>
+                  <ul className="
+                    mt-2
+                    list-disc
+                    ml-5
+                    space-y-1
+                  ">
 
-                  <li>
-                    Putri menggunakan kode
-                    <strong> PI</strong>.
-                  </li>
+                    <li>
+                      Setiap regu hanya mendapat
+                      <strong>
+                        {" "}1 nomor kapling.
+                      </strong>
+                    </li>
 
-                  <li>
-                    PA003 dan PI003
-                    <strong> boleh sama</strong>.
-                  </li>
+                    <li>
+                      Regu Putra dan Putri
+                      ditampilkan terpisah.
+                    </li>
 
-                  <li>
-                    Jumlah nomor yang dipilih
-                    harus sesuai jumlah regu.
-                  </li>
+                    <li>
+                      Nomor lokal tersedia
+                      <strong>
+                        {" "}001–015
+                      </strong>
+                      pada setiap kelurahan.
+                    </li>
 
-                  <li>
-                    Contoh 2 regu Putra:
-                    <strong> PA003, PA004</strong>.
-                  </li>
+                    <li>
+                      Nomor otomatis menjadi nomor
+                      global berdasarkan kelurahan.
+                    </li>
 
-                </ul>
+                    <li>
+                      Putra menggunakan kode
+                      <strong>
+                        {" "}PA
+                      </strong>.
+                    </li>
 
-              </div>
+                    <li>
+                      Putri menggunakan kode
+                      <strong>
+                        {" "}PI
+                      </strong>.
+                    </li>
 
+                    <li>
+                      PA026 dan PI026
+                      <strong>
+                        {" "}boleh sama.
+                      </strong>
+                    </li>
 
-              {/* =================================================
-                  PUTRA
-              ================================================= */}
+                  </ul>
 
-              {selectedGudep.adaPutra && (
+                </div>
+
+                {/* =================================================
+                    BLOK PUTRA
+                ================================================= */}
+
+                {selectedGudep.adaPutra && (
+
+                  <div className="
+                    border
+                    border-blue-200
+                    rounded-xl
+                    p-5
+                    mb-5
+                    bg-blue-50
+                  ">
+
+                    <h3 className="
+                      text-lg
+                      font-bold
+                      text-blue-700
+                      mb-4
+                    ">
+                      🧑 Blok Putra
+                    </h3>
+
+                    <div className="
+                      bg-blue-100
+                      text-blue-800
+                      rounded-lg
+                      p-3
+                      mb-4
+                      text-sm
+                      font-semibold
+                    ">
+
+                      Jumlah regu Putra:
+                      {" "}
+                      {selectedGudep.jumlahPutra}
+                      {" "}
+                      regu
+
+                    </div>
+
+                    {/* KECAMATAN */}
+
+                    <label className="
+                      block
+                      text-sm
+                      font-semibold
+                      mb-2
+                    ">
+                      Kecamatan
+                    </label>
+
+                    <input
+                      type="text"
+                      value={
+                        wilayahCikarangUtara
+                          ?.putra
+                          ?.kecamatan ||
+                        ""
+                      }
+                      readOnly
+                      className="
+                        w-full
+                        border
+                        rounded-lg
+                        p-3
+                        bg-gray-100
+                        mb-4
+                      "
+                    />
+
+                    {/* KELURAHAN */}
+
+                    <label className="
+                      block
+                      text-sm
+                      font-semibold
+                      mb-2
+                    ">
+                      Kelurahan
+                    </label>
+
+                    <select
+                      value={
+                        formPenempatan
+                          .kelurahanPutra
+                      }
+                      onChange={(e) => {
+
+                        setFormPenempatan(
+                          (prev) => ({
+                            ...prev,
+
+                            kelurahanPutra:
+                              e.target.value,
+
+                            kaplingPutra:
+                              buatArrayRegu(
+                                selectedGudep
+                                  .jumlahPutra
+                              ),
+                          })
+                        );
+
+                      }}
+                      className="
+                        w-full
+                        border
+                        border-gray-300
+                        rounded-lg
+                        p-3
+                        bg-white
+                        mb-5
+                        cursor-pointer
+                      "
+                    >
+
+                      <option value="">
+                        Pilih Kelurahan
+                      </option>
+
+                      {(
+                        wilayahCikarangUtara
+                          ?.putra
+                          ?.kelurahan || []
+                      ).map(
+                        (
+                          kelurahan
+                        ) => (
+
+                          <option
+                            key={
+                              kelurahan
+                            }
+                            value={
+                              kelurahan
+                            }
+                          >
+                            {kelurahan}
+                          </option>
+
+                        )
+                      )}
+
+                    </select>
+
+                    {/* ==========================================
+                        REGU PUTRA
+                    ========================================== */}
+
+                    <div className="
+                      space-y-3
+                    ">
+
+                      {Array.from(
+                        {
+                          length:
+                            selectedGudep
+                              .jumlahPutra,
+                        },
+                        (
+                          _,
+                          index
+                        ) => {
+
+                          const nomorTerpilih =
+                            formPenempatan
+                              .kaplingPutra?.[
+                              index
+                            ] ||
+                            "";
+
+                          const pilihan =
+                            getPilihanKapling(
+                              "putra",
+
+                              formPenempatan
+                                .kelurahanPutra,
+
+                              formPenempatan
+                                .kaplingPutra,
+
+                              index
+                            );
+
+                          return (
+
+                            <div
+                              key={
+                                `putra-regu-${index}`
+                              }
+                              className="
+                                bg-white
+                                border
+                                border-blue-200
+                                rounded-xl
+                                p-4
+                              "
+                            >
+
+                              <div className="
+                                flex
+                                items-center
+                                justify-between
+                                gap-3
+                                mb-2
+                              ">
+
+                                <div>
+
+                                  <div className="
+                                    font-bold
+                                    text-blue-700
+                                  ">
+                                    🧑 Regu Putra{" "}
+                                    {index + 1}
+                                  </div>
+
+                                  <div className="
+                                    text-xs
+                                    text-gray-500
+                                    mt-1
+                                  ">
+                                    Pilih 1 nomor kapling
+                                  </div>
+
+                                </div>
+
+                                {nomorTerpilih && (
+
+                                  <span className="
+                                    bg-blue-100
+                                    text-blue-700
+                                    px-3
+                                    py-1
+                                    rounded-full
+                                    text-sm
+                                    font-bold
+                                  ">
+
+                                    {formatNomorKapling(
+                                      nomorTerpilih,
+                                      "putra"
+                                    )}
+
+                                  </span>
+
+                                )}
+
+                              </div>
+
+                              <select
+                                value={
+                                  nomorTerpilih
+                                }
+                                onChange={(e) =>
+                                  handleKaplingPutraChange(
+                                    index,
+                                    e.target.value
+                                  )
+                                }
+                                disabled={
+                                  !formPenempatan
+                                    .kelurahanPutra
+                                }
+                                className="
+                                  w-full
+                                  border
+                                  border-blue-300
+                                  rounded-lg
+                                  p-3
+                                  bg-white
+                                  text-blue-700
+                                  font-bold
+                                  cursor-pointer
+                                  disabled:bg-gray-100
+                                  disabled:cursor-not-allowed
+                                "
+                              >
+
+                                <option value="">
+                                  Pilih Kapling Regu Putra{" "}
+                                  {index + 1}
+                                </option>
+
+                                {pilihan.map(
+                                  ({
+                                    nomorGlobal,
+                                    sudahTerpakai,
+                                    dipakaiReguLain,
+                                  }) => {
+
+                                    const disabled =
+                                      sudahTerpakai ||
+                                      dipakaiReguLain;
+
+                                    return (
+
+                                      <option
+                                        key={
+                                          nomorGlobal
+                                        }
+                                        value={
+                                          nomorGlobal
+                                        }
+                                        disabled={
+                                          disabled
+                                        }
+                                      >
+
+                                        {formatNomorKapling(
+                                          nomorGlobal,
+                                          "putra"
+                                        )}
+
+                                        {sudahTerpakai
+                                          ? " — Sudah Digunakan"
+                                          : dipakaiReguLain
+                                          ? " — Dipakai Regu Lain"
+                                          : ""}
+
+                                      </option>
+
+                                    );
+                                  }
+                                )}
+
+                              </select>
+
+                            </div>
+
+                          );
+                        }
+                      )}
+
+                    </div>
+
+                  </div>
+
+                )}
+
+                {/* =================================================
+                    BLOK PUTRI
+                ================================================= */}
+
+                {selectedGudep.adaPutri && (
+
+                  <div className="
+                    border
+                    border-pink-200
+                    rounded-xl
+                    p-5
+                    mb-5
+                    bg-pink-50
+                  ">
+
+                    <h3 className="
+                      text-lg
+                      font-bold
+                      text-pink-700
+                      mb-4
+                    ">
+                      👩 Blok Putri
+                    </h3>
+
+                    <div className="
+                      bg-pink-100
+                      text-pink-800
+                      rounded-lg
+                      p-3
+                      mb-4
+                      text-sm
+                      font-semibold
+                    ">
+
+                      Jumlah regu Putri:
+                      {" "}
+                      {selectedGudep.jumlahPutri}
+                      {" "}
+                      regu
+
+                    </div>
+
+                    {/* KECAMATAN */}
+
+                    <label className="
+                      block
+                      text-sm
+                      font-semibold
+                      mb-2
+                    ">
+                      Kecamatan
+                    </label>
+
+                    <input
+                      type="text"
+                      value={
+                        wilayahCikarangUtara
+                          ?.putri
+                          ?.kecamatan ||
+                        ""
+                      }
+                      readOnly
+                      className="
+                        w-full
+                        border
+                        rounded-lg
+                        p-3
+                        bg-gray-100
+                        mb-4
+                      "
+                    />
+
+                    {/* KELURAHAN */}
+
+                    <label className="
+                      block
+                      text-sm
+                      font-semibold
+                      mb-2
+                    ">
+                      Kelurahan
+                    </label>
+
+                    <select
+                      value={
+                        formPenempatan
+                          .kelurahanPutri
+                      }
+                      onChange={(e) => {
+
+                        setFormPenempatan(
+                          (prev) => ({
+                            ...prev,
+
+                            kelurahanPutri:
+                              e.target.value,
+
+                            kaplingPutri:
+                              buatArrayRegu(
+                                selectedGudep
+                                  .jumlahPutri
+                              ),
+                          })
+                        );
+
+                      }}
+                      className="
+                        w-full
+                        border
+                        border-gray-300
+                        rounded-lg
+                        p-3
+                        bg-white
+                        mb-5
+                        cursor-pointer
+                      "
+                    >
+
+                      <option value="">
+                        Pilih Kelurahan
+                      </option>
+
+                      {(
+                        wilayahCikarangUtara
+                          ?.putri
+                          ?.kelurahan || []
+                      ).map(
+                        (
+                          kelurahan
+                        ) => (
+
+                          <option
+                            key={
+                              kelurahan
+                            }
+                            value={
+                              kelurahan
+                            }
+                          >
+                            {kelurahan}
+                          </option>
+
+                        )
+                      )}
+
+                    </select>
+
+                    {/* ==========================================
+                        REGU PUTRI
+                    ========================================== */}
+
+                    <div className="
+                      space-y-3
+                    ">
+
+                      {Array.from(
+                        {
+                          length:
+                            selectedGudep
+                              .jumlahPutri,
+                        },
+                        (
+                          _,
+                          index
+                        ) => {
+
+                          const nomorTerpilih =
+                            formPenempatan
+                              .kaplingPutri?.[
+                              index
+                            ] ||
+                            "";
+
+                          const pilihan =
+                            getPilihanKapling(
+                              "putri",
+
+                              formPenempatan
+                                .kelurahanPutri,
+
+                              formPenempatan
+                                .kaplingPutri,
+
+                              index
+                            );
+
+                          return (
+
+                            <div
+                              key={
+                                `putri-regu-${index}`
+                              }
+                              className="
+                                bg-white
+                                border
+                                border-pink-200
+                                rounded-xl
+                                p-4
+                              "
+                            >
+
+                              <div className="
+                                flex
+                                items-center
+                                justify-between
+                                gap-3
+                                mb-2
+                              ">
+
+                                <div>
+
+                                  <div className="
+                                    font-bold
+                                    text-pink-700
+                                  ">
+                                    👩 Regu Putri{" "}
+                                    {index + 1}
+                                  </div>
+
+                                  <div className="
+                                    text-xs
+                                    text-gray-500
+                                    mt-1
+                                  ">
+                                    Pilih 1 nomor kapling
+                                  </div>
+
+                                </div>
+
+                                {nomorTerpilih && (
+
+                                  <span className="
+                                    bg-pink-100
+                                    text-pink-700
+                                    px-3
+                                    py-1
+                                    rounded-full
+                                    text-sm
+                                    font-bold
+                                  ">
+
+                                    {formatNomorKapling(
+                                      nomorTerpilih,
+                                      "putri"
+                                    )}
+
+                                  </span>
+
+                                )}
+
+                              </div>
+
+                              <select
+                                value={
+                                  nomorTerpilih
+                                }
+                                onChange={(e) =>
+                                  handleKaplingPutriChange(
+                                    index,
+                                    e.target.value
+                                  )
+                                }
+                                disabled={
+                                  !formPenempatan
+                                    .kelurahanPutri
+                                }
+                                className="
+                                  w-full
+                                  border
+                                  border-pink-300
+                                  rounded-lg
+                                  p-3
+                                  bg-white
+                                  text-pink-700
+                                  font-bold
+                                  cursor-pointer
+                                  disabled:bg-gray-100
+                                  disabled:cursor-not-allowed
+                                "
+                              >
+
+                                <option value="">
+                                  Pilih Kapling Regu Putri{" "}
+                                  {index + 1}
+                                </option>
+
+                                {pilihan.map(
+                                  ({
+                                    nomorGlobal,
+                                    sudahTerpakai,
+                                    dipakaiReguLain,
+                                  }) => {
+
+                                    const disabled =
+                                      sudahTerpakai ||
+                                      dipakaiReguLain;
+
+                                    return (
+
+                                      <option
+                                        key={
+                                          nomorGlobal
+                                        }
+                                        value={
+                                          nomorGlobal
+                                        }
+                                        disabled={
+                                          disabled
+                                        }
+                                      >
+
+                                        {formatNomorKapling(
+                                          nomorGlobal,
+                                          "putri"
+                                        )}
+
+                                        {sudahTerpakai
+                                          ? " — Sudah Digunakan"
+                                          : dipakaiReguLain
+                                          ? " — Dipakai Regu Lain"
+                                          : ""}
+
+                                      </option>
+
+                                    );
+                                  }
+                                )}
+
+                              </select>
+
+                            </div>
+
+                          );
+                        }
+                      )}
+
+                    </div>
+
+                  </div>
+
+                )}
+
+                {/* =================================================
+                    RINGKASAN
+                ================================================= */}
 
                 <div className="
                   border
-                  border-blue-200
+                  border-gray-200
                   rounded-xl
-                  p-5
+                  p-4
                   mb-5
-                  bg-blue-50
+                  bg-gray-50
                 ">
 
                   <h3 className="
-                    text-lg
                     font-bold
-                    text-blue-700
-                    mb-4
+                    text-gray-700
+                    mb-3
                   ">
-                    🧑 Blok Putra
+                    📋 Ringkasan Penempatan
                   </h3>
 
+                  {/* PUTRA */}
 
-                  <div className="
-                    bg-blue-100
-                    text-blue-800
-                    rounded-lg
-                    p-3
-                    mb-4
-                    text-sm
-                    font-semibold
-                  ">
-                    Jumlah regu Putra:
-                    {" "}
-                    {selectedGudep.jumlahPutra}
-                    {" "}
-                    regu
-                  </div>
-
-
-                  <label className="
-                    block
-                    text-sm
-                    font-semibold
-                    mb-2
-                  ">
-                    Kecamatan
-                  </label>
-
-                  <input
-                    type="text"
-                    value={
-                      wilayahCikarangUtara?.putra?.kecamatan ||
-                      ""
-                    }
-                    readOnly
-                    className="
-                      w-full
-                      border
-                      rounded-lg
-                      p-3
-                      bg-gray-100
-                      mb-4
-                    "
-                  />
-
-
-                  <label className="
-                    block
-                    text-sm
-                    font-semibold
-                    mb-2
-                  ">
-                    Kelurahan
-                  </label>
-
-                  <select
-                    value={
-                      formPenempatan.kelurahanPutra
-                    }
-                    onChange={(e) => {
-
-                      setFormPenempatan(
-                        prev => ({
-                          ...prev,
-
-                          kelurahanPutra:
-                            e.target.value,
-
-                          kaplingPutra: [],
-
-                        })
-                      );
-
-                    }}
-                    className="
-                      w-full
-                      border
-                      border-gray-300
-                      rounded-lg
-                      p-3
-                      bg-white
-                      mb-4
-                      cursor-pointer
-                    "
-                  >
-
-                    <option value="">
-                      Pilih Kelurahan
-                    </option>
-
-                    {(
-                      wilayahCikarangUtara
-                        ?.putra
-                        ?.kelurahan || []
-                    ).map(
-                      kelurahan => (
-
-                        <option
-                          key={kelurahan}
-                          value={kelurahan}
-                        >
-                          {kelurahan}
-                        </option>
-
-                      )
-                    )}
-
-                  </select>
-
-
-                  <label className="
-                    block
-                    text-sm
-                    font-semibold
-                    mb-2
-                  ">
-                    Nomor Kapling Putra
-                  </label>
-
-                  <select
-                    multiple
-                    value={
-                      formPenempatan.kaplingPutra
-                    }
-                    onChange={
-                      handleKaplingPutraChange
-                    }
-                    disabled={
-                      !formPenempatan.kelurahanPutra
-                    }
-                    className="
-                      w-full
-                      border
-                      rounded-lg
-                      p-3
-                      font-bold
-                      min-h-[180px]
-                      bg-white
-                      text-blue-700
-                      border-blue-300
-                    "
-                  >
-
-                    {Array.from(
-  { length: 15 },
-  (_, index) =>
-    index + 1
-).map(
-  nomorLokal => {
-
-    const nomorGlobal =
-      getNomorGlobalKapling(
-        "putra",
-        formPenempatan.kelurahanPutra,
-        nomorLokal
-      );
-
-
-    const sudahTerpakai =
-      formPenempatan.kelurahanPutra
-        ? cekKaplingTerpakai(
-            formPenempatan.kelurahanPutra,
-            nomorGlobal,
-            "putra"
-          )
-        : false;
-
-
-    return (
-
-      <option
-        key={nomorGlobal}
-        value={nomorGlobal}
-        disabled={sudahTerpakai}
-      >
-
-        {formatNomorKapling(
-          nomorGlobal,
-          "putra"
-        )}
-
-        {sudahTerpakai
-          ? " — Sudah Digunakan"
-          : ""}
-
-      </option>
-
-    );
-
-  }
-)}
-
-                  </select>
-
-
-                  <p className="
-                    text-xs
-                    text-blue-600
-                    mt-2
-                  ">
-                    💡 Pilih tepat{" "}
-                    <strong>
-                      {selectedGudep.jumlahPutra}
-                    </strong>{" "}
-                    nomor untuk{" "}
-                    <strong>
-                      {selectedGudep.jumlahPutra}
-                    </strong>{" "}
-                    regu Putra.
-                  </p>
-
-
-                  {formPenempatan.kaplingPutra.length > 0 && (
+                  {selectedGudep.adaPutra && (
 
                     <div className="
-                      mt-3
-                      bg-white
-                      border
-                      border-blue-200
-                      rounded-lg
-                      p-3
-                      text-sm
-                      text-blue-700
-                      font-bold
+                      mb-4
                     ">
 
-                      Kapling terpilih:{" "}
+                      <div className="
+                        text-sm
+                        font-bold
+                        text-blue-700
+                        mb-1
+                      ">
+                        🧑 Regu Putra
+                      </div>
 
-                      {formPenempatan.kaplingPutra
-                        .map(
-                          n =>
-                            `PA${String(n).padStart(3, "0")}`
-                        )
-                        .join(", ")}
+                      <div className="
+                        space-y-1
+                        text-sm
+                      ">
+
+                        {formPenempatan
+                          .kaplingPutra
+                          .map(
+                            (
+                              nomor,
+                              index
+                            ) => (
+
+                              <div
+                                key={
+                                  `ringkas-putra-${index}`
+                                }
+                                className="
+                                  flex
+                                  justify-between
+                                  border-b
+                                  border-gray-200
+                                  py-1
+                                "
+                              >
+
+                                <span>
+                                  Regu Putra{" "}
+                                  {index + 1}
+                                </span>
+
+                                <strong className="
+                                  text-blue-700
+                                ">
+
+                                  {nomor
+                                    ? formatNomorKapling(
+                                        nomor,
+                                        "putra"
+                                      )
+                                    : "Belum dipilih"}
+
+                                </strong>
+
+                              </div>
+
+                            )
+                          )}
+
+                      </div>
+
+                    </div>
+
+                  )}
+
+                  {/* PUTRI */}
+
+                  {selectedGudep.adaPutri && (
+
+                    <div>
+
+                      <div className="
+                        text-sm
+                        font-bold
+                        text-pink-700
+                        mb-1
+                      ">
+                        👩 Regu Putri
+                      </div>
+
+                      <div className="
+                        space-y-1
+                        text-sm
+                      ">
+
+                        {formPenempatan
+                          .kaplingPutri
+                          .map(
+                            (
+                              nomor,
+                              index
+                            ) => (
+
+                              <div
+                                key={
+                                  `ringkas-putri-${index}`
+                                }
+                                className="
+                                  flex
+                                  justify-between
+                                  border-b
+                                  border-gray-200
+                                  py-1
+                                "
+                              >
+
+                                <span>
+                                  Regu Putri{" "}
+                                  {index + 1}
+                                </span>
+
+                                <strong className="
+                                  text-pink-700
+                                ">
+
+                                  {nomor
+                                    ? formatNomorKapling(
+                                        nomor,
+                                        "putri"
+                                      )
+                                    : "Belum dipilih"}
+
+                                </strong>
+
+                              </div>
+
+                            )
+                          )}
+
+                      </div>
 
                     </div>
 
@@ -1862,362 +2802,99 @@ export default function PenempatanBlok() {
 
                 </div>
 
-              )}
-
-
-              {/* =================================================
-                  PUTRI
-              ================================================= */}
-
-              {selectedGudep.adaPutri && (
+                {/* =================================================
+                    TOMBOL
+                ================================================= */}
 
                 <div className="
-                  border
-                  border-pink-200
-                  rounded-xl
-                  p-5
-                  mb-5
-                  bg-pink-50
+                  flex
+                  justify-end
+                  gap-3
+                  mt-6
                 ">
 
-                  <h3 className="
-                    text-lg
-                    font-bold
-                    text-pink-700
-                    mb-4
-                  ">
-                    👩 Blok Putri
-                  </h3>
-
-
-                  <div className="
-                    bg-pink-100
-                    text-pink-800
-                    rounded-lg
-                    p-3
-                    mb-4
-                    text-sm
-                    font-semibold
-                  ">
-                    Jumlah regu Putri:
-                    {" "}
-                    {selectedGudep.jumlahPutri}
-                    {" "}
-                    regu
-                  </div>
-
-
-                  <label className="
-                    block
-                    text-sm
-                    font-semibold
-                    mb-2
-                  ">
-                    Kecamatan
-                  </label>
-
-                  <input
-                    type="text"
-                    value={
-                      wilayahCikarangUtara?.putri?.kecamatan ||
-                      ""
+                  <button
+                    onClick={
+                      handleTutupModal
                     }
-                    readOnly
                     className="
-                      w-full
-                      border
+                      px-5
+                      py-3
                       rounded-lg
-                      p-3
-                      bg-gray-100
-                      mb-4
-                    "
-                  />
-
-
-                  <label className="
-                    block
-                    text-sm
-                    font-semibold
-                    mb-2
-                  ">
-                    Kelurahan
-                  </label>
-
-                  <select
-                    value={
-                      formPenempatan.kelurahanPutri
-                    }
-                    onChange={(e) => {
-
-                      setFormPenempatan(
-                        prev => ({
-                          ...prev,
-
-                          kelurahanPutri:
-                            e.target.value,
-
-                          kaplingPutri: [],
-
-                        })
-                      );
-
-                    }}
-                    className="
-                      w-full
-                      border
-                      border-gray-300
-                      rounded-lg
-                      p-3
-                      bg-white
-                      mb-4
-                      cursor-pointer
+                      bg-gray-200
+                      hover:bg-gray-300
+                      font-semibold
                     "
                   >
+                    Batal
+                  </button>
 
-                    <option value="">
-                      Pilih Kelurahan
-                    </option>
-
-                    {(
-                      wilayahCikarangUtara
-                        ?.putri
-                        ?.kelurahan || []
-                    ).map(
-                      kelurahan => (
-
-                        <option
-                          key={kelurahan}
-                          value={kelurahan}
-                        >
-                          {kelurahan}
-                        </option>
-
-                      )
-                    )}
-
-                  </select>
-
-
-                  <label className="
-                    block
-                    text-sm
-                    font-semibold
-                    mb-2
-                  ">
-                    Nomor Kapling Putri
-                  </label>
-
-                  <select
-                    multiple
-                    value={
-                      formPenempatan.kaplingPutri
-                    }
-                    onChange={
-                      handleKaplingPutriChange
+                  <button
+                    onClick={
+                      handleSimpanPenempatan
                     }
                     disabled={
-                      !formPenempatan.kelurahanPutri
+
+                      (
+                        selectedGudep.adaPutra &&
+                        (
+                          !formPenempatan
+                            .kelurahanPutra ||
+                          !semuaReguSudahDipilih(
+                            formPenempatan
+                              .kaplingPutra,
+                            selectedGudep
+                              .jumlahPutra
+                          )
+                        )
+                      )
+
+                      ||
+
+                      (
+                        selectedGudep.adaPutri &&
+                        (
+                          !formPenempatan
+                            .kelurahanPutri ||
+                          !semuaReguSudahDipilih(
+                            formPenempatan
+                              .kaplingPutri,
+                            selectedGudep
+                              .jumlahPutri
+                          )
+                        )
+                      )
+
                     }
                     className="
-                      w-full
-                      border
+                      px-5
+                      py-3
                       rounded-lg
-                      p-3
+                      bg-green-600
+                      hover:bg-green-700
+                      disabled:bg-gray-400
+                      text-white
                       font-bold
-                      min-h-[180px]
-                      bg-white
-                      text-pink-700
-                      border-pink-300
                     "
                   >
 
-                   {Array.from(
-  { length: 15 },
-  (_, index) =>
-    index + 1
-).map(
-  nomorLokal => {
+                    {modeEdit
+                      ? "💾 Simpan Perubahan"
+                      : "💾 Simpan Penempatan"}
 
-    const nomorGlobal =
-      getNomorGlobalKapling(
-        "putri",
-        formPenempatan.kelurahanPutri,
-        nomorLokal
-      );
-
-
-    const sudahTerpakai =
-      formPenempatan.kelurahanPutri
-        ? cekKaplingTerpakai(
-            formPenempatan.kelurahanPutri,
-            nomorGlobal,
-            "putri"
-          )
-        : false;
-
-
-    return (
-
-      <option
-        key={nomorGlobal}
-        value={nomorGlobal}
-        disabled={sudahTerpakai}
-      >
-
-        {formatNomorKapling(
-          nomorGlobal,
-          "putri"
-        )}
-
-        {sudahTerpakai
-          ? " — Sudah Digunakan"
-          : ""}
-
-      </option>
-
-    );
-
-  }
-)}
-
-                  </select>
-
-
-                  <p className="
-                    text-xs
-                    text-pink-600
-                    mt-2
-                  ">
-                    💡 Pilih tepat{" "}
-                    <strong>
-                      {selectedGudep.jumlahPutri}
-                    </strong>{" "}
-                    nomor untuk{" "}
-                    <strong>
-                      {selectedGudep.jumlahPutri}
-                    </strong>{" "}
-                    regu Putri.
-                  </p>
-
-
-                  {formPenempatan.kaplingPutri.length > 0 && (
-
-                    <div className="
-                      mt-3
-                      bg-white
-                      border
-                      border-pink-200
-                      rounded-lg
-                      p-3
-                      text-sm
-                      text-pink-700
-                      font-bold
-                    ">
-
-                      Kapling terpilih:{" "}
-
-                      {formPenempatan.kaplingPutri
-                        .map(
-                          n =>
-                            `PI${String(n).padStart(3, "0")}`
-                        )
-                        .join(", ")}
-
-                    </div>
-
-                  )}
+                  </button>
 
                 </div>
 
-              )}
-
-
-              {/* =================================================
-                  TOMBOL
-              ================================================= */}
-
-              <div className="
-                flex
-                justify-end
-                gap-3
-                mt-6
-              ">
-
-                <button
-                  onClick={() => {
-
-                    setModalOpen(false);
-
-                    setSelectedGudep(null);
-
-                  }}
-                  className="
-                    px-5
-                    py-3
-                    rounded-lg
-                    bg-gray-200
-                    hover:bg-gray-300
-                    font-semibold
-                  "
-                >
-                  Batal
-                </button>
-
-
-                <button
-                  onClick={
-                    handleSimpanPenempatan
-                  }
-                  disabled={
-
-                    (
-                      selectedGudep.adaPutra &&
-                      (
-                        !formPenempatan.kelurahanPutra ||
-                        formPenempatan.kaplingPutra.length !==
-                        selectedGudep.jumlahPutra
-                      )
-                    )
-
-                    ||
-
-                    (
-                      selectedGudep.adaPutri &&
-                      (
-                        !formPenempatan.kelurahanPutri ||
-                        formPenempatan.kaplingPutri.length !==
-                        selectedGudep.jumlahPutri
-                      )
-                    )
-
-                  }
-                  className="
-                    px-5
-                    py-3
-                    rounded-lg
-                    bg-green-600
-                    hover:bg-green-700
-                    disabled:bg-gray-400
-                    text-white
-                    font-bold
-                  "
-                >
-                  💾 Simpan Penempatan
-                </button>
-
               </div>
-
 
             </div>
 
-          </div>
-
-        )}
+          )}
 
       </div>
 
     </div>
-
   );
-
 }
+

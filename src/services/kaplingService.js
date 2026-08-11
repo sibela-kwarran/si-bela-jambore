@@ -22,14 +22,8 @@ export async function getKaplingByGudep(gudep_id) {
   return data;
 }
 
-
 // ======================================================
 // AMBIL SEMUA DATA BLOK
-//
-// PENTING:
-// Tidak menggunakan nested profil_gudep.
-// Ini mencegah error Failed to fetch akibat
-// relationship Supabase.
 // ======================================================
 
 export async function getBlok() {
@@ -46,9 +40,18 @@ export async function getBlok() {
   return data || [];
 }
 
-
 // ======================================================
 // SIMPAN PENEMPATAN BLOK
+//
+// JIKA GUDEP BELUM ADA:
+//   INSERT
+//
+// JIKA GUDEP SUDAH ADA:
+//   UPDATE
+//
+// PENTING:
+// Mencegah satu gudep mempunyai 2 baris
+// penempatan_blok.
 // ======================================================
 
 export async function savePenempatanBlok(data) {
@@ -58,36 +61,82 @@ export async function savePenempatanBlok(data) {
     );
   }
 
-  const { data: hasil, error } = await supabase
-    .from(TABLE)
-    .insert([data])
-    .select("*")
-    .single();
+  // ====================================================
+  // CEK APAKAH GUDEP SUDAH ADA
+  // ====================================================
 
-  if (error) {
+  const { data: dataLama, error: errorCek } = await supabase
+    .from(TABLE)
+    .select("*")
+    .eq("gudep_id", data.gudep_id)
+    .maybeSingle();
+
+  if (errorCek) {
     console.error(
-      "SAVE PENEMPATAN BLOK ERROR:",
-      error
+      "CEK PENEMPATAN GUDEP ERROR:",
+      errorCek
     );
 
-    throw error;
+    throw errorCek;
   }
 
-  return hasil;
-}
+  // ====================================================
+  // JIKA SUDAH ADA → UPDATE
+  // ====================================================
 
+  if (dataLama) {
+    const { data: hasilUpdate, error: errorUpdate } =
+      await supabase
+        .from(TABLE)
+        .update(data)
+        .eq("gudep_id", data.gudep_id)
+        .select("*")
+        .single();
+
+    if (errorUpdate) {
+      console.error(
+        "UPDATE PENEMPATAN BLOK ERROR:",
+        errorUpdate
+      );
+
+      throw errorUpdate;
+    }
+
+    return hasilUpdate;
+  }
+
+  // ====================================================
+  // JIKA BELUM ADA → INSERT
+  // ====================================================
+
+  const { data: hasilInsert, error: errorInsert } =
+    await supabase
+      .from(TABLE)
+      .insert([data])
+      .select("*")
+      .single();
+
+  if (errorInsert) {
+    console.error(
+      "INSERT PENEMPATAN BLOK ERROR:",
+      errorInsert
+    );
+
+    throw errorInsert;
+  }
+
+  return hasilInsert;
+}
 
 // ======================================================
 // SIMPAN PETA
 //
-// Dipertahankan agar komponen lama tidak error.
+// Dipertahankan untuk kompatibilitas komponen lama.
 // ======================================================
 
 export async function savePeta(data) {
   if (!data) {
-    throw new Error(
-      "Data peta tidak tersedia."
-    );
+    throw new Error("Data peta tidak tersedia.");
   }
 
   const { data: hasil, error } = await supabase
@@ -112,7 +161,6 @@ export async function savePeta(data) {
     ? hasil || []
     : hasil?.[0] || null;
 }
-
 
 // ======================================================
 // CEK APAKAH GUDEP SUDAH PUNYA KAPLING
@@ -141,7 +189,6 @@ export async function cekKaplingGudep(gudepId) {
   return data;
 }
 
-
 // ======================================================
 // NORMALISASI NOMOR KAPLING
 //
@@ -151,6 +198,8 @@ export async function cekKaplingGudep(gudepId) {
 // 003, 004
 // PA003
 // PA003,PA004
+// PI003
+// PI003,PI004
 // ======================================================
 
 function normalisasiNomor(value) {
@@ -164,7 +213,7 @@ function normalisasiNomor(value) {
 
   return String(value)
     .split(",")
-    .map(item =>
+    .map((item) =>
       String(item)
         .trim()
         .replace(/^PA/i, "")
@@ -173,21 +222,17 @@ function normalisasiNomor(value) {
     )
     .map(Number)
     .filter(
-      nomor =>
+      (nomor) =>
         !isNaN(nomor) &&
         nomor >= 1 &&
         nomor <= 1000
     );
 }
 
-
 // ======================================================
 // AMBIL NOMOR KAPLING YANG SUDAH DIPAKAI
 //
 // Berdasarkan kelurahan + jenis.
-//
-// Contoh hasil:
-// [1, 2, 3, 4]
 // ======================================================
 
 export async function getKaplingTerpakai(
@@ -234,7 +279,7 @@ export async function getKaplingTerpakai(
 
   const hasil = [];
 
-  (data || []).forEach(item => {
+  (data || []).forEach((item) => {
     hasil.push(
       ...normalisasiNomor(
         item[kolomKapling]
@@ -248,7 +293,6 @@ export async function getKaplingTerpakai(
     (a, b) => a - b
   );
 }
-
 
 // ======================================================
 // CEK SATU NOMOR KAPLING
@@ -278,7 +322,6 @@ export async function cekNomorKaplingDipakai(
   );
 }
 
-
 // ======================================================
 // NOMOR KAPLING PUTRA TERAKHIR
 // ======================================================
@@ -304,7 +347,7 @@ export async function getNomorPutraTerakhir() {
 
   const semuaNomor = [];
 
-  (data || []).forEach(item => {
+  (data || []).forEach((item) => {
     semuaNomor.push(
       ...normalisasiNomor(
         item.kapling_putra
@@ -316,7 +359,6 @@ export async function getNomorPutraTerakhir() {
     ? Math.max(...semuaNomor)
     : 0;
 }
-
 
 // ======================================================
 // NOMOR KAPLING PUTRI TERAKHIR
@@ -343,7 +385,7 @@ export async function getNomorPutriTerakhir() {
 
   const semuaNomor = [];
 
-  (data || []).forEach(item => {
+  (data || []).forEach((item) => {
     semuaNomor.push(
       ...normalisasiNomor(
         item.kapling_putri
@@ -355,7 +397,6 @@ export async function getNomorPutriTerakhir() {
     ? Math.max(...semuaNomor)
     : 0;
 }
-
 
 // ======================================================
 // NOMOR KAPLING BERIKUTNYA
@@ -392,7 +433,7 @@ export async function getNomorKaplingBerikutnya(
 
   const nomorTerpakai = [];
 
-  (data || []).forEach(item => {
+  (data || []).forEach((item) => {
     nomorTerpakai.push(
       ...normalisasiNomor(
         item[kolom]
@@ -410,3 +451,4 @@ export async function getNomorKaplingBerikutnya(
 
   return nomor;
 }
+

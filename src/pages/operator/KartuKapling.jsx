@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -104,7 +105,7 @@ export default function KartuKapling() {
   }
 
   // ==========================================
-  // KAPLING BELUM DIBUAT
+  // CEK KAPLING
   // ==========================================
 
   const adaKaplingPutra =
@@ -194,46 +195,113 @@ export default function KartuKapling() {
   );
 
   // ==========================================
+  // FUNGSI AMBIL NOMOR KAPLING
+  //
+  // "019"       -> ["019"]
+  // "019,020"   -> ["019", "020"]
+  // "019, 020"  -> ["019", "020"]
+  // ==========================================
+
+  function ambilNomorKapling(value) {
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+      return [];
+    }
+
+    return String(value)
+      .split(",")
+      .map((nomor) => nomor.trim())
+      .filter(Boolean);
+  }
+
+  // ==========================================
+  // NOMOR KAPLING PUTRA
+  // ==========================================
+
+  const daftarKaplingPutra =
+    ambilNomorKapling(
+      dataKapling.kapling_putra
+    );
+
+  // ==========================================
+  // NOMOR KAPLING PUTRI
+  // ==========================================
+
+  const daftarKaplingPutri =
+    ambilNomorKapling(
+      dataKapling.kapling_putri
+    );
+
+  // ==========================================
   // BUAT KARTU
   // ==========================================
 
   const kartu = [];
 
-  // ------------------------------------------
+  // ==========================================
   // KARTU PUTRA
-  // ------------------------------------------
+  //
+  // Regu 1 -> nomor index 0
+  // Regu 2 -> nomor index 1
+  // Regu 3 -> nomor index 2
+  // ==========================================
 
   if (adaKaplingPutra) {
     reguPutra.forEach((regu, index) => {
+
+      const nomorKapling =
+        daftarKaplingPutra[index] || "";
+
       kartu.push({
         ...dataKapling,
         regu,
         jenis: "putra",
         nomorUrut: index + 1,
-        nomorKapling: dataKapling.kapling_putra,
+        nomorKapling,
         kecamatan: dataKapling.kecamatan_putra,
         kelurahan: dataKapling.kelurahan_putra,
       });
+
     });
   }
 
-  // ------------------------------------------
+  // ==========================================
   // KARTU PUTRI
-  // ------------------------------------------
+  //
+  // Regu 1 -> nomor index 0
+  // Regu 2 -> nomor index 1
+  // Regu 3 -> nomor index 2
+  // ==========================================
 
   if (adaKaplingPutri) {
     reguPutri.forEach((regu, index) => {
+
+      const nomorKapling =
+        daftarKaplingPutri[index] || "";
+
       kartu.push({
         ...dataKapling,
         regu,
         jenis: "putri",
         nomorUrut: index + 1,
-        nomorKapling: dataKapling.kapling_putri,
+        nomorKapling,
         kecamatan: dataKapling.kecamatan_putri,
         kelurahan: dataKapling.kelurahan_putri,
       });
+
     });
   }
+
+  // ==========================================
+  // DEBUG
+  // ==========================================
+
+  console.log("DAFTAR KAPLING PUTRA:", daftarKaplingPutra);
+  console.log("DAFTAR KAPLING PUTRI:", daftarKaplingPutri);
+  console.log("KARTU FINAL:", kartu);
 
   // ==========================================
   // JIKA BELUM ADA DATA REGU
@@ -282,7 +350,9 @@ export default function KartuKapling() {
   // ==========================================
 
   function CardKapling({ item }) {
-    const isPutra = item.jenis === "putra";
+
+    const isPutra =
+      item.jenis === "putra";
 
     return (
       <div
@@ -371,10 +441,12 @@ export default function KartuKapling() {
               }
             `}
           >
+
             {item.regu?.nama_regu ||
               item.regu?.regu ||
               item.regu?.nama ||
               `Regu ${item.nomorUrut}`}
+
           </h2>
 
           <p className="text-sm md:text-base font-semibold text-gray-600 mt-1">
@@ -417,9 +489,11 @@ export default function KartuKapling() {
                 }
               `}
             >
+
               {isPutra
                 ? "🏕 BLOK PUTRA"
                 : "🌸 BLOK PUTRI"}
+
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -475,7 +549,13 @@ export default function KartuKapling() {
                   }
                 `}
               >
-                {String(item.nomorKapling).padStart(2, "0")}
+
+                {item.nomorKapling
+                  ? `${isPutra ? "PA" : "PI"}${String(
+                      item.nomorKapling
+                    ).padStart(3, "0")}`
+                  : "—"}
+
               </div>
 
             </div>
@@ -679,3 +759,4 @@ export default function KartuKapling() {
     </div>
   );
 }
+
