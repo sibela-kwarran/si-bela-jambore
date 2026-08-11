@@ -122,18 +122,36 @@ export async function deleteRegu(id){
 // ===================================
 // CEK REGU PUTRA & PUTRI
 // ===================================
-export async function getJenisRegu(gudepId){
-
+// ===================================
+// CEK JUMLAH REGU PUTRA & PUTRI
+// ===================================
+export async function getJenisRegu(gudepId) {
   const { data, error } = await supabase
     .from("data_regu")
-    .select("jenis")
+    .select("jenis, gudep_id")
     .eq("gudep_id", gudepId);
 
-  if(error) throw error;
+  if (error) throw error;
+
+  const reguPutra = (data || []).filter(
+    x =>
+      String(x.jenis || "")
+        .trim()
+        .toLowerCase() === "putra"
+  );
+
+  const reguPutri = (data || []).filter(
+    x =>
+      String(x.jenis || "")
+        .trim()
+        .toLowerCase() === "putri"
+  );
 
   return {
-    adaPutra: data.some(x => x.jenis === "Putra"),
-    adaPutri: data.some(x => x.jenis === "Putri")
-  };
+    adaPutra: reguPutra.length > 0,
+    adaPutri: reguPutri.length > 0,
 
+    jumlahPutra: reguPutra.length,
+    jumlahPutri: reguPutri.length,
+  };
 }

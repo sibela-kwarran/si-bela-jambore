@@ -2,15 +2,10 @@ import KelurahanCard from "./KelurahanCard";
 import { wilayahPerkemahan } from "../../data/wilayahPerkemahan";
 
 export default function KecamatanCard({
-
   jenis,
-
   data,
-
   cariKapling,
-
   onSelectGudep,
-
 }) {
 
   const info = wilayahPerkemahan[jenis];
@@ -18,6 +13,10 @@ export default function KecamatanCard({
   return (
 
     <div>
+
+      {/* ==========================================
+          HEADER KECAMATAN
+      =========================================== */}
 
       <div
         className={`
@@ -38,27 +37,53 @@ export default function KecamatanCard({
 
       </div>
 
+
+      {/* ==========================================
+          DAFTAR KELURAHAN
+      =========================================== */}
+
       <div className="mt-4 space-y-4">
 
-        {info.kelurahan.map((namaKelurahan) => (
+        {info.kelurahan.map(
+          (namaKelurahan, indexKelurahan) => (
 
-          <KelurahanCard
+            <KelurahanCard
 
-  key={namaKelurahan}
+              key={namaKelurahan}
 
-  nama={namaKelurahan}
+              nama={namaKelurahan}
 
-  jenis={jenis}
+              jenis={jenis}
 
-  data={data}
+              data={data}
 
-  cariKapling={cariKapling}
+              cariKapling={cariKapling}
 
-  onSelectGudep={onSelectGudep}
+              onSelectGudep={onSelectGudep}
 
-/>
+              /*
+               * INI PENTING
+               *
+               * Kelurahan ke-0:
+               * 001 - 015
+               *
+               * Kelurahan ke-1:
+               * 016 - 030
+               *
+               * Kelurahan ke-2:
+               * 031 - 045
+               *
+               * dst.
+               */
 
-        ))}
+              indexKelurahan={
+                indexKelurahan
+              }
+
+            />
+
+          )
+        )}
 
       </div>
 

@@ -2,8 +2,11 @@ import supabase from "../lib/supabase";
 
 const TABLE = "pembayaran";
 
-function getOperatorLogin() {
+// ======================================================
+// OPERATOR LOGIN
+// ======================================================
 
+function getOperatorLogin() {
   const operator = JSON.parse(
     localStorage.getItem("operatorLogin")
   );
@@ -15,8 +18,11 @@ function getOperatorLogin() {
   return operator;
 }
 
-async function getGudepLogin() {
+// ======================================================
+// AMBIL GUDEP LOGIN
+// ======================================================
 
+async function getGudepLogin() {
   const operator = getOperatorLogin();
 
   const { data, error } = await supabase
@@ -30,31 +36,36 @@ async function getGudepLogin() {
   return data;
 }
 
-export async function getPembayaranAdmin(){
+// ======================================================
+// PEMBAYARAN ADMIN
+// ======================================================
 
-const {data,error}=await supabase
-.from("pembayaran")
-.select(`
-*,
-profil_gudep(
- nama_pangkalan,
- nama_mabigus
-)
-`)
-.order("id");
+export async function getPembayaranAdmin() {
 
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select(`
+      *,
+      profil_gudep(
+        id,
+        nama_pangkalan,
+        nama_mabigus
+      )
+    `)
+    .order("id");
 
-if(error) throw error;
+  if (error) throw error;
 
-
-return data;
-
+  return data || [];
 }
 
-export async function getPembayaran(){
+// ======================================================
+// PEMBAYARAN OPERATOR
+// ======================================================
+
+export async function getPembayaran() {
 
   const gudep = await getGudepLogin();
-
 
   const { data, error } = await supabase
     .from(TABLE)
@@ -62,13 +73,14 @@ export async function getPembayaran(){
     .eq("gudep_id", gudep.id)
     .maybeSingle();
 
-
-  if(error) throw error;
-
+  if (error) throw error;
 
   return data;
-
 }
+
+// ======================================================
+// SIMPAN PEMBAYARAN
+// ======================================================
 
 export async function savePembayaran(dataBaru) {
 
@@ -90,60 +102,71 @@ export async function savePembayaran(dataBaru) {
   return data;
 }
 
+// ======================================================
+// UPDATE PEMBAYARAN
+// ======================================================
 
+export async function updatePembayaran(
+  id,
+  dataBaru
+) {
 
-export async function updatePembayaran(id,dataBaru){
-
-  const { error } = await supabase
-    .from("pembayaran")
+  const { data, error } = await supabase
+    .from(TABLE)
     .update(dataBaru)
-    .eq("id",id);
+    .eq("id", id)
+    .select()
+    .single();
 
+  if (error) throw error;
 
-  if(error) throw error;
-
+  return data;
 }
+
+// ======================================================
+// SEMUA PEMBAYARAN ADMIN
+// ======================================================
+
 export async function getSemuaPembayaran() {
 
   const { data, error } = await supabase
-    .from("pembayaran")
+    .from(TABLE)
     .select(`
-    *,
-    profil_gudep (
-      id,
-      nama_pangkalan,
-      nama_mabigus
-    )
-  `)
+      *,
+      profil_gudep(
+        id,
+        nama_pangkalan,
+        nama_mabigus
+      )
+    `)
     .order("created_at", {
       ascending: false,
     });
 
   if (error) throw error;
 
-  return data;
+  return data || [];
 }
-export async function getPembayaranLunas(){
 
-  const {data,error}=await supabase
-  .from("pembayaran")
-  .select(`
-    *,
-    profil_gudep(
-      id,
-      nama_pangkalan,
-      nama_mabigus
-    )
-  `)
-  .eq(
-    "status",
-    "Lunas"
-  );
+// ======================================================
+// PEMBAYARAN LUNAS
+// ======================================================
 
+export async function getPembayaranLunas() {
 
-  if(error) throw error;
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select(`
+      *,
+      profil_gudep(
+        id,
+        nama_pangkalan,
+        nama_mabigus
+      )
+    `)
+    .eq("status", "Lunas");
 
+  if (error) throw error;
 
   return data || [];
-
 }
