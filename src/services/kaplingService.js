@@ -1,67 +1,49 @@
+
 import supabase from "../lib/supabase";
+
+const TABLE = "penempatan_blok";
 
 // ======================================================
 // AMBIL KAPLING BERDASARKAN GUDEP
 // ======================================================
 
 export async function getKaplingByGudep(gudep_id) {
-
   const { data, error } = await supabase
-    .from("penempatan_blok")
-    .select(`
-      *,
-      profil_gudep(
-        nama_pangkalan
-      )
-    `)
+    .from(TABLE)
+    .select("*")
     .eq("gudep_id", gudep_id)
     .maybeSingle();
 
   if (error) {
-
-    console.error(
-      "GET KAPLING ERROR:",
-      error
-    );
-
+    console.error("GET KAPLING ERROR:", error);
     throw error;
-
   }
 
   return data;
-
 }
 
 
 // ======================================================
 // AMBIL SEMUA DATA BLOK
+//
+// PENTING:
+// Tidak menggunakan nested profil_gudep.
+// Ini mencegah error Failed to fetch akibat
+// relationship Supabase.
 // ======================================================
 
 export async function getBlok() {
-
   const { data, error } = await supabase
-    .from("penempatan_blok")
-    .select(`
-      *,
-      profil_gudep(
-        nama_pangkalan
-      )
-    `)
-    .order("id");
+    .from(TABLE)
+    .select("*")
+    .order("id", { ascending: true });
 
   if (error) {
-
-    console.error(
-      "GET BLOK ERROR:",
-      error
-    );
-
+    console.error("GET BLOK ERROR:", error);
     throw error;
-
   }
 
   return data || [];
-
 }
 
 
@@ -70,54 +52,65 @@ export async function getBlok() {
 // ======================================================
 
 export async function savePenempatanBlok(data) {
+  if (!data || !data.gudep_id) {
+    throw new Error(
+      "Data penempatan tidak valid: gudep_id tidak tersedia."
+    );
+  }
 
   const { data: hasil, error } = await supabase
-    .from("penempatan_blok")
+    .from(TABLE)
     .insert([data])
-    .select()
+    .select("*")
     .single();
 
   if (error) {
-
     console.error(
-      "SAVE BLOK ERROR:",
+      "SAVE PENEMPATAN BLOK ERROR:",
       error
     );
 
     throw error;
-
   }
 
   return hasil;
-
 }
 
 
 // ======================================================
 // SIMPAN PETA
+//
+// Dipertahankan agar komponen lama tidak error.
 // ======================================================
 
 export async function savePeta(data) {
+  if (!data) {
+    throw new Error(
+      "Data peta tidak tersedia."
+    );
+  }
 
   const { data: hasil, error } = await supabase
-    .from("penempatan_blok")
-    .insert(data)
-    .select()
-    .single();
+    .from(TABLE)
+    .insert(
+      Array.isArray(data)
+        ? data
+        : [data]
+    )
+    .select("*");
 
   if (error) {
-
     console.error(
       "SAVE PETA ERROR:",
       error
     );
 
     throw error;
-
   }
 
-  return hasil;
-
+  return Array.isArray(data)
+    ? hasil || []
+    : hasil?.[0] || null;
 }
 
 
@@ -126,39 +119,81 @@ export async function savePeta(data) {
 // ======================================================
 
 export async function cekKaplingGudep(gudepId) {
+  if (!gudepId) {
+    return null;
+  }
 
   const { data, error } = await supabase
-    .from("penempatan_blok")
+    .from(TABLE)
     .select("*")
     .eq("gudep_id", gudepId)
     .maybeSingle();
 
   if (error) {
-
     console.error(
       "CEK KAPLING GUDEP ERROR:",
       error
     );
 
     throw error;
-
   }
 
   return data;
+}
 
+
+// ======================================================
+// NORMALISASI NOMOR KAPLING
+//
+// Bisa menerima:
+// 003
+// 003,004
+// 003, 004
+// PA003
+// PA003,PA004
+// ======================================================
+
+function normalisasiNomor(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return [];
+  }
+
+  return String(value)
+    .split(",")
+    .map(item =>
+      String(item)
+        .trim()
+        .replace(/^PA/i, "")
+        .replace(/^PI/i, "")
+        .replace(/^0+/, "") || "0"
+    )
+    .map(Number)
+    .filter(
+      nomor =>
+        !isNaN(nomor) &&
+        nomor >= 1 &&
+        nomor <= 1000
+    );
 }
 
 
 // ======================================================
 // AMBIL NOMOR KAPLING YANG SUDAH DIPAKAI
-// BERDASARKAN KELURAHAN DAN JENIS
+//
+// Berdasarkan kelurahan + jenis.
+//
+// Contoh hasil:
+// [1, 2, 3, 4]
 // ======================================================
 
 export async function getKaplingTerpakai(
   kelurahan,
   jenis
 ) {
-
   if (!kelurahan || !jenis) {
     return [];
   }
@@ -173,9 +208,8 @@ export async function getKaplingTerpakai(
       ? "kapling_putra"
       : "kapling_putri";
 
-
   const { data, error } = await supabase
-    .from("penempatan_blok")
+    .from(TABLE)
     .select(
       `${kolomKelurahan}, ${kolomKapling}`
     )
@@ -189,33 +223,30 @@ export async function getKaplingTerpakai(
       null
     );
 
-
   if (error) {
-
     console.error(
       "GAGAL CEK KAPLING TERPAKAI:",
       error
     );
 
     throw error;
-
   }
 
+  const hasil = [];
 
-  return (data || [])
-    .map(
-      item =>
-        Number(
-          item[kolomKapling]
-        )
-    )
-    .filter(
-      nomor =>
-        !isNaN(nomor) &&
-        nomor >= 1 &&
-        nomor <= 15
+  (data || []).forEach(item => {
+    hasil.push(
+      ...normalisasiNomor(
+        item[kolomKapling]
+      )
     );
+  });
 
+  return [
+    ...new Set(hasil)
+  ].sort(
+    (a, b) => a - b
+  );
 }
 
 
@@ -228,57 +259,23 @@ export async function cekNomorKaplingDipakai(
   jenis,
   nomor
 ) {
-
   if (
     !kelurahan ||
     !jenis ||
     !nomor
   ) {
-
     return false;
-
   }
 
-
-  const kolomKelurahan =
-    jenis === "putra"
-      ? "kelurahan_putra"
-      : "kelurahan_putri";
-
-  const kolomKapling =
-    jenis === "putra"
-      ? "kapling_putra"
-      : "kapling_putri";
-
-
-  const { data, error } = await supabase
-    .from("penempatan_blok")
-    .select("id")
-    .eq(
-      kolomKelurahan,
-      kelurahan
-    )
-    .eq(
-      kolomKapling,
-      String(nomor).padStart(2, "0")
-    )
-    .maybeSingle();
-
-
-  if (error) {
-
-    console.error(
-      "CEK NOMOR KAPLING ERROR:",
-      error
+  const daftar =
+    await getKaplingTerpakai(
+      kelurahan,
+      jenis
     );
 
-    throw error;
-
-  }
-
-
-  return Boolean(data);
-
+  return daftar.includes(
+    Number(nomor)
+  );
 }
 
 
@@ -287,9 +284,8 @@ export async function cekNomorKaplingDipakai(
 // ======================================================
 
 export async function getNomorPutraTerakhir() {
-
   const { data, error } = await supabase
-    .from("penempatan_blok")
+    .from(TABLE)
     .select("kapling_putra")
     .not(
       "kapling_putra",
@@ -298,38 +294,27 @@ export async function getNomorPutraTerakhir() {
     );
 
   if (error) {
+    console.error(
+      "GET NOMOR PUTRA TERAKHIR ERROR:",
+      error
+    );
+
     throw error;
   }
 
+  const semuaNomor = [];
 
-  if (
-    !data ||
-    data.length === 0
-  ) {
-
-    return 0;
-
-  }
-
-
-  const nomor =
-    data
-      .map(
-        x =>
-          Number(
-            x.kapling_putra
-          )
+  (data || []).forEach(item => {
+    semuaNomor.push(
+      ...normalisasiNomor(
+        item.kapling_putra
       )
-      .filter(
-        n =>
-          !isNaN(n)
-      );
+    );
+  });
 
-
-  return nomor.length
-    ? Math.max(...nomor)
+  return semuaNomor.length
+    ? Math.max(...semuaNomor)
     : 0;
-
 }
 
 
@@ -338,9 +323,8 @@ export async function getNomorPutraTerakhir() {
 // ======================================================
 
 export async function getNomorPutriTerakhir() {
-
   const { data, error } = await supabase
-    .from("penempatan_blok")
+    .from(TABLE)
     .select("kapling_putri")
     .not(
       "kapling_putri",
@@ -349,59 +333,47 @@ export async function getNomorPutriTerakhir() {
     );
 
   if (error) {
+    console.error(
+      "GET NOMOR PUTRI TERAKHIR ERROR:",
+      error
+    );
+
     throw error;
   }
 
+  const semuaNomor = [];
 
-  if (
-    !data ||
-    data.length === 0
-  ) {
-
-    return 0;
-
-  }
-
-
-  const nomor =
-    data
-      .map(
-        x =>
-          Number(
-            x.kapling_putri
-          )
+  (data || []).forEach(item => {
+    semuaNomor.push(
+      ...normalisasiNomor(
+        item.kapling_putri
       )
-      .filter(
-        n =>
-          !isNaN(n)
-      );
+    );
+  });
 
-
-  return nomor.length
-    ? Math.max(...nomor)
+  return semuaNomor.length
+    ? Math.max(...semuaNomor)
     : 0;
-
 }
 
 
 // ======================================================
 // NOMOR KAPLING BERIKUTNYA
-// FUNGSI LAMA — DIPERTAHANKAN AGAR KOMPONEN LAIN
-// TIDAK ERROR
+//
+// Dipertahankan untuk kompatibilitas
+// dengan komponen lama.
 // ======================================================
 
 export async function getNomorKaplingBerikutnya(
   jenis
 ) {
-
   const kolom =
     jenis === "putra"
       ? "kapling_putra"
       : "kapling_putri";
 
-
   const { data, error } = await supabase
-    .from("penempatan_blok")
+    .from(TABLE)
     .select(kolom)
     .not(
       kolom,
@@ -409,45 +381,32 @@ export async function getNomorKaplingBerikutnya(
       null
     );
 
-
   if (error) {
-
     console.error(
       "GAGAL CEK NOMOR KAPLING:",
       error
     );
 
     throw error;
-
   }
 
+  const nomorTerpakai = [];
 
-  const nomorTerpakai =
-    (data || [])
-      .map(
-        item =>
-          Number(
-            item[kolom]
-          )
+  (data || []).forEach(item => {
+    nomorTerpakai.push(
+      ...normalisasiNomor(
+        item[kolom]
       )
-      .filter(
-        nomor =>
-          !isNaN(nomor)
-      );
-
+    );
+  });
 
   let nomor = 1;
-
 
   while (
     nomorTerpakai.includes(nomor)
   ) {
-
     nomor++;
-
   }
 
-
   return nomor;
-
 }

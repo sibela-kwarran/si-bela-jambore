@@ -99,61 +99,128 @@ export default function PetaPerkemahan() {
   // CARI KAPLING
   // ======================================================
 
-  const cariKapling = (
+  // ======================================================
+// CARI KAPLING
+// ======================================================
+
+const cariKapling = (
+  kelurahan,
+  nomor,
+  jenis
+) => {
+
+  // ==========================================
+  // NORMALISASI NOMOR TARGET
+  // ==========================================
+
+  const nomorTarget = Number(
+    String(nomor)
+      .trim()
+      .replace(/^PA/i, "")
+      .replace(/^PI/i, "")
+      .replace(/^0+/, "") || "0"
+  );
+
+  console.log("🔎 CARI KAPLING:", {
+    jenis,
     kelurahan,
     nomor,
-    jenis
-  ) => {
+    nomorTarget,
+  });
 
-    const nomorTarget =
-      normalisasiNomor(nomor);
+  // ==========================================
+  // CARI BERDASARKAN NOMOR KAPLING
+  // ==========================================
 
-    return data.find((item) => {
+  const hasil = data.find((item) => {
 
-      if (jenis === "putra") {
+    // =================================================
+    // PUTRA
+    // =================================================
 
-        return (
-          String(
-            item.kelurahan_putra || ""
+    if (jenis === "putra") {
+
+      const daftarNomor = String(
+        item.kapling_putra || ""
+      )
+        .split(",")
+        .map((nomor) =>
+          Number(
+            String(nomor)
+              .trim()
+              .replace(/^PA/i, "")
+              .replace(/^PI/i, "")
+              .replace(/^0+/, "") || "0"
           )
-            .trim()
-            .toLowerCase() ===
-          String(kelurahan || "")
-            .trim()
-            .toLowerCase()
-          &&
-          normalisasiNomor(
-            item.kapling_putra
-          ) === nomorTarget
+        )
+        .filter(
+          (nomor) => !isNaN(nomor)
         );
 
-      }
+      return daftarNomor.includes(
+        nomorTarget
+      );
+    }
 
+    // =================================================
+    // PUTRI
+    // =================================================
 
-      if (jenis === "putri") {
+    if (jenis === "putri") {
 
-        return (
-          String(
-            item.kelurahan_putri || ""
+      const daftarNomor = String(
+        item.kapling_putri || ""
+      )
+        .split(",")
+        .map((nomor) =>
+          Number(
+            String(nomor)
+              .trim()
+              .replace(/^PA/i, "")
+              .replace(/^PI/i, "")
+              .replace(/^0+/, "") || "0"
           )
-            .trim()
-            .toLowerCase() ===
-          String(kelurahan || "")
-            .trim()
-            .toLowerCase()
-          &&
-          normalisasiNomor(
-            item.kapling_putri
-          ) === nomorTarget
+        )
+        .filter(
+          (nomor) => !isNaN(nomor)
         );
 
-      }
+      return daftarNomor.includes(
+        nomorTarget
+      );
+    }
 
-      return false;
+    return false;
+  });
 
-    });
+  // ==========================================
+  // DEBUG
+  // ==========================================
 
-  };
+  console.log(
+    "✅ HASIL CARI:",
+    hasil
+      ? {
+          gudep:
+            hasil.profil_gudep?.nama_pangkalan,
+
+          kaplingPutra:
+            hasil.kapling_putra,
+
+          kaplingPutri:
+            hasil.kapling_putri,
+
+          kelurahanPutra:
+            hasil.kelurahan_putra,
+
+          kelurahanPutri:
+            hasil.kelurahan_putri,
+        }
+      : null
+  );
+
+  return hasil;
+};
 
 
   // ======================================================

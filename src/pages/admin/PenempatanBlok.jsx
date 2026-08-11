@@ -145,158 +145,134 @@ export default function PenempatanBlok() {
 
 
   async function loadData() {
+  try {
+    setLoading(true);
 
-    try {
+    console.log("=================================");
+    console.log("MULAI LOAD PENEMPATAN BLOK");
+    console.log("=================================");
 
-      setLoading(true);
+    console.log("1️⃣ GET BLOK");
+    const blok = await getBlok();
+    console.log("✅ HASIL GET BLOK:", blok);
 
-      // -----------------------------------------------
-      // SEMUA PENEMPATAN
-      // -----------------------------------------------
+    setSemuaBlok(blok || []);
 
-      const blok = await getBlok();
+    console.log("2️⃣ GET PENDAFTARAN");
+    const pendaftaran = await getSemuaPendaftaran();
+    console.log("✅ HASIL PENDAFTARAN:", pendaftaran);
 
-      setSemuaBlok(blok || []);
+    console.log("3️⃣ GET PEMBAYARAN");
+    const pembayaran = await getSemuaPembayaran();
+    console.log("✅ HASIL PEMBAYARAN:", pembayaran);
 
+    const terverifikasi = (pendaftaran || []).filter(
+      item =>
+        String(item.status || "")
+          .trim()
+          .toLowerCase() === "terverifikasi"
+    );
 
-      // -----------------------------------------------
-      // PENDAFTARAN
-      // -----------------------------------------------
+    console.log(
+      "4️⃣ GUDEP TERVERIFIKASI:",
+      terverifikasi
+    );
 
-      const pendaftaran =
-        await getSemuaPendaftaran();
+    const hasil = [];
 
+    for (const item of terverifikasi) {
+      const gudepId = item.gudep_id;
 
-      // -----------------------------------------------
-      // PEMBAYARAN
-      // -----------------------------------------------
+      console.log(
+        "5️⃣ CEK REGU GUDEP:",
+        gudepId
+      );
 
-      const pembayaran =
-        await getSemuaPembayaran();
+      const regu = await getJenisRegu(gudepId);
 
+      console.log(
+        "6️⃣ HASIL REGU:",
+        gudepId,
+        regu
+      );
 
-      // -----------------------------------------------
-      // HANYA GUDEP TERVERIFIKASI
-      // -----------------------------------------------
-
-      const terverifikasi =
-        (pendaftaran || []).filter(
-          item =>
-            String(item.status || "")
-              .trim()
-              .toLowerCase() ===
-            "terverifikasi"
+      const sudahDitempatkan =
+        (blok || []).find(
+          p =>
+            Number(p.gudep_id) ===
+            Number(gudepId)
         );
 
+      hasil.push({
+        id: item.id,
 
-      const hasil = [];
+        gudep_id: gudepId,
 
+        namaGudep:
+          item.nama_gudep ||
+          item.profil_gudep?.nama_pangkalan ||
+          "-",
 
-      // =================================================
-      // PROSES SETIAP GUDEP
-      // =================================================
+        adaPutra:
+          Boolean(regu?.adaPutra),
 
-      for (const item of terverifikasi) {
+        adaPutri:
+          Boolean(regu?.adaPutri),
 
-        const gudepId =
-          item.gudep_id;
+        jumlahPutra:
+          Number(regu?.jumlahPutra || 0),
 
+        jumlahPutri:
+          Number(regu?.jumlahPutri || 0),
 
-        // ---------------------------------------------
-        // DATA PEMBAYARAN
-        // ---------------------------------------------
+        status:
+          sudahDitempatkan
+            ? "Sudah Ditempatkan"
+            : "Belum Ditempatkan",
 
-        const pembayaranGudep =
-          (pembayaran || []).find(
-            p =>
-              Number(p.gudep_id) ===
-              Number(gudepId)
-          );
-
-
-        const nomorKapling =
-          pembayaranGudep?.nomor_kapling ||
-          null;
-
-
-        // ---------------------------------------------
-        // JUMLAH REGU
-        // ---------------------------------------------
-
-        const regu =
-          await getJenisRegu(gudepId);
-
-
-        // ---------------------------------------------
-        // CEK SUDAH DITEMPATKAN
-        // ---------------------------------------------
-
-        const sudahDitempatkan =
-          (blok || []).find(
-            p =>
-              Number(p.gudep_id) ===
-              Number(gudepId)
-          );
-
-
-        hasil.push({
-
-          id: item.id,
-
-          gudep_id: gudepId,
-
-          namaGudep:
-            item.nama_gudep ||
-            item.profil_gudep?.nama_pangkalan ||
-            "-",
-
-          nomorKapling,
-
-          adaPutra:
-            Boolean(regu?.adaPutra),
-
-          adaPutri:
-            Boolean(regu?.adaPutri),
-
-          jumlahPutra:
-            Number(regu?.jumlahPutra || 0),
-
-          jumlahPutri:
-            Number(regu?.jumlahPutri || 0),
-
-          status:
-            sudahDitempatkan
-              ? "Sudah Ditempatkan"
-              : "Belum Ditempatkan",
-
-          penempatan:
-            sudahDitempatkan || null,
-
-        });
-
-      }
-
-
-      setData(hasil);
-
-    } catch (error) {
-
-      console.error(
-        "PENEMPATAN BLOK ERROR:",
-        error
-      );
-
-      alert(
-        "Gagal mengambil data penempatan."
-      );
-
-    } finally {
-
-      setLoading(false);
-
+        penempatan:
+          sudahDitempatkan || null,
+      });
     }
 
+    console.log(
+      "================================="
+    );
+
+    console.log(
+      "DATA PENEMPATAN FINAL:",
+      hasil
+    );
+
+    console.log(
+      "================================="
+    );
+
+    setData(hasil);
+
+  } catch (error) {
+
+    console.error(
+      "❌ PENEMPATAN BLOK ERROR:",
+      error
+    );
+
+    console.error(
+      "MESSAGE:",
+      error?.message
+    );
+
+    alert(
+      "Gagal mengambil data penempatan.\n\n" +
+      (error?.message || "Failed to fetch")
+    );
+
+  } finally {
+
+    setLoading(false);
+
   }
+}
 
 
   // =====================================================
