@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 
 import {
@@ -564,10 +563,6 @@ export default function VerifikasiPembayaran() {
             item.created_at ||
             null,
 
-          // ============================================
-          // NOMOR KAPLING
-          // ============================================
-
           nomor_kapling:
             item.nomor_kapling ||
             null,
@@ -637,7 +632,11 @@ export default function VerifikasiPembayaran() {
 
   return (
 
-    <div className="space-y-6">
+    <div className="
+      space-y-4
+      sm:space-y-6
+    ">
+
 
       {/* =================================================
           HEADER
@@ -645,24 +644,43 @@ export default function VerifikasiPembayaran() {
 
       <div className="
         flex
-        justify-between
-        items-center
+        flex-col
+        sm:flex-row
+        sm:justify-between
+        sm:items-center
+        gap-3
       ">
 
-        <h1 className="
-          text-3xl
-          font-bold
-          text-amber-700
-        ">
+        <div>
 
-          Verifikasi Pembayaran
+          <h1 className="
+            text-2xl
+            sm:text-3xl
+            font-bold
+            text-amber-700
+          ">
 
-        </h1>
+            Verifikasi Pembayaran
+
+          </h1>
+
+          <p className="
+            text-xs
+            sm:text-sm
+            text-gray-500
+            mt-1
+          ">
+
+            Pemeriksaan pembayaran Gudep.
+
+          </p>
+
+        </div>
 
 
         <input
           type="text"
-          placeholder="Cari Gudep..."
+          placeholder="🔎 Cari Gudep..."
           value={cari}
           onChange={
             e =>
@@ -673,9 +691,14 @@ export default function VerifikasiPembayaran() {
           className="
             border
             rounded-lg
-            px-4
+            px-3
             py-2
-            w-72
+            text-sm
+            w-full
+            sm:w-72
+            focus:outline-none
+            focus:ring-2
+            focus:ring-amber-500
           "
         />
 
@@ -690,316 +713,437 @@ export default function VerifikasiPembayaran() {
         bg-white
         rounded-xl
         shadow
-        overflow-x-auto
+        overflow-hidden
       ">
 
-        <table className="
-          w-full
-          min-w-[1100px]
+        {/* PETUNJUK GESER DI HP */}
+
+        <div className="
+          sm:hidden
+          bg-amber-50
+          border-b
+          border-amber-100
+          px-3
+          py-2
+          text-xs
+          text-amber-700
+          text-center
         ">
 
-          <thead className="
-            bg-amber-700
-            text-white
+          👉 Geser tabel ke kanan untuk melihat kolom Aksi
+
+        </div>
+
+
+        <div className="
+          overflow-x-auto
+          w-full
+          overscroll-x-contain
+        ">
+
+          <table className="
+            w-full
+            min-w-[850px]
+            text-xs
+            sm:text-sm
           ">
 
-            <tr>
-
-              <th className="p-3">
-                Prioritas
-              </th>
-
-              <th className="p-3">
-                Gudep
-              </th>
-
-              <th className="p-3">
-                Mabigus
-              </th>
-
-              <th className="p-3">
-                Tgl. Pembayaran
-              </th>
-
-              <th className="p-3">
-                No. Kapling
-              </th>
-
-              <th className="p-3">
-                Peserta
-              </th>
-
-              <th className="p-3">
-                Total
-              </th>
-
-              <th className="p-3">
-                Status
-              </th>
-
-              <th className="p-3">
-                Aksi
-              </th>
-
-            </tr>
-
-          </thead>
-
-
-          <tbody>
-
-            {hasil.length === 0 ? (
+            <thead className="
+              bg-amber-700
+              text-white
+            ">
 
               <tr>
 
-                <td
-                  colSpan="9"
-                  className="
-                    text-center
-                    p-6
-                  "
-                >
+                <th className="
+                  p-2
+                  sm:p-3
+                  whitespace-nowrap
+                  text-center
+                ">
+                  Prioritas
+                </th>
 
-                  Belum ada data pembayaran
+                <th className="
+                  p-2
+                  sm:p-3
+                  whitespace-nowrap
+                  text-left
+                ">
+                  Gudep
+                </th>
 
-                </td>
+                <th className="
+                  p-2
+                  sm:p-3
+                  whitespace-nowrap
+                ">
+                  Mabigus
+                </th>
+
+                <th className="
+                  p-2
+                  sm:p-3
+                  whitespace-nowrap
+                ">
+                  Tgl. Bayar
+                </th>
+
+                <th className="
+                  p-2
+                  sm:p-3
+                  whitespace-nowrap
+                ">
+                  No. Kapling
+                </th>
+
+                <th className="
+                  p-2
+                  sm:p-3
+                  whitespace-nowrap
+                ">
+                  Peserta
+                </th>
+
+                <th className="
+                  p-2
+                  sm:p-3
+                  whitespace-nowrap
+                ">
+                  Total
+                </th>
+
+                <th className="
+                  p-2
+                  sm:p-3
+                  whitespace-nowrap
+                ">
+                  Status
+                </th>
+
+                <th className="
+                  p-2
+                  sm:p-3
+                  whitespace-nowrap
+                  sticky
+                  right-0
+                  bg-amber-700
+                ">
+                  Aksi
+                </th>
 
               </tr>
 
-            ) : (
+            </thead>
 
-              hasil.map(
-                (item, index) => (
 
-                  <tr
-                    key={item.id}
+            <tbody>
+
+              {hasil.length === 0 ? (
+
+                <tr>
+
+                  <td
+                    colSpan="9"
                     className="
-                      border-b
-                      hover:bg-gray-50
+                      text-center
+                      p-6
+                      text-gray-500
                     "
                   >
 
-                    {/* PRIORITAS */}
+                    Belum ada data pembayaran
 
-                    <td className="
-                      p-3
-                      text-center
-                    ">
+                  </td>
 
-                      <span className="
-                        font-bold
-                        text-lg
+                </tr>
+
+              ) : (
+
+                hasil.map(
+                  (item, index) => (
+
+                    <tr
+                      key={item.id}
+                      className="
+                        border-b
+                        hover:bg-gray-50
+                      "
+                    >
+
+                      {/* PRIORITAS */}
+
+                      <td className="
+                        p-2
+                        sm:p-3
+                        text-center
                       ">
 
-                        {index + 1}
+                        <span className="
+                          font-bold
+                          text-base
+                          sm:text-lg
+                        ">
 
-                      </span>
+                          {index + 1}
 
-                    </td>
+                        </span>
+
+                      </td>
 
 
-                    {/* GUDEP */}
+                      {/* GUDEP */}
 
-                    <td className="p-3">
-
-                      <span className="
-                        font-semibold
+                      <td className="
+                        p-2
+                        sm:p-3
+                        max-w-[180px]
                       ">
 
-                        {item.gudep}
+                        <span className="
+                          font-semibold
+                          text-gray-800
+                          break-words
+                        ">
 
-                      </span>
+                          {item.gudep}
 
-                    </td>
+                        </span>
 
-
-                    {/* MABIGUS */}
-
-                    <td className="p-3">
-
-                      {item.ketua}
-
-                    </td>
+                      </td>
 
 
-                    {/* TANGGAL PEMBAYARAN */}
+                      {/* MABIGUS */}
 
-                    <td className="p-3">
+                      <td className="
+                        p-2
+                        sm:p-3
+                        max-w-[150px]
+                      ">
 
-                      {item.tanggalPembayaran
+                        <span className="
+                          break-words
+                        ">
 
-                        ? new Date(
-                            item.tanggalPembayaran +
-                            "T00:00:00"
-                          ).toLocaleDateString(
-                            "id-ID",
-                            {
-                              day:
-                                "2-digit",
-                              month:
-                                "short",
-                              year:
-                                "numeric",
+                          {item.ketua}
+
+                        </span>
+
+                      </td>
+
+
+                      {/* TANGGAL PEMBAYARAN */}
+
+                      <td className="
+                        p-2
+                        sm:p-3
+                        whitespace-nowrap
+                      ">
+
+                        {item.tanggalPembayaran
+
+                          ? new Date(
+                              item.tanggalPembayaran +
+                              "T00:00:00"
+                            ).toLocaleDateString(
+                              "id-ID",
+                              {
+                                day:
+                                  "2-digit",
+                                month:
+                                  "short",
+                                year:
+                                  "numeric",
+                              }
+                            )
+
+                          : (
+
+                            <span className="
+                              text-red-500
+                              font-semibold
+                            ">
+
+                              Belum diisi
+
+                            </span>
+
+                          )}
+
+                      </td>
+
+
+                      {/* NOMOR KAPLING */}
+
+                      <td className="
+                        p-2
+                        sm:p-3
+                        text-center
+                      ">
+
+                        {item.nomor_kapling ? (
+
+                          <button
+                            onClick={() =>
+                              ubahNomorKapling(
+                                item
+                              )
                             }
-                          )
+                            className="
+                              bg-blue-100
+                              text-blue-700
+                              hover:bg-blue-200
+                              px-3
+                              sm:px-4
+                              py-1.5
+                              sm:py-2
+                              rounded-lg
+                              font-bold
+                              min-w-[55px]
+                            "
+                            title="Klik untuk mengubah nomor kapling"
+                          >
 
-                        : (
+                            {item.nomor_kapling}
 
-                          <span className="
-                            text-red-500
-                          ">
+                          </button>
 
-                            Belum diisi
+                        ) : (
 
-                          </span>
+                          <button
+                            onClick={() =>
+                              ubahNomorKapling(
+                                item
+                              )
+                            }
+                            className="
+                              bg-yellow-100
+                              text-yellow-700
+                              hover:bg-yellow-200
+                              px-2
+                              sm:px-3
+                              py-1.5
+                              sm:py-2
+                              rounded-lg
+                              font-semibold
+                            "
+                          >
+
+                            + Isi
+
+                          </button>
 
                         )}
 
-                    </td>
+                      </td>
 
 
-                    {/* =================================================
-                        NOMOR KAPLING
-                    ================================================= */}
+                      {/* PESERTA */}
 
-                    <td className="
-                      p-3
-                      text-center
-                    ">
+                      <td className="
+                        p-2
+                        sm:p-3
+                        text-center
+                        font-semibold
+                      ">
 
-                      {item.nomor_kapling ? (
+                        {item.peserta}
+
+                      </td>
+
+
+                      {/* TOTAL */}
+
+                      <td className="
+                        p-2
+                        sm:p-3
+                        whitespace-nowrap
+                        font-semibold
+                      ">
+
+                        Rp{" "}
+
+                        {Number(
+                          item.total
+                        ).toLocaleString(
+                          "id-ID"
+                        )}
+
+                      </td>
+
+
+                      {/* STATUS */}
+
+                      <td className="
+                        p-2
+                        sm:p-3
+                        whitespace-nowrap
+                      ">
+
+                        <StatusBadge
+                          status={
+                            selected &&
+                            selected.id ===
+                              item.id
+                              ? selected.status
+                              : item.status
+                          }
+                        />
+
+                      </td>
+
+
+                      {/* AKSI */}
+
+                      <td className="
+                        p-2
+                        sm:p-3
+                        text-center
+                        sticky
+                        right-0
+                        bg-white
+                        border-l
+                        border-gray-200
+                      ">
 
                         <button
                           onClick={() =>
-                            ubahNomorKapling(
+                            setSelected(
                               item
                             )
                           }
                           className="
-                            bg-blue-100
-                            text-blue-700
-                            hover:bg-blue-200
-                            px-4
-                            py-2
-                            rounded-lg
-                            font-bold
-                            min-w-[70px]
-                          "
-                          title="Klik untuk mengubah nomor kapling"
-                        >
-
-                          {item.nomor_kapling}
-
-                        </button>
-
-                      ) : (
-
-                        <button
-                          onClick={() =>
-                            ubahNomorKapling(
-                              item
-                            )
-                          }
-                          className="
-                            bg-yellow-100
-                            text-yellow-700
-                            hover:bg-yellow-200
+                            bg-blue-600
+                            hover:bg-blue-700
+                            text-white
                             px-3
-                            py-2
+                            sm:px-4
+                            py-1.5
+                            sm:py-2
                             rounded-lg
                             font-semibold
+                            whitespace-nowrap
                           "
                         >
 
-                          + Isi
+                          👁 Lihat
 
                         </button>
 
-                      )}
+                      </td>
 
-                    </td>
+                    </tr>
 
-
-                    {/* PESERTA */}
-
-                    <td className="
-                      p-3
-                      text-center
-                    ">
-
-                      {item.peserta}
-
-                    </td>
-
-
-                    {/* TOTAL */}
-
-                    <td className="p-3">
-
-                      Rp{" "}
-
-                      {Number(
-                        item.total
-                      ).toLocaleString(
-                        "id-ID"
-                      )}
-
-                    </td>
-
-
-                    {/* STATUS */}
-
-                    <td className="p-3">
-
-                      <StatusBadge
-                        status={
-                          selected &&
-                          selected.id ===
-                            item.id
-                            ? selected.status
-                            : item.status
-                        }
-                      />
-
-                    </td>
-
-
-                    {/* AKSI */}
-
-                    <td className="p-3">
-
-                      <button
-                        onClick={() =>
-                          setSelected(
-                            item
-                          )
-                        }
-                        className="
-                          bg-blue-600
-                          hover:bg-blue-700
-                          text-white
-                          px-4
-                          py-2
-                          rounded-lg
-                        "
-                      >
-
-                        Lihat
-
-                      </button>
-
-                    </td>
-
-                  </tr>
-
+                  )
                 )
-              )
 
-            )}
+              )}
 
-          </tbody>
+            </tbody>
 
-        </table>
+          </table>
+
+        </div>
 
       </div>
 
@@ -1014,14 +1158,17 @@ export default function VerifikasiPembayaran() {
           bg-white
           rounded-xl
           shadow
-          p-6
+          p-4
+          sm:p-6
         ">
 
           <h2 className="
-            text-2xl
+            text-xl
+            sm:text-2xl
             font-bold
             text-amber-700
-            mb-5
+            mb-4
+            sm:mb-5
           ">
 
             Detail Pembayaran
@@ -1031,8 +1178,10 @@ export default function VerifikasiPembayaran() {
 
           <div className="
             grid
-            grid-cols-2
-            gap-5
+            grid-cols-1
+            sm:grid-cols-2
+            gap-3
+            sm:gap-5
           ">
 
             <Info
@@ -1086,20 +1235,20 @@ export default function VerifikasiPembayaran() {
             />
 
 
-            {/* =================================================
-                NOMOR KAPLING DETAIL
-            ================================================= */}
+            {/* NOMOR KAPLING DETAIL */}
 
             <div className="
               border
               border-blue-200
               rounded-lg
-              p-4
+              p-3
+              sm:p-4
               bg-blue-50
             ">
 
               <p className="
                 text-gray-500
+                text-sm
                 mb-1
               ">
 
@@ -1112,12 +1261,13 @@ export default function VerifikasiPembayaran() {
                 flex
                 items-center
                 justify-between
-                gap-3
+                gap-2
               ">
 
                 <h2 className="
                   font-bold
-                  text-2xl
+                  text-xl
+                  sm:text-2xl
                   text-blue-700
                 ">
 
@@ -1137,9 +1287,12 @@ export default function VerifikasiPembayaran() {
                     bg-blue-600
                     hover:bg-blue-700
                     text-white
-                    px-4
+                    px-3
+                    sm:px-4
                     py-2
                     rounded-lg
+                    text-sm
+                    font-semibold
                   "
                 >
 
@@ -1159,7 +1312,7 @@ export default function VerifikasiPembayaran() {
 
             <div className="
               flex
-              items-end
+              items-stretch
             ">
 
               <button
@@ -1174,6 +1327,8 @@ export default function VerifikasiPembayaran() {
                   py-3
                   rounded-lg
                   w-full
+                  text-sm
+                  font-semibold
                 "
               >
 
@@ -1216,11 +1371,16 @@ export default function VerifikasiPembayaran() {
 
           {selected.bukti && (
 
-            <div className="mt-6">
+            <div className="
+              mt-5
+              sm:mt-6
+            ">
 
               <h3 className="
                 font-bold
                 mb-3
+                text-base
+                sm:text-lg
               ">
 
                 Bukti Transfer
@@ -1242,11 +1402,14 @@ export default function VerifikasiPembayaran() {
                     rel="noreferrer"
                     className="
                       bg-blue-600
+                      hover:bg-blue-700
                       text-white
-                      px-5
+                      px-4
                       py-2
                       rounded-lg
                       inline-block
+                      text-sm
+                      font-semibold
                     "
                   >
 
@@ -1264,7 +1427,8 @@ export default function VerifikasiPembayaran() {
                     }
                     alt="Bukti Transfer"
                     className="
-                      w-96
+                      w-full
+                      max-w-md
                       rounded-lg
                       border
                       shadow
@@ -1284,8 +1448,11 @@ export default function VerifikasiPembayaran() {
 
           <div className="
             flex
+            flex-col
+            sm:flex-row
             gap-3
-            mt-6
+            mt-5
+            sm:mt-6
           ">
 
             <button
@@ -1301,6 +1468,9 @@ export default function VerifikasiPembayaran() {
                 px-5
                 py-3
                 rounded-lg
+                font-semibold
+                w-full
+                sm:w-auto
               "
             >
 
@@ -1322,6 +1492,9 @@ export default function VerifikasiPembayaran() {
                 px-5
                 py-3
                 rounded-lg
+                font-semibold
+                w-full
+                sm:w-auto
               "
             >
 
@@ -1357,12 +1530,16 @@ function StatusBadge({
     return (
 
       <span className="
+        inline-flex
         bg-green-100
         text-green-700
-        px-3
+        px-2
+        sm:px-3
         py-1
         rounded-full
         font-semibold
+        text-xs
+        sm:text-sm
       ">
 
         Lunas
@@ -1381,12 +1558,16 @@ function StatusBadge({
     return (
 
       <span className="
+        inline-flex
         bg-red-100
         text-red-700
-        px-3
+        px-2
+        sm:px-3
         py-1
         rounded-full
         font-semibold
+        text-xs
+        sm:text-sm
       ">
 
         Ditolak
@@ -1401,12 +1582,16 @@ function StatusBadge({
   return (
 
     <span className="
+      inline-flex
       bg-yellow-100
       text-yellow-700
-      px-3
+      px-2
+      sm:px-3
       py-1
       rounded-full
       font-semibold
+      text-xs
+      sm:text-sm
     ">
 
       Menunggu
@@ -1432,11 +1617,14 @@ function Info({
     <div className="
       border
       rounded-lg
-      p-4
+      p-3
+      sm:p-4
     ">
 
       <p className="
         text-gray-500
+        text-xs
+        sm:text-sm
       ">
 
         {title}
@@ -1446,7 +1634,9 @@ function Info({
 
       <h2 className="
         font-bold
-        text-xl
+        text-base
+        sm:text-xl
+        break-words
       ">
 
         {value}
@@ -1458,4 +1648,3 @@ function Info({
   );
 
 }
-

@@ -7,312 +7,591 @@ import {
 
 import StatCard from "./StatCard";
 
-export default function Laporan(){
 
+export default function Laporan() {
 
-const [data,setData]=useState([]);
-const statistik = {
+  const [data, setData] = useState([]);
 
-jumlahGudep: data.length,
 
-pembinaPutra: data.reduce(
-(total,item)=> total + item.pembinaPutra,
-0
-),
+  // ======================================================
+  // STATISTIK
+  // ======================================================
 
-pembinaPutri: data.reduce(
-(total,item)=> total + item.pembinaPutri,
-0
-),
+  const statistik = {
 
-pesertaPutra: data.reduce(
-(total,item)=> total + item.pesertaPutra,
-0
-),
+    jumlahGudep: data.length,
 
-pesertaPutri: data.reduce(
-(total,item)=> total + item.pesertaPutri,
-0
-),
+    pembinaPutra: data.reduce(
+      (total, item) =>
+        total + (Number(item.pembinaPutra) || 0),
+      0
+    ),
 
-jumlahRegu: data.reduce(
-(total,item)=> total + item.jumlahRegu,
-0
-)
+    pembinaPutri: data.reduce(
+      (total, item) =>
+        total + (Number(item.pembinaPutri) || 0),
+      0
+    ),
 
-};
+    pesertaPutra: data.reduce(
+      (total, item) =>
+        total + (Number(item.pesertaPutra) || 0),
+      0
+    ),
 
+    pesertaPutri: data.reduce(
+      (total, item) =>
+        total + (Number(item.pesertaPutri) || 0),
+      0
+    ),
 
-useEffect(()=>{
+    jumlahRegu: data.reduce(
+      (total, item) =>
+        total + (Number(item.jumlahRegu) || 0),
+      0
+    )
 
-loadData();
+  };
 
-},[]);
 
+  // ======================================================
+  // LOAD DATA
+  // ======================================================
 
+  useEffect(() => {
 
-async function loadData(){
+    loadData();
 
-try{
+  }, []);
 
-const hasil =
-await getLaporanAdmin();
 
-setData(hasil);
+  async function loadData() {
 
+    try {
 
-}catch(error){
+      const hasil =
+        await getLaporanAdmin();
 
-console.error(error);
+      setData(hasil || []);
 
-}
+    } catch (error) {
 
-}
+      console.error(
+        "GAGAL LOAD LAPORAN:",
+        error
+      );
 
+      setData([]);
 
+    }
 
-return (
+  }
 
-<div className="space-y-6">
 
+  // ======================================================
+  // TAMPILAN
+  // ======================================================
 
-<h1 className="
-text-3xl
-font-bold
-text-green-700
-">
+  return (
 
-📊 Laporan Jambore
+    <div className="space-y-5 sm:space-y-6">
 
-</h1>
 
-<div className="
-grid 
-grid-cols-1 
-md:grid-cols-3 
-gap-6
-">
+      {/* ==================================================
+          HEADER
+      ================================================== */}
 
+      <div>
 
-<StatCard
- icon="🏫"
- title="Jumlah Gudep"
- value={statistik.jumlahGudep}
-/>
+        <h1 className="
+          text-2xl
+          sm:text-3xl
+          font-bold
+          text-green-700
+        ">
 
+          📊 Laporan Jambore
 
-<StatCard
+        </h1>
 
-icon="👨"
+        <p className="
+          text-gray-500
+          text-sm
+          sm:text-base
+          mt-1
+        ">
 
-title="Pembina Putra"
+          Rekapitulasi data peserta Jambore Ranting 2026
 
-value={statistik.pembinaPutra}
+        </p>
 
-/>
+      </div>
 
 
-<StatCard
 
-icon="👩"
+      {/* ==================================================
+          STATISTIK
+      ================================================== */}
 
-title="Pembina Putri"
+      <div className="
+        grid
+        grid-cols-2
+        sm:grid-cols-2
+        md:grid-cols-3
+        gap-3
+        sm:gap-5
+        md:gap-6
+      ">
 
-value={statistik.pembinaPutri}
 
-/>
+        <StatCard
+          icon="🏫"
+          title="Jumlah Gudep"
+          value={statistik.jumlahGudep}
+        />
 
 
-<StatCard
+        <StatCard
+          icon="👨"
+          title="Pembina Putra"
+          value={statistik.pembinaPutra}
+        />
 
-icon="👦"
 
-title="Peserta Putra"
+        <StatCard
+          icon="👩"
+          title="Pembina Putri"
+          value={statistik.pembinaPutri}
+        />
 
-value={statistik.pesertaPutra}
 
-/>
+        <StatCard
+          icon="👦"
+          title="Peserta Putra"
+          value={statistik.pesertaPutra}
+        />
 
 
-<StatCard
+        <StatCard
+          icon="👧"
+          title="Peserta Putri"
+          value={statistik.pesertaPutri}
+        />
 
-icon="👧"
 
-title="Peserta Putri"
+        <StatCard
+          icon="🏕️"
+          title="Jumlah Regu"
+          value={statistik.jumlahRegu}
+        />
 
-value={statistik.pesertaPutri}
+      </div>
 
-/>
 
 
-<StatCard
+      {/* ==================================================
+          TABEL REKAPITULASI GUEDEP
+      ================================================== */}
 
-icon="🏕️"
+      <div className="
+        bg-white
+        rounded-xl
+        shadow
+        p-4
+        sm:p-6
+      ">
 
-title="Jumlah Regu"
 
-value={statistik.jumlahRegu}
+        {/* JUDUL TABEL */}
 
-/>
+        <div className="
+          mb-4
+          sm:mb-5
+        ">
 
+          <h2 className="
+            text-lg
+            sm:text-xl
+            font-bold
+            text-green-700
+          ">
 
-</div>
+            📋 Rekapitulasi Setiap Gudep
 
-<div className="
-bg-white
-rounded-xl
-shadow
-p-6
-">
+          </h2>
 
+          <p className="
+            text-xs
+            sm:text-sm
+            text-gray-500
+            mt-1
+          ">
 
-<table className="
-w-full
-border
-">
+            Jumlah pembina, peserta, dan regu dari setiap Gudep.
 
+          </p>
 
-<thead className="
-bg-green-700
-text-white
-">
+        </div>
 
 
-<tr>
 
-<th className="border p-3">
-No
-</th>
+        {/* ==================================================
+            TABLE WRAPPER
+            RESPONSIVE HP
+        ================================================== */}
 
+        <div className="
+          w-full
+          overflow-x-auto
+          rounded-lg
+          border
+        ">
 
-<th className="border p-3">
-Nama Gudep
-</th>
 
+          <table className="
+            min-w-[900px]
+            w-full
+            border-collapse
+            text-sm
+          ">
 
-<th className="border p-3">
-Pembina Putra
-</th>
 
+            {/* ==================================================
+                HEADER TABLE
+            ================================================== */}
 
-<th className="border p-3">
-Pembina Putri
-</th>
+            <thead className="
+              bg-green-700
+              text-white
+            ">
 
+              <tr>
 
-<th className="border p-3">
-Peserta Putra
-</th>
+                <th className="
+                  border
+                  border-green-600
+                  p-3
+                  text-center
+                  whitespace-nowrap
+                ">
+                  No
+                </th>
 
 
-<th className="border p-3">
-Peserta Putri
-</th>
+                <th className="
+                  border
+                  border-green-600
+                  p-3
+                  text-left
+                  whitespace-nowrap
+                ">
+                  Nama Gudep
+                </th>
 
 
-<th className="border p-3">
-Jumlah Regu
-</th>
+                <th className="
+                  border
+                  border-green-600
+                  p-3
+                  text-center
+                  whitespace-nowrap
+                ">
+                  Pembina Putra
+                </th>
 
-<th className="border p-3">
-Aksi
-</th>
 
-</tr>
+                <th className="
+                  border
+                  border-green-600
+                  p-3
+                  text-center
+                  whitespace-nowrap
+                ">
+                  Pembina Putri
+                </th>
 
 
-</thead>
+                <th className="
+                  border
+                  border-green-600
+                  p-3
+                  text-center
+                  whitespace-nowrap
+                ">
+                  Peserta Putra
+                </th>
 
 
+                <th className="
+                  border
+                  border-green-600
+                  p-3
+                  text-center
+                  whitespace-nowrap
+                ">
+                  Peserta Putri
+                </th>
 
-<tbody>
 
+                <th className="
+                  border
+                  border-green-600
+                  p-3
+                  text-center
+                  whitespace-nowrap
+                ">
+                  Jumlah Regu
+                </th>
 
-{
-data.map((item,index)=>(
 
+                <th className="
+                  border
+                  border-green-600
+                  p-3
+                  text-center
+                  whitespace-nowrap
+                ">
+                  Aksi
+                </th>
 
-<tr key={index}>
+              </tr>
 
+            </thead>
 
-<td className="border p-3 text-center">
-{index+1}
-</td>
 
 
-<td className="border p-3">
-{item.nama_gudep}
-</td>
+            {/* ==================================================
+                BODY TABLE
+            ================================================== */}
 
+            <tbody>
 
-<td className="border p-3 text-center">
-{item.pembinaPutra}
-</td>
 
+              {/* TIDAK ADA DATA */}
 
-<td className="border p-3 text-center">
-{item.pembinaPutri}
-</td>
+              {data.length === 0 ? (
 
+                <tr>
 
-<td className="border p-3 text-center">
-{item.pesertaPutra}
-</td>
+                  <td
+                    colSpan="8"
+                    className="
+                      border
+                      p-6
+                      text-center
+                      text-gray-500
+                    "
+                  >
 
+                    Belum ada data laporan Gudep.
 
-<td className="border p-3 text-center">
-{item.pesertaPutri}
-</td>
+                  </td>
 
+                </tr>
 
-<td className="border p-3 text-center">
-{item.jumlahRegu}
-</td>
+              ) : (
 
-<td className="border p-3 text-center">
 
-  <Link
-    to={`/admin/detail-laporan/${item.id}`}
-    className="
-      inline-flex
-      items-center
-      gap-2
-      bg-blue-600
-      hover:bg-blue-700
-      text-white
-      px-3
-      py-2
-      rounded-lg
-      transition
-      text-sm
-      font-medium
-    "
-  >
-    👁️ Lihat
-  </Link>
+                /* DATA GUEDEP */
 
-</td>
-</tr>
+                data.map((item, index) => (
 
+                  <tr
+                    key={
+                      item.id ||
+                      item.gudep_id ||
+                      index
+                    }
+                    className="
+                      hover:bg-gray-50
+                    "
+                  >
 
-))
 
-}
+                    {/* NO */}
 
+                    <td className="
+                      border
+                      p-3
+                      text-center
+                      whitespace-nowrap
+                    ">
 
-</tbody>
+                      {index + 1}
 
+                    </td>
 
-</table>
 
 
-</div>
+                    {/* NAMA GUEDEP */}
 
+                    <td className="
+                      border
+                      p-3
+                      font-medium
+                      whitespace-nowrap
+                    ">
 
-</div>
+                      {item.nama_gudep || "-"}
 
+                    </td>
 
-);
 
+
+                    {/* PEMBINA PUTRA */}
+
+                    <td className="
+                      border
+                      p-3
+                      text-center
+                      whitespace-nowrap
+                    ">
+
+                      {item.pembinaPutra || 0}
+
+                    </td>
+
+
+
+                    {/* PEMBINA PUTRI */}
+
+                    <td className="
+                      border
+                      p-3
+                      text-center
+                      whitespace-nowrap
+                    ">
+
+                      {item.pembinaPutri || 0}
+
+                    </td>
+
+
+
+                    {/* PESERTA PUTRA */}
+
+                    <td className="
+                      border
+                      p-3
+                      text-center
+                      whitespace-nowrap
+                    ">
+
+                      {item.pesertaPutra || 0}
+
+                    </td>
+
+
+
+                    {/* PESERTA PUTRI */}
+
+                    <td className="
+                      border
+                      p-3
+                      text-center
+                      whitespace-nowrap
+                    ">
+
+                      {item.pesertaPutri || 0}
+
+                    </td>
+
+
+
+                    {/* JUMLAH REGU */}
+
+                    <td className="
+                      border
+                      p-3
+                      text-center
+                      whitespace-nowrap
+                    ">
+
+                      {item.jumlahRegu || 0}
+
+                    </td>
+
+
+
+                    {/* AKSI */}
+
+                    <td className="
+                      border
+                      p-3
+                      text-center
+                      whitespace-nowrap
+                    ">
+
+                      <Link
+                        to={`/admin/detail-laporan/${item.id}`}
+                        className="
+                          inline-flex
+                          items-center
+                          justify-center
+                          gap-1
+                          bg-blue-600
+                          hover:bg-blue-700
+                          text-white
+                          px-3
+                          py-2
+                          rounded-lg
+                          transition
+                          text-xs
+                          sm:text-sm
+                          font-medium
+                        "
+                      >
+
+                        👁️ Lihat
+
+                      </Link>
+
+                    </td>
+
+
+                  </tr>
+
+                ))
+
+              )}
+
+
+            </tbody>
+
+
+          </table>
+
+
+        </div>
+
+
+
+        {/* ==================================================
+            PETUNJUK HP
+        ================================================== */}
+
+        {data.length > 0 && (
+
+          <div className="
+            mt-3
+            text-xs
+            text-gray-400
+            sm:hidden
+            text-center
+          ">
+
+            ← Geser tabel ke kiri/kanan untuk melihat semua data →
+
+          </div>
+
+        )}
+
+
+      </div>
+
+
+    </div>
+
+  );
 
 }

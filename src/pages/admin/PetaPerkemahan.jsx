@@ -33,11 +33,13 @@ function formatNomorKapling(nomor, jenis) {
 
 // ======================================================
 // NORMALISASI NOMOR
-// Supaya pencarian tetap cocok dengan data Supabase
 // ======================================================
 
 function normalisasiNomor(nomor) {
-  if (nomor === null || nomor === undefined) {
+  if (
+    nomor === null ||
+    nomor === undefined
+  ) {
     return "";
   }
 
@@ -47,6 +49,10 @@ function normalisasiNomor(nomor) {
     .replace(/^0+/, "") || "0";
 }
 
+
+// ======================================================
+// KOMPONEN
+// ======================================================
 
 export default function PetaPerkemahan() {
 
@@ -74,14 +80,17 @@ export default function PetaPerkemahan() {
 
     try {
 
-      const hasil = await getPeta();
+      const hasil =
+        await getPeta();
 
       console.log(
         "DATA PETA PERKEMAHAN:",
         hasil
       );
 
-      setData(hasil || []);
+      setData(
+        hasil || []
+      );
 
     } catch (error) {
 
@@ -99,182 +108,213 @@ export default function PetaPerkemahan() {
   // CARI KAPLING
   // ======================================================
 
-  // ======================================================
-// CARI KAPLING
-// ======================================================
-
-const cariKapling = (
-  kelurahan,
-  nomor,
-  jenis
-) => {
-
-  // ==========================================
-  // NORMALISASI NOMOR TARGET
-  // ==========================================
-
-  const nomorTarget = Number(
-    String(nomor)
-      .trim()
-      .replace(/^PA/i, "")
-      .replace(/^PI/i, "")
-      .replace(/^0+/, "") || "0"
-  );
-
-  console.log("🔎 CARI KAPLING:", {
-    jenis,
+  const cariKapling = (
     kelurahan,
     nomor,
-    nomorTarget,
-  });
+    jenis
+  ) => {
 
-  // ==========================================
-  // CARI BERDASARKAN NOMOR KAPLING
-  // ==========================================
-
-  const hasil = data.find((item) => {
-
-    // =================================================
-    // PUTRA
-    // =================================================
-
-    if (jenis === "putra") {
-
-      const daftarNomor = String(
-        item.kapling_putra || ""
-      )
-        .split(",")
-        .map((nomor) =>
-          Number(
-            String(nomor)
-              .trim()
-              .replace(/^PA/i, "")
-              .replace(/^PI/i, "")
-              .replace(/^0+/, "") || "0"
-          )
-        )
-        .filter(
-          (nomor) => !isNaN(nomor)
-        );
-
-      return daftarNomor.includes(
-        nomorTarget
+    const nomorTarget =
+      Number(
+        String(nomor)
+          .trim()
+          .replace(/^PA/i, "")
+          .replace(/^PI/i, "")
+          .replace(/^0+/, "") ||
+          "0"
       );
-    }
 
-    // =================================================
-    // PUTRI
-    // =================================================
+    console.log(
+      "🔎 CARI KAPLING:",
+      {
+        jenis,
+        kelurahan,
+        nomor,
+        nomorTarget,
+      }
+    );
 
-    if (jenis === "putri") {
 
-      const daftarNomor = String(
-        item.kapling_putri || ""
-      )
-        .split(",")
-        .map((nomor) =>
-          Number(
-            String(nomor)
-              .trim()
-              .replace(/^PA/i, "")
-              .replace(/^PI/i, "")
-              .replace(/^0+/, "") || "0"
-          )
-        )
-        .filter(
-          (nomor) => !isNaN(nomor)
-        );
+    const hasil =
+      data.find(
+        (item) => {
 
-      return daftarNomor.includes(
-        nomorTarget
-      );
-    }
+          // =================================================
+          // PUTRA
+          // =================================================
 
-    return false;
-  });
+          if (
+            jenis === "putra"
+          ) {
 
-  // ==========================================
-  // DEBUG
-  // ==========================================
+            const daftarNomor =
+              String(
+                item.kapling_putra || ""
+              )
+                .split(",")
+                .map(
+                  (nomor) =>
+                    Number(
+                      String(nomor)
+                        .trim()
+                        .replace(
+                          /^PA/i,
+                          ""
+                        )
+                        .replace(
+                          /^PI/i,
+                          ""
+                        )
+                        .replace(
+                          /^0+/,
+                          ""
+                        ) ||
+                        "0"
+                    )
+                )
+                .filter(
+                  (nomor) =>
+                    !isNaN(nomor)
+                );
 
-  console.log(
-    "✅ HASIL CARI:",
-    hasil
-      ? {
-          gudep:
-            hasil.profil_gudep?.nama_pangkalan,
+            return daftarNomor.includes(
+              nomorTarget
+            );
+          }
 
-          kaplingPutra:
-            hasil.kapling_putra,
 
-          kaplingPutri:
-            hasil.kapling_putri,
+          // =================================================
+          // PUTRI
+          // =================================================
 
-          kelurahanPutra:
-            hasil.kelurahan_putra,
+          if (
+            jenis === "putri"
+          ) {
 
-          kelurahanPutri:
-            hasil.kelurahan_putri,
+            const daftarNomor =
+              String(
+                item.kapling_putri || ""
+              )
+                .split(",")
+                .map(
+                  (nomor) =>
+                    Number(
+                      String(nomor)
+                        .trim()
+                        .replace(
+                          /^PA/i,
+                          ""
+                        )
+                        .replace(
+                          /^PI/i,
+                          ""
+                        )
+                        .replace(
+                          /^0+/,
+                          ""
+                        ) ||
+                        "0"
+                    )
+                )
+                .filter(
+                  (nomor) =>
+                    !isNaN(nomor)
+                );
+
+            return daftarNomor.includes(
+              nomorTarget
+            );
+          }
+
+
+          return false;
+
         }
-      : null
-  );
+      );
 
-  return hasil;
-};
+
+    console.log(
+      "✅ HASIL CARI:",
+      hasil
+        ? {
+            gudep:
+              hasil.profil_gudep
+                ?.nama_pangkalan,
+
+            kaplingPutra:
+              hasil.kapling_putra,
+
+            kaplingPutri:
+              hasil.kapling_putri,
+
+            kelurahanPutra:
+              hasil.kelurahan_putra,
+
+            kelurahanPutri:
+              hasil.kelurahan_putri,
+          }
+        : null
+    );
+
+
+    return hasil;
+
+  };
 
 
   // ======================================================
   // DATA UNTUK TAMPILAN PETA
-  //
-  // Data asli:
-  // kapling_putra = 003
-  // kapling_putri = 003
-  //
-  // Tampilan:
-  // PA003
-  // PI003
   // ======================================================
 
-  const dataPeta = (data || []).map((item) => ({
+  const dataPeta =
+    (data || []).map(
+      (item) => ({
 
-    ...item,
+        ...item,
 
-    // PUTRA
-    nomor_kapling_putra:
-      item.kapling_putra
-        ? formatNomorKapling(
-            item.kapling_putra,
-            "putra"
-          )
-        : null,
+        // =================================================
+        // PUTRA
+        // =================================================
 
-    kapling_putra_label:
-      item.kapling_putra
-        ? formatNomorKapling(
-            item.kapling_putra,
-            "putra"
-          )
-        : null,
+        nomor_kapling_putra:
+          item.kapling_putra
+            ? formatNomorKapling(
+                item.kapling_putra,
+                "putra"
+              )
+            : null,
+
+        kapling_putra_label:
+          item.kapling_putra
+            ? formatNomorKapling(
+                item.kapling_putra,
+                "putra"
+              )
+            : null,
 
 
-    // PUTRI
-    nomor_kapling_putri:
-      item.kapling_putri
-        ? formatNomorKapling(
-            item.kapling_putri,
-            "putri"
-          )
-        : null,
+        // =================================================
+        // PUTRI
+        // =================================================
 
-    kapling_putri_label:
-      item.kapling_putri
-        ? formatNomorKapling(
-            item.kapling_putri,
-            "putri"
-          )
-        : null,
+        nomor_kapling_putri:
+          item.kapling_putri
+            ? formatNomorKapling(
+                item.kapling_putri,
+                "putri"
+              )
+            : null,
 
-  }));
+        kapling_putri_label:
+          item.kapling_putri
+            ? formatNomorKapling(
+                item.kapling_putri,
+                "putri"
+              )
+            : null,
+
+      })
+    );
 
 
   // ======================================================
@@ -283,19 +323,30 @@ const cariKapling = (
 
   return (
 
-    <div className="space-y-6">
+    <div className="
+      w-full
+      max-w-full
+      space-y-4
+      sm:space-y-6
+      overflow-x-hidden
+    ">
 
 
       {/* ==================================================
           HEADER
       ================================================== */}
 
-      <div>
+      <div className="
+        px-1
+        sm:px-0
+      ">
 
         <h1 className="
-          text-3xl
+          text-2xl
+          sm:text-3xl
           font-bold
           text-green-700
+          leading-tight
         ">
 
           🏕️ Peta Bumi Perkemahan
@@ -305,6 +356,8 @@ const cariKapling = (
         <p className="
           text-gray-500
           mt-1
+          text-sm
+          sm:text-base
         ">
 
           Layout penempatan Gudep Putra dan Putri
@@ -322,25 +375,39 @@ const cariKapling = (
         bg-white
         rounded-xl
         shadow
-        p-5
+        p-3
+        sm:p-5
+        w-full
+        max-w-full
       ">
 
         <div className="
-          flex
-          flex-wrap
-          gap-4
-          text-sm
+          grid
+          grid-cols-1
+          sm:flex
+          sm:flex-wrap
+          gap-3
+          sm:gap-4
+          text-xs
+          sm:text-sm
         ">
+
+
+          {/* PUTRA */}
 
           <div className="
             bg-blue-50
             border
             border-blue-200
             rounded-lg
-            px-4
+            px-3
             py-2
+            sm:px-4
+            sm:py-2
             text-blue-700
             font-semibold
+            w-full
+            sm:w-auto
           ">
 
             🧑 PA001 – PA015 = Kapling Putra
@@ -348,15 +415,21 @@ const cariKapling = (
           </div>
 
 
+          {/* PUTRI */}
+
           <div className="
             bg-pink-50
             border
             border-pink-200
             rounded-lg
-            px-4
+            px-3
             py-2
+            sm:px-4
+            sm:py-2
             text-pink-700
             font-semibold
+            w-full
+            sm:w-auto
           ">
 
             👩 PI001 – PI015 = Kapling Putri
@@ -376,122 +449,196 @@ const cariKapling = (
         bg-white
         rounded-xl
         shadow
-        p-6
+        p-3
+        sm:p-4
+        lg:p-6
+        w-full
+        max-w-full
+        overflow-hidden
       ">
 
-        <h2 className="
-          text-xl
-          font-bold
-          mb-2
+
+        {/* =================================================
+            JUDUL PETA
+        ================================================= */}
+
+        <div className="
+          mb-4
+          sm:mb-6
         ">
 
-          Layout Perkemahan Jambore Ranting
+          <h2 className="
+            text-lg
+            sm:text-xl
+            font-bold
+            leading-tight
+          ">
 
-        </h2>
+            Layout Perkemahan Jambore Ranting
 
-        <p className="
-          text-gray-500
-          mb-6
-        ">
+          </h2>
 
-          Nomor kapling Putra dan Putri menggunakan
-          kode berbeda untuk menghindari nomor ganda.
+          <p className="
+            text-gray-500
+            mt-1
+            text-xs
+            sm:text-sm
+            leading-relaxed
+          ">
 
-        </p>
+            Nomor kapling Putra dan Putri menggunakan
+            kode berbeda untuk menghindari nomor ganda.
 
+          </p>
+
+        </div>
+
+
+        {/* =================================================
+            BLOK PUTRA + PUTRI
+        ================================================= */}
 
         <div className="
           grid
           grid-cols-1
           lg:grid-cols-2
-          gap-8
+          gap-4
+          sm:gap-6
+          lg:gap-8
+          w-full
+          min-w-0
         ">
 
 
-          {/* ==================================================
+          {/* =================================================
               BLOK PUTRA
-          ================================================== */}
+          ================================================= */}
 
-          <KecamatanCard
-            jenis="putra"
-            data={dataPeta}
-            cariKapling={cariKapling}
+          <div className="
+            min-w-0
+            w-full
+            max-w-full
+            overflow-hidden
+          ">
 
-            onSelectGudep={async (item) => {
+            <KecamatanCard
 
-              try {
+              jenis="putra"
 
-                const detail =
-                  await getDetailKapling(
-                    item.gudep_id
-                  );
+              data={dataPeta}
 
-
-                console.log(
-                  "KLIK KAPLING PUTRA:",
-                  detail
-                );
-
-
-                setSelectedGudep(detail);
-
-                setJenisKapling("Putra");
-
-              } catch (error) {
-
-                console.error(
-                  "GAGAL DETAIL PUTRA:",
-                  error
-                );
-
+              cariKapling={
+                cariKapling
               }
 
-            }}
+              onSelectGudep={
+                async (item) => {
 
-          />
+                  try {
+
+                    const detail =
+                      await getDetailKapling(
+                        item.gudep_id
+                      );
 
 
-          {/* ==================================================
+                    console.log(
+                      "KLIK KAPLING PUTRA:",
+                      detail
+                    );
+
+
+                    setSelectedGudep(
+                      detail
+                    );
+
+                    setJenisKapling(
+                      "Putra"
+                    );
+
+                  } catch (
+                    error
+                  ) {
+
+                    console.error(
+                      "GAGAL DETAIL PUTRA:",
+                      error
+                    );
+
+                  }
+
+                }
+              }
+
+            />
+
+          </div>
+
+
+          {/* =================================================
               BLOK PUTRI
-          ================================================== */}
+          ================================================= */}
 
-          <KecamatanCard
-            jenis="putri"
-            data={dataPeta}
-            cariKapling={cariKapling}
+          <div className="
+            min-w-0
+            w-full
+            max-w-full
+            overflow-hidden
+          ">
 
-            onSelectGudep={async (item) => {
+            <KecamatanCard
 
-              try {
+              jenis="putri"
 
-                const detail =
-                  await getDetailKapling(
-                    item.gudep_id
-                  );
+              data={dataPeta}
 
-
-                console.log(
-                  "KLIK KAPLING PUTRI:",
-                  detail
-                );
-
-
-                setSelectedGudep(detail);
-
-                setJenisKapling("Putri");
-
-              } catch (error) {
-
-                console.error(
-                  "GAGAL DETAIL PUTRI:",
-                  error
-                );
-
+              cariKapling={
+                cariKapling
               }
 
-            }}
+              onSelectGudep={
+                async (item) => {
 
-          />
+                  try {
+
+                    const detail =
+                      await getDetailKapling(
+                        item.gudep_id
+                      );
+
+
+                    console.log(
+                      "KLIK KAPLING PUTRI:",
+                      detail
+                    );
+
+
+                    setSelectedGudep(
+                      detail
+                    );
+
+                    setJenisKapling(
+                      "Putri"
+                    );
+
+                  } catch (
+                    error
+                  ) {
+
+                    console.error(
+                      "GAGAL DETAIL PUTRI:",
+                      error
+                    );
+
+                  }
+
+                }
+              }
+
+            />
+
+          </div>
+
 
         </div>
 
@@ -504,12 +651,18 @@ const cariKapling = (
 
       <DetailKapling
 
-        gudep={selectedGudep}
+        gudep={
+          selectedGudep
+        }
 
-        jenis={jenisKapling}
+        jenis={
+          jenisKapling
+        }
 
         onClose={() =>
-          setSelectedGudep(null)
+          setSelectedGudep(
+            null
+          )
         }
 
       />

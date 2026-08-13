@@ -35,21 +35,17 @@ export default function VerifikasiGudep() {
 
       setError("");
 
-
       const data =
         await getSemuaPendaftaran();
-
 
       console.log(
         "DATA VERIFIKASI GUDEP:",
         data
       );
 
-
       setDataPendaftaran(
         data || []
       );
-
 
     } catch (err) {
 
@@ -58,12 +54,10 @@ export default function VerifikasiGudep() {
         err
       );
 
-
       setError(
         err?.message ||
         "Gagal mengambil data pendaftaran."
       );
-
 
     } finally {
 
@@ -86,10 +80,23 @@ export default function VerifikasiGudep() {
     ) {
 
       return (
-        <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold text-sm">
-
+        <span
+          className="
+            inline-flex
+            items-center
+            px-2
+            py-1
+            sm:px-3
+            rounded-full
+            bg-green-100
+            text-green-700
+            font-semibold
+            text-[10px]
+            sm:text-sm
+            whitespace-nowrap
+          "
+        >
           ✅ Terverifikasi
-
         </span>
       );
 
@@ -102,10 +109,23 @@ export default function VerifikasiGudep() {
     ) {
 
       return (
-        <span className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 font-semibold text-sm">
-
+        <span
+          className="
+            inline-flex
+            items-center
+            px-2
+            py-1
+            sm:px-3
+            rounded-full
+            bg-yellow-100
+            text-yellow-700
+            font-semibold
+            text-[10px]
+            sm:text-sm
+            whitespace-nowrap
+          "
+        >
           🔄 Perlu Perbaikan
-
         </span>
       );
 
@@ -118,10 +138,23 @@ export default function VerifikasiGudep() {
     ) {
 
       return (
-        <span className="inline-flex items-center px-3 py-1 rounded-full bg-red-100 text-red-700 font-semibold text-sm">
-
+        <span
+          className="
+            inline-flex
+            items-center
+            px-2
+            py-1
+            sm:px-3
+            rounded-full
+            bg-red-100
+            text-red-700
+            font-semibold
+            text-[10px]
+            sm:text-sm
+            whitespace-nowrap
+          "
+        >
           ❌ Ditolak
-
         </span>
       );
 
@@ -129,10 +162,23 @@ export default function VerifikasiGudep() {
 
 
     return (
-      <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
-
+      <span
+        className="
+          inline-flex
+          items-center
+          px-2
+          py-1
+          sm:px-3
+          rounded-full
+          bg-blue-100
+          text-blue-700
+          font-semibold
+          text-[10px]
+          sm:text-sm
+          whitespace-nowrap
+        "
+      >
         ⏳ Menunggu Verifikasi
-
       </span>
     );
 
@@ -147,19 +193,33 @@ export default function VerifikasiGudep() {
 
     return (
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
 
-        <h1 className="text-3xl font-bold text-amber-700">
-
+        <h1
+          className="
+            text-xl
+            sm:text-3xl
+            font-bold
+            text-amber-700
+          "
+        >
           Verifikasi Gudep
-
         </h1>
 
-
-        <div className="bg-white rounded-xl shadow p-8 text-center text-gray-500">
-
+        <div
+          className="
+            bg-white
+            rounded-xl
+            shadow
+            p-5
+            sm:p-8
+            text-center
+            text-gray-500
+            text-sm
+            sm:text-base
+          "
+        >
           Memuat data pendaftaran...
-
         </div>
 
       </div>
@@ -175,48 +235,77 @@ export default function VerifikasiGudep() {
 
   return (
 
-    <div className="space-y-6">
+    <div
+      className="
+        space-y-4
+        sm:space-y-6
+      "
+    >
 
 
       {/* ===================================== */}
       {/* HEADER */}
       {/* ===================================== */}
 
-      <div className="flex justify-between items-center">
+      <div
+        className="
+          flex
+          justify-between
+          items-center
+          gap-3
+        "
+      >
 
-        <div>
+        <div className="min-w-0">
 
-          <h1 className="text-3xl font-bold text-amber-700">
-
+          <h1
+            className="
+              text-xl
+              sm:text-3xl
+              font-bold
+              text-amber-700
+            "
+          >
             Verifikasi Gudep
-
           </h1>
 
-          <p className="text-gray-500 mt-1">
-
+          <p
+            className="
+              text-gray-500
+              mt-1
+              text-xs
+              sm:text-base
+            "
+          >
             Pemeriksaan dan verifikasi pendaftaran Gugus Depan.
-
           </p>
 
         </div>
 
 
         <button
-
           onClick={loadData}
-
           disabled={loading}
-
-          className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white px-5 py-2 rounded-lg font-semibold"
-
+          className="
+            shrink-0
+            bg-gray-600
+            hover:bg-gray-700
+            disabled:bg-gray-400
+            text-white
+            px-3
+            py-2
+            sm:px-5
+            sm:py-2
+            rounded-lg
+            font-semibold
+            text-xs
+            sm:text-base
+          "
         >
-
           🔄 Refresh
-
         </button>
 
       </div>
-
 
 
       {/* ===================================== */}
@@ -225,25 +314,54 @@ export default function VerifikasiGudep() {
 
       {error && (
 
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4">
-
+        <div
+          className="
+            bg-red-50
+            border
+            border-red-200
+            text-red-700
+            rounded-lg
+            p-3
+            sm:p-4
+            text-xs
+            sm:text-base
+          "
+        >
           ❌ {error}
-
         </div>
 
       )}
-
 
 
       {/* ===================================== */}
       {/* TABEL */}
       {/* ===================================== */}
 
-      <div className="bg-white rounded-xl shadow overflow-hidden">
+      <div
+        className="
+          bg-white
+          rounded-xl
+          shadow
+          overflow-hidden
+        "
+      >
 
-        <div className="overflow-x-auto">
+        <div
+          className="
+            overflow-x-auto
+            w-full
+          "
+        >
 
-          <table className="w-full border-collapse">
+          <table
+            className="
+              w-full
+              min-w-[760px]
+              border-collapse
+              text-xs
+              sm:text-sm
+            "
+          >
 
 
             {/* ================================ */}
@@ -254,46 +372,76 @@ export default function VerifikasiGudep() {
 
               <tr>
 
-                <th className="p-3 text-center w-16">
-
+                <th
+                  className="
+                    p-2
+                    sm:p-3
+                    text-center
+                    w-12
+                    sm:w-16
+                  "
+                >
                   No
-
                 </th>
 
-                <th className="p-3 text-left">
-
+                <th
+                  className="
+                    p-2
+                    sm:p-3
+                    text-left
+                  "
+                >
                   Gudep
-
                 </th>
 
-                <th className="p-3 text-center">
-
+                <th
+                  className="
+                    p-2
+                    sm:p-3
+                    text-center
+                  "
+                >
                   Pembina
-
                 </th>
 
-                <th className="p-3 text-center">
-
+                <th
+                  className="
+                    p-2
+                    sm:p-3
+                    text-center
+                  "
+                >
                   Regu
-
                 </th>
 
-                <th className="p-3 text-center">
-
+                <th
+                  className="
+                    p-2
+                    sm:p-3
+                    text-center
+                  "
+                >
                   Peserta
-
                 </th>
 
-                <th className="p-3 text-center">
-
+                <th
+                  className="
+                    p-2
+                    sm:p-3
+                    text-center
+                  "
+                >
                   Status
-
                 </th>
 
-                <th className="p-3 text-center">
-
+                <th
+                  className="
+                    p-2
+                    sm:p-3
+                    text-center
+                  "
+                >
                   Aksi
-
                 </th>
 
               </tr>
@@ -313,11 +461,14 @@ export default function VerifikasiGudep() {
 
                   <td
                     colSpan="7"
-                    className="text-center p-8 text-gray-500"
+                    className="
+                      text-center
+                      p-6
+                      sm:p-8
+                      text-gray-500
+                    "
                   >
-
                     📋 Belum ada data pendaftaran.
-
                   </td>
 
                 </tr>
@@ -328,54 +479,70 @@ export default function VerifikasiGudep() {
                   (item, index) => (
 
                     <tr
-
                       key={
                         item.id ||
                         index
                       }
-
-                      className="border-b hover:bg-gray-50"
-
+                      className="
+                        border-b
+                        hover:bg-gray-50
+                      "
                     >
 
 
                       {/* NO */}
 
-                      <td className="p-3 text-center">
-
+                      <td
+                        className="
+                          p-2
+                          sm:p-3
+                          text-center
+                        "
+                      >
                         {index + 1}
-
                       </td>
 
 
                       {/* GUDEP */}
 
-                      <td className="p-3">
+                      <td
+                        className="
+                          p-2
+                          sm:p-3
+                        "
+                      >
 
-                        <div className="font-semibold text-gray-800">
-
+                        <div
+                          className="
+                            font-semibold
+                            text-gray-800
+                          "
+                        >
                           {
                             item.profil_gudep
                               ?.nama_pangkalan ||
                             item.nama_gudep ||
                             "-"
                           }
-
                         </div>
 
 
                         {item.profil_gudep
                           ?.nama_mabigus && (
 
-                          <div className="text-sm text-gray-500">
-
+                          <div
+                            className="
+                              text-[10px]
+                              sm:text-sm
+                              text-gray-500
+                              mt-0.5
+                            "
+                          >
                             Mabigus:{" "}
-
                             {
                               item.profil_gudep
                                 .nama_mabigus
                             }
-
                           </div>
 
                         )}
@@ -385,15 +552,19 @@ export default function VerifikasiGudep() {
 
                       {/* PEMBINA */}
 
-                      <td className="p-3 text-center">
+                      <td
+                        className="
+                          p-2
+                          sm:p-3
+                          text-center
+                        "
+                      >
 
                         <span className="font-semibold">
-
                           {
                             item.jumlah_pembina ??
                             0
                           }
-
                         </span>
 
                       </td>
@@ -401,15 +572,19 @@ export default function VerifikasiGudep() {
 
                       {/* REGU */}
 
-                      <td className="p-3 text-center">
+                      <td
+                        className="
+                          p-2
+                          sm:p-3
+                          text-center
+                        "
+                      >
 
                         <span className="font-semibold">
-
                           {
                             item.jumlah_regu ??
                             0
                           }
-
                         </span>
 
                       </td>
@@ -417,27 +592,34 @@ export default function VerifikasiGudep() {
 
                       {/* PESERTA */}
 
-                      <td className="p-3 text-center">
+                      <td
+                        className="
+                          p-2
+                          sm:p-3
+                          text-center
+                        "
+                      >
 
                         {Number(
                           item.jumlah_peserta ||
                           0
                         ) === 0 ? (
 
-                          <span className="text-red-600 font-semibold">
-
+                          <span
+                            className="
+                              text-red-600
+                              font-semibold
+                            "
+                          >
                             0 ⚠️
-
                           </span>
 
                         ) : (
 
                           <span className="font-semibold">
-
                             {
                               item.jumlah_peserta
                             }
-
                           </span>
 
                         )}
@@ -447,7 +629,13 @@ export default function VerifikasiGudep() {
 
                       {/* STATUS */}
 
-                      <td className="p-3 text-center">
+                      <td
+                        className="
+                          p-2
+                          sm:p-3
+                          text-center
+                        "
+                      >
 
                         {
                           getStatusBadge(
@@ -460,10 +648,15 @@ export default function VerifikasiGudep() {
 
                       {/* AKSI */}
 
-                      <td className="p-3 text-center">
+                      <td
+                        className="
+                          p-2
+                          sm:p-3
+                          text-center
+                        "
+                      >
 
                         <button
-
                           onClick={() => {
 
                             console.log(
@@ -471,31 +664,37 @@ export default function VerifikasiGudep() {
                               item
                             );
 
-
                             console.log(
                               "ID PENDAFTARAN:",
                               item.id
                             );
-
 
                             console.log(
                               "ID GUDEP:",
                               item.gudep_id
                             );
 
-
                             navigate(
                               `/admin/detail-gudep/${item.id}`
                             );
 
                           }}
-
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold"
-
+                          className="
+                            bg-blue-600
+                            hover:bg-blue-700
+                            text-white
+                            px-3
+                            py-1.5
+                            sm:px-4
+                            sm:py-2
+                            rounded-lg
+                            font-semibold
+                            text-xs
+                            sm:text-sm
+                            whitespace-nowrap
+                          "
                         >
-
                           👁 Lihat
-
                         </button>
 
                       </td>
@@ -516,19 +715,28 @@ export default function VerifikasiGudep() {
       </div>
 
 
-
       {/* ===================================== */}
       {/* INFORMASI */}
       {/* ===================================== */}
 
       {dataPendaftaran.length > 0 && (
 
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
+        <div
+          className="
+            bg-blue-50
+            border
+            border-blue-200
+            rounded-xl
+            p-3
+            sm:p-4
+            text-xs
+            sm:text-sm
+            text-blue-800
+          "
+        >
 
           <span className="font-semibold">
-
             ℹ️ Informasi:
-
           </span>{" "}
 
           Klik tombol <b>👁 Lihat</b> untuk memeriksa
