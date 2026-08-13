@@ -1365,81 +1365,169 @@ export default function VerifikasiPembayaran() {
           </div>
 
 
-          {/* =================================================
-              BUKTI TRANSFER
-          ================================================= */}
+         {/* =================================================
+    BUKTI TRANSFER
+================================================= */}
 
-          {selected.bukti && (
+{selected.bukti && (
 
-            <div className="
-              mt-5
-              sm:mt-6
-            ">
+  <div className="
+    mt-5
+    sm:mt-6
+  ">
 
-              <h3 className="
-                font-bold
-                mb-3
-                text-base
-                sm:text-lg
-              ">
+    <h3 className="
+      font-bold
+      mb-3
+      text-base
+      sm:text-lg
+    ">
 
-                Bukti Transfer
+      Bukti Transfer
 
-              </h3>
+    </h3>
 
 
-              {selected.bukti
-                .toLowerCase()
-                .includes(".pdf")
+    {/*
+      ================================================
+      CEK APAKAH FILE ADALAH PDF
+      ================================================
+    */}
 
-                ? (
+    {(
+      selected.bukti
+        .toLowerCase()
+        .startsWith("data:application/pdf")
 
-                  <a
-                    href={
-                      selected.bukti
-                    }
-                    target="_blank"
-                    rel="noreferrer"
-                    className="
-                      bg-blue-600
-                      hover:bg-blue-700
-                      text-white
-                      px-4
-                      py-2
-                      rounded-lg
-                      inline-block
-                      text-sm
-                      font-semibold
-                    "
-                  >
+      ||
 
-                    📄 Lihat PDF
+      selected.bukti
+        .toLowerCase()
+        .includes(".pdf")
+    )
 
-                  </a>
+      ? (
 
-                )
+        <div className="
+          space-y-3
+        ">
 
-                : (
+          {/* LABEL PDF */}
 
-                  <img
-                    src={
-                      selected.bukti
-                    }
-                    alt="Bukti Transfer"
-                    className="
-                      w-full
-                      max-w-md
-                      rounded-lg
-                      border
-                      shadow
-                    "
-                  />
+          <div className="
+            bg-blue-50
+            border
+            border-blue-200
+            rounded-lg
+            p-3
+            text-blue-800
+            font-semibold
+          ">
 
-                )}
+            📄 Bukti Pembayaran PDF
 
-            </div>
+          </div>
 
-          )}
+
+          {/* ========================================
+              TAMPILKAN PDF LANGSUNG
+          ======================================== */}
+
+          <div className="
+            w-full
+            border
+            rounded-lg
+            overflow-hidden
+            bg-gray-100
+          ">
+
+            <iframe
+              src={selected.bukti}
+              title="Bukti Pembayaran"
+              className="
+                w-full
+                h-[700px]
+                sm:h-[800px]
+                border-0
+              "
+            />
+
+          </div>
+
+
+          {/* ========================================
+              TOMBOL BUKA PDF
+          ======================================== */}
+
+          <a
+            href={selected.bukti}
+            target="_blank"
+            rel="noreferrer"
+            className="
+              inline-block
+              bg-blue-600
+              hover:bg-blue-700
+              text-white
+              px-4
+              py-2
+              rounded-lg
+              text-sm
+              font-semibold
+            "
+          >
+
+            📄 Buka PDF di Tab Baru
+
+          </a>
+
+        </div>
+
+      )
+
+      : (
+
+        /* ==========================================
+           JIKA GAMBAR
+        ========================================== */
+
+        <div className="
+          space-y-3
+        ">
+
+          <div className="
+            bg-green-50
+            border
+            border-green-200
+            rounded-lg
+            p-3
+            text-green-800
+            font-semibold
+          ">
+
+            🖼 Bukti Pembayaran
+
+          </div>
+
+
+          <img
+            src={selected.bukti}
+            alt="Bukti Transfer"
+            className="
+              w-full
+              max-w-2xl
+              rounded-lg
+              border
+              shadow
+            "
+          />
+
+        </div>
+
+      )}
+
+  </div>
+
+)}
 
 
           {/* =================================================
