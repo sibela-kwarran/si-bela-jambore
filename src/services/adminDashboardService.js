@@ -25,14 +25,16 @@ throw gudepError;
 // TOTAL PESERTA
 // ======================
 
-const { data:peserta, error:pesertaError } =
+const { count: jumlahPeserta, error: pesertaError } =
 await supabase
-.from("peserta")
-.select("*");
+  .from("peserta")
+  .select("*", {
+    count: "exact",
+    head: true
+  });
 
-
-if(pesertaError)
-throw pesertaError;
+if (pesertaError)
+  throw pesertaError;
 
 
 // ======================
@@ -81,7 +83,7 @@ return {
   gudep?.length || 0,
 
   peserta:
-  peserta?.length || 0,
+jumlahPeserta || 0,
 
   pembayaran:
   pembayaran?.filter(
