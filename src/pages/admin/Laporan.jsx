@@ -19,37 +19,64 @@ export default function Laporan() {
 
   const statistik = {
 
-    jumlahGudep: data.length,
+    jumlahGudep:
+      data.length,
 
-    pembinaPutra: data.reduce(
-      (total, item) =>
-        total + (Number(item.pembinaPutra) || 0),
-      0
-    ),
 
-    pembinaPutri: data.reduce(
-      (total, item) =>
-        total + (Number(item.pembinaPutri) || 0),
-      0
-    ),
+    pembinaPutra:
+      data.reduce(
+        (total, item) =>
+          total + (Number(item.pembinaPutra) || 0),
+        0
+      ),
 
-    pesertaPutra: data.reduce(
-      (total, item) =>
-        total + (Number(item.pesertaPutra) || 0),
-      0
-    ),
 
-    pesertaPutri: data.reduce(
-      (total, item) =>
-        total + (Number(item.pesertaPutri) || 0),
-      0
-    ),
+    pembinaPutri:
+      data.reduce(
+        (total, item) =>
+          total + (Number(item.pembinaPutri) || 0),
+        0
+      ),
 
-    jumlahRegu: data.reduce(
-      (total, item) =>
-        total + (Number(item.jumlahRegu) || 0),
-      0
-    )
+
+    pesertaPutra:
+      data.reduce(
+        (total, item) =>
+          total + (Number(item.pesertaPutra) || 0),
+        0
+      ),
+
+
+    pesertaPutri:
+      data.reduce(
+        (total, item) =>
+          total + (Number(item.pesertaPutri) || 0),
+        0
+      ),
+
+
+    jumlahReguPutra:
+      data.reduce(
+        (total, item) =>
+          total + (Number(item.jumlahReguPutra) || 0),
+        0
+      ),
+
+
+    jumlahReguPutri:
+      data.reduce(
+        (total, item) =>
+          total + (Number(item.jumlahReguPutri) || 0),
+        0
+      ),
+
+
+    jumlahRegu:
+      data.reduce(
+        (total, item) =>
+          total + (Number(item.jumlahRegu) || 0),
+        0
+      )
 
   };
 
@@ -179,9 +206,29 @@ export default function Laporan() {
         />
 
 
+        {/* REGU PUTRA */}
+
         <StatCard
           icon="🏕️"
-          title="Jumlah Regu"
+          title="Regu Putra"
+          value={statistik.jumlahReguPutra}
+        />
+
+
+        {/* REGU PUTRI */}
+
+        <StatCard
+          icon="🌸"
+          title="Regu Putri"
+          value={statistik.jumlahReguPutri}
+        />
+
+
+        {/* TOTAL REGU */}
+
+        <StatCard
+          icon="🏕️"
+          title="Total Regu"
           value={statistik.jumlahRegu}
         />
 
@@ -190,7 +237,7 @@ export default function Laporan() {
 
 
       {/* ==================================================
-          TABEL REKAPITULASI GUEDEP
+          TABEL REKAPITULASI GUDEP
       ================================================== */}
 
       <div className="
@@ -227,7 +274,7 @@ export default function Laporan() {
             mt-1
           ">
 
-            Jumlah pembina, peserta, dan regu dari setiap Gudep.
+            Jumlah pembina, peserta, serta regu putra dan putri dari setiap Gudep.
 
           </p>
 
@@ -237,7 +284,6 @@ export default function Laporan() {
 
         {/* ==================================================
             TABLE WRAPPER
-            RESPONSIVE HP
         ================================================== */}
 
         <div className="
@@ -249,16 +295,14 @@ export default function Laporan() {
 
 
           <table className="
-            min-w-[900px]
+            min-w-[1050px]
             w-full
             border-collapse
             text-sm
           ">
 
 
-            {/* ==================================================
-                HEADER TABLE
-            ================================================== */}
+            {/* HEADER */}
 
             <thead className="
               bg-green-700
@@ -333,6 +377,8 @@ export default function Laporan() {
                 </th>
 
 
+                {/* REGU PUTRA */}
+
                 <th className="
                   border
                   border-green-600
@@ -340,7 +386,33 @@ export default function Laporan() {
                   text-center
                   whitespace-nowrap
                 ">
-                  Jumlah Regu
+                  Regu Putra
+                </th>
+
+
+                {/* REGU PUTRI */}
+
+                <th className="
+                  border
+                  border-green-600
+                  p-3
+                  text-center
+                  whitespace-nowrap
+                ">
+                  Regu Putri
+                </th>
+
+
+                {/* TOTAL REGU */}
+
+                <th className="
+                  border
+                  border-green-600
+                  p-3
+                  text-center
+                  whitespace-nowrap
+                ">
+                  Total Regu
                 </th>
 
 
@@ -360,21 +432,16 @@ export default function Laporan() {
 
 
 
-            {/* ==================================================
-                BODY TABLE
-            ================================================== */}
+            {/* BODY */}
 
             <tbody>
-
-
-              {/* TIDAK ADA DATA */}
 
               {data.length === 0 ? (
 
                 <tr>
 
                   <td
-                    colSpan="8"
+                    colSpan="10"
                     className="
                       border
                       p-6
@@ -390,9 +457,6 @@ export default function Laporan() {
                 </tr>
 
               ) : (
-
-
-                /* DATA GUEDEP */
 
                 data.map((item, index) => (
 
@@ -423,7 +487,7 @@ export default function Laporan() {
 
 
 
-                    {/* NAMA GUEDEP */}
+                    {/* NAMA GUDEP */}
 
                     <td className="
                       border
@@ -498,13 +562,48 @@ export default function Laporan() {
 
 
 
-                    {/* JUMLAH REGU */}
+                    {/* REGU PUTRA */}
 
                     <td className="
                       border
                       p-3
                       text-center
                       whitespace-nowrap
+                      font-bold
+                      text-green-700
+                    ">
+
+                      {item.jumlahReguPutra || 0}
+
+                    </td>
+
+
+
+                    {/* REGU PUTRI */}
+
+                    <td className="
+                      border
+                      p-3
+                      text-center
+                      whitespace-nowrap
+                      font-bold
+                      text-pink-600
+                    ">
+
+                      {item.jumlahReguPutri || 0}
+
+                    </td>
+
+
+
+                    {/* TOTAL REGU */}
+
+                    <td className="
+                      border
+                      p-3
+                      text-center
+                      whitespace-nowrap
+                      font-bold
                     ">
 
                       {item.jumlahRegu || 0}
@@ -555,20 +654,15 @@ export default function Laporan() {
 
               )}
 
-
             </tbody>
 
-
           </table>
-
 
         </div>
 
 
 
-        {/* ==================================================
-            PETUNJUK HP
-        ================================================== */}
+        {/* PETUNJUK HP */}
 
         {data.length > 0 && (
 
@@ -586,9 +680,7 @@ export default function Laporan() {
 
         )}
 
-
       </div>
-
 
     </div>
 

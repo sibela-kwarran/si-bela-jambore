@@ -1,136 +1,173 @@
 import supabase from "../lib/supabase";
 
+export async function getLaporanAdmin() {
+  try {
+    // ======================================================
+    // AMBIL DATA GUDEP
+    // ======================================================
+
+    const {
+      data: gudep,
+      error: gudepError,
+    } = await supabase
+      .from("profil_gudep")
+      .select(`
+        id,
+        nama_pangkalan
+      `);
+
+    if (gudepError) throw gudepError;
+
+    // ======================================================
+    // PROSES SETIAP GUDEP
+    // ======================================================
+
+    const laporan = await Promise.all(
+      gudep.map(async (item) => {
+
+        // ==================================================
+        // PEMBINA
+        // ==================================================
+
+        const {
+          data: pembina,
+          error: pembinaError,
+        } = await supabase
+          .from("data_pembina")
+          .select("jk")
+          .eq("gudep_id", item.id);
+
+        if (pembinaError) throw pembinaError;
+
+        const pembinaPutra =
+          pembina?.filter(
+            (x) =>
+              String(x.jk || "")
+                .trim()
+                .toLowerCase() === "putra"
+          ).length || 0;
+
+        const pembinaPutri =
+          pembina?.filter(
+            (x) =>
+              String(x.jk || "")
+                .trim()
+                .toLowerCase() === "putri"
+          ).length || 0;
+
+
+        // ==================================================
+        // PESERTA
+        // ==================================================
+
+        const {
+          data: peserta,
+          error: pesertaError,
+        } = await supabase
+          .from("peserta")
+          .select("jk")
+          .eq("gudep_id", item.id);
+
+        if (pesertaError) throw pesertaError;
+
+        const pesertaPutra =
+          peserta?.filter(
+            (x) =>
+              String(x.jk || "")
+                .trim()
+                .toLowerCase() === "putra"
+          ).length || 0;
+
+        const pesertaPutri =
+          peserta?.filter(
+            (x) =>
+              String(x.jk || "")
+                .trim()
+                .toLowerCase() === "putri"
+          ).length || 0;
+
+
+        // ==================================================
+        // REGU
+        // ==================================================
+
+        const {
+          data: regu,
+          error: reguError,
+        } = await supabase
+          .from("data_regu")
+          .select("jenis")
+          .eq("gudep_id", item.id);
+
+        if (reguError) throw reguError;
+
 
-export async function getLaporanAdmin(){
+        // ==================================================
+        // JUMLAH REGU PUTRA
+        // ==================================================
 
-try {
+        const jumlahReguPutra =
+          regu?.filter(
+            (x) =>
+              String(x.jenis || "")
+                .trim()
+                .toLowerCase() === "putra"
+          ).length || 0;
 
 
-const {data:gudep,error:gudepError}
-=
-await supabase
-.from("profil_gudep")
-.select(`
-id,
-nama_pangkalan
-`);
+        // ==================================================
+        // JUMLAH REGU PUTRI
+        // ==================================================
 
+        const jumlahReguPutri =
+          regu?.filter(
+            (x) =>
+              String(x.jenis || "")
+                .trim()
+                .toLowerCase() === "putri"
+          ).length || 0;
 
-if(gudepError) throw gudepError;
 
+        // ==================================================
+        // TOTAL REGU
+        // ==================================================
 
+        const jumlahRegu =
+          jumlahReguPutra + jumlahReguPutri;
 
-const laporan = await Promise.all(
 
-gudep.map(async(item)=>{
+        // ==================================================
+        // HASIL
+        // ==================================================
 
+        return {
+          id: item.id,
 
-// PEMBINA
+          nama_gudep: item.nama_pangkalan,
 
-const {data:pembina}
-=
-await supabase
-.from("data_pembina")
-.select("jk")
-.eq("gudep_id",item.id);
+          pembinaPutra,
+          pembinaPutri,
 
+          pesertaPutra,
+          pesertaPutri,
 
+          jumlahReguPutra,
+          jumlahReguPutri,
 
-const pembinaPutra =
-pembina?.filter(
-x=>x.jk==="Putra"
-).length || 0;
+          jumlahRegu,
+        };
+      })
+    );
 
+    return laporan;
 
+  } catch (error) {
 
-const pembinaPutri =
-pembina?.filter(
-x=>x.jk==="Putri"
-).length || 0;
+    console.error(
+      "LAPORAN ERROR:",
+      error
+    );
 
-
-
-
-// PESERTA
-
-const {data:peserta}
-=
-await supabase
-.from("peserta")
-.select("jk")
-.eq("gudep_id",item.id);
-
-
-
-const pesertaPutra =
-peserta?.filter(
-x=>x.jk==="Putra"
-).length || 0;
-
-
-
-const pesertaPutri =
-peserta?.filter(
-x=>x.jk==="Putri"
-).length || 0;
-
-
-
-
-
-// REGU
-
-const {count:jumlahRegu}
-=
-await supabase
-.from("data_regu")
-.select("*",{count:"exact",head:true})
-.eq("gudep_id",item.id);
-
-
-
-
-
-return {
-
-  id: item.id,
-
-  nama_gudep: item.nama_pangkalan,
-
-  pembinaPutra,
-
-  pembinaPutri,
-
-  pesertaPutra,
-
-  pesertaPutri,
-
-  jumlahRegu: jumlahRegu || 0
-
-};
-
-
-})
-
-);
-
-
-
-return laporan;
-
-
-
-}catch(error){
-
-console.error(
-"LAPORAN ERROR:",
-error
-);
-
-throw error;
-
-
-}
-
-
+    throw error;
+  }
 }
