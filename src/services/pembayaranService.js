@@ -103,6 +103,7 @@ export async function getPembayaran() {
       status,
       tanggal,
       tanggal_pembayaran,
+      bukti,
       created_at
     `)
     .eq("gudep_id", gudep.id)
@@ -247,4 +248,32 @@ export async function getPembayaranLunas() {
   }
 
   return data || [];
+}
+// ======================================================
+// CEK STATUS BUKTI PEMBAYARAN
+// ======================================================
+
+export async function cekBuktiPembayaran() {
+
+  const gudep = await getGudepLogin();
+
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select(`
+      id,
+      gudep_id,
+      status,
+      nominal,
+      tanggal,
+      tanggal_pembayaran,
+      bukti
+    `)
+    .eq("gudep_id", gudep.id)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }
