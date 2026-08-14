@@ -1,72 +1,183 @@
 import { useEffect, useState } from "react";
-import supabase from "../../lib/supabase";
 import { FaMoneyBillWave } from "react-icons/fa";
+
+import {
+  getPembayaranAdmin,
+} from "../../services/pembayaranService";
+
 
 export default function RingkasanPembayaran() {
 
   const [data, setData] = useState({
-  totalMasuk: 0,
-  targetPembayaran: 0,
-  sisa: 0,
-  sudahBayar: 0,
-  belumBayar: 0,
-  progress: 0,
-});
+    totalMasuk: 0,
+    targetPembayaran: 0,
+    sisa: 0,
+    sudahBayar: 0,
+    belumBayar: 0,
+    progress: 0,
+  });
+
+
+  // ======================================================
+  // LOAD DATA
+  // ======================================================
 
   useEffect(() => {
-    loadData();
-  }, []);
 
-  async function loadData() {
+    async function loadData() {
 
-    const { data: pembayaran, error } = await supabase
-      .from("pembayaran")
-      .select("*");
+      try {
 
-    if (error) {
-      console.log(error);
-      return;
+        const pembayaran = await getPembayaranAdmin();
+
+        console.log(
+          "RINGKASAN PEMBAYARAN ADMIN:",
+          pembayaran
+        );
+
+
+        // ==================================================
+        // JUMLAH GUDEP
+        // ==================================================
+
+        const totalGudep = pembayaran.length;
+
+
+        // ==================================================
+        // SUDAH BAYAR
+        // ==================================================
+
+        const sudahBayar = pembayaran.filter(
+          (item) =>
+            String(item.status || "").toLowerCase() ===
+            "lunas"
+        ).length;
+
+
+        // ==================================================
+        // BELUM BAYAR
+        // ==================================================
+
+        const belumBayar =
+          totalGudep - sudahBayar;
+
+
+        // ==================================================
+        // TARGET PEMBAYARAN
+        //
+        // Menggunakan biaya_per_regu
+        // ==================================================
+
+        const targetPembayaran =
+          pembayaran.reduce(
+            (total, item) =>
+              total +
+              Number(
+                item.biaya_per_regu || 0
+              ),
+            0
+          );
+
+
+        // ==================================================
+        // DANA MASUK
+        // ==================================================
+
+        const totalMasuk =
+          pembayaran.reduce(
+            (total, item) =>
+              total +
+              Number(
+                item.nominal || 0
+              ),
+            0
+          );
+
+
+        // ==================================================
+        // SISA
+        // ==================================================
+
+        const sisa =
+          Math.max(
+            targetPembayaran - totalMasuk,
+            0
+          );
+
+
+        // ==================================================
+        // PROGRESS
+        // ==================================================
+
+        const progress =
+          targetPembayaran === 0
+            ? 0
+            : Math.min(
+                Math.round(
+                  (totalMasuk /
+                    targetPembayaran) *
+                    100
+                ),
+                100
+              );
+
+
+        // ==================================================
+        // SET DATA
+        // ==================================================
+
+        setData({
+          totalMasuk,
+          targetPembayaran,
+          sisa,
+          sudahBayar,
+          belumBayar,
+          progress,
+        });
+
+
+      } catch (error) {
+
+        console.error(
+          "GAGAL LOAD RINGKASAN PEMBAYARAN:",
+          error
+        );
+
+      }
+
     }
 
-    const totalMasuk = pembayaran.reduce(
-  (total, item) => total + Number(item.nominal || 0),
-  0
-);
 
-const targetPembayaran = pembayaran.reduce(
-  (total, item) =>
-    total +
-    (Number(item.biaya_per_peserta || 0) *
-      Number(item.jumlah_peserta || 0)),
-  0
-);
+    loadData();
 
-const sisa = targetPembayaran - totalMasuk;
+  }, []);
 
-const sudahBayar = pembayaran.filter(
-  (item) => item.status === "Lunas"
-).length;
 
-const belumBayar = pembayaran.length - sudahBayar;
+  // ======================================================
+  // FORMAT RUPIAH
+  // ======================================================
 
-const progress =
-  targetPembayaran === 0
-    ? 0
-    : Math.round((totalMasuk / targetPembayaran) * 100);
+  function formatRupiah(angka) {
 
-setData({
-  totalMasuk,
-  targetPembayaran,
-  sisa,
-  sudahBayar,
-  belumBayar,
-  progress,
-});
+    return Number(
+      angka || 0
+    ).toLocaleString(
+      "id-ID"
+    );
+
   }
+
+
+  // ======================================================
+  // TAMPILAN
+  // ======================================================
 
   return (
 
     <div className="bg-white rounded-xl shadow p-6">
+
+
+      {/* HEADER */}
 
       <div className="flex items-center gap-3 mb-5">
 
@@ -81,105 +192,135 @@ setData({
 
       </div>
 
+
       <div className="space-y-3">
 
-  <div className="flex justify-between">
 
-    <span>✅ Sudah Bayar</span>
+        {/* SUDAH BAYAR */}
 
-    <span className="font-bold text-green-600">
-      {data.sudahBayar} Gudep
-    </span>
+        <div className="flex justify-between">
 
-  </div>
+          <span>
+            ✅ Sudah Bayar
+          </span>
 
-  <div className="flex justify-between">
+          <span className="font-bold text-green-600">
 
-    <span>⏳ Belum Bayar</span>
+            {data.sudahBayar} Gudep
 
-    <span className="font-bold text-red-600">
-      {data.belumBayar} Gudep
-    </span>
+          </span>
 
-  </div>
+        </div>
 
-  <hr />
 
-  <div className="flex justify-between">
+        {/* BELUM BAYAR */}
 
-    <span>🎯 Target Pembayaran</span>
+        <div className="flex justify-between">
 
-    <span className="font-bold">
+          <span>
+            ⏳ Belum Bayar
+          </span>
 
-      Rp {data.targetPembayaran.toLocaleString("id-ID")}
+          <span className="font-bold text-red-600">
 
-    </span>
+            {data.belumBayar} Gudep
 
-  </div>
+          </span>
 
-  <div className="flex justify-between">
+        </div>
 
-    <span>💰 Dana Masuk</span>
 
-    <span className="font-bold text-green-700">
+        <hr />
 
-      Rp {data.totalMasuk.toLocaleString("id-ID")}
 
-    </span>
+        {/* TARGET */}
 
-  </div>
+        <div className="flex justify-between gap-4">
 
-  <div className="flex justify-between">
+          <span>
+            🎯 Target Pembayaran
+          </span>
 
-    <span>❌ Sisa Pembayaran</span>
+          <span className="font-bold">
 
-    <span className="font-bold text-red-600">
+            Rp {formatRupiah(
+              data.targetPembayaran
+            )}
 
-      Rp {data.sisa.toLocaleString("id-ID")}
+          </span>
 
-    </span>
+        </div>
 
-  </div>
 
-  <div className="mt-5">
+        {/* DANA MASUK */}
 
-    <div className="w-full bg-gray-200 rounded-full h-4">
+        <div className="flex justify-between gap-4">
 
-      <div
-        className="bg-green-600 h-4 rounded-full transition-all duration-700"
-        style={{
-          width: `${data.progress}%`,
-        }}
-      />
+          <span>
+            💰 Dana Masuk
+          </span>
 
-    </div>
+          <span className="font-bold text-green-700">
 
-    <p className="text-center mt-3 font-semibold text-green-700">
+            Rp {formatRupiah(
+              data.totalMasuk
+            )}
 
-      Progress Pembayaran {data.progress}%
+          </span>
 
-    </p>
+        </div>
 
-  </div>
 
-</div>
+        {/* SISA */}
+
+        <div className="flex justify-between gap-4">
+
+          <span>
+            ❌ Sisa Pembayaran
+          </span>
+
+          <span className="font-bold text-red-600">
+
+            Rp {formatRupiah(
+              data.sisa
+            )}
+
+          </span>
+
+        </div>
+
+
+        {/* PROGRESS */}
 
         <div className="mt-5">
 
           <div className="w-full bg-gray-200 rounded-full h-4">
 
             <div
-              className="bg-green-600 h-4 rounded-full"
+              className="
+                bg-green-600
+                h-4
+                rounded-full
+                transition-all
+                duration-700
+              "
               style={{
                 width: `${data.progress}%`,
               }}
-            ></div>
+            />
 
           </div>
 
-          <p className="text-center mt-2 text-sm text-gray-500">
 
-            Progress Pembayaran {data.progress}%
+          <p className="
+            text-center
+            mt-3
+            font-semibold
+            text-green-700
+          ">
+
+            Progress Pembayaran{" "}
+            {data.progress}%
 
           </p>
 
@@ -187,7 +328,7 @@ setData({
 
       </div>
 
-    
+    </div>
 
   );
 
