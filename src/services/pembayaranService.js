@@ -7,6 +7,7 @@ const TABLE = "pembayaran";
 // ======================================================
 
 function getOperatorLogin() {
+
   const operator = JSON.parse(
     localStorage.getItem("operatorLogin")
   );
@@ -18,11 +19,13 @@ function getOperatorLogin() {
   return operator;
 }
 
+
 // ======================================================
 // AMBIL GUDEP LOGIN
 // ======================================================
 
 async function getGudepLogin() {
+
   const operator = getOperatorLogin();
 
   const { data, error } = await supabase
@@ -31,10 +34,13 @@ async function getGudepLogin() {
     .eq("operator_id", operator.id)
     .single();
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 
   return data;
 }
+
 
 // ======================================================
 // PEMBAYARAN ADMIN
@@ -45,7 +51,16 @@ export async function getPembayaranAdmin() {
   const { data, error } = await supabase
     .from(TABLE)
     .select(`
-      *,
+      id,
+      gudep_id,
+      bank,
+      rekening,
+      atas_nama,
+      nominal,
+      status,
+      tanggal,
+      tanggal_pembayaran,
+      created_at,
       profil_gudep(
         id,
         nama_pangkalan,
@@ -54,13 +69,21 @@ export async function getPembayaranAdmin() {
     `)
     .order("id");
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 
   return data || [];
 }
 
+
 // ======================================================
 // PEMBAYARAN OPERATOR
+//
+// PENTING:
+// Kolom "bukti" TIDAK diambil di sini.
+// Supaya menu Pembayaran tidak mengunduh
+// Base64 PDF/JPG/PNG setiap kali dibuka.
 // ======================================================
 
 export async function getPembayaran() {
@@ -69,14 +92,58 @@ export async function getPembayaran() {
 
   const { data, error } = await supabase
     .from(TABLE)
-    .select("*")
+    .select(`
+      id,
+      gudep_id,
+      bank,
+      rekening,
+      atas_nama,
+      biaya_per_regu,
+      nominal,
+      status,
+      tanggal,
+      tanggal_pembayaran,
+      created_at
+    `)
     .eq("gudep_id", gudep.id)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 
   return data;
 }
+
+
+// ======================================================
+// AMBIL BUKTI PEMBAYARAN
+//
+// Dipanggil HANYA ketika operator menekan tombol
+// "Lihat".
+// ======================================================
+
+export async function getBuktiPembayaran() {
+
+  const gudep = await getGudepLogin();
+
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select(`
+      id,
+      bukti,
+      tanggal
+    `)
+    .eq("gudep_id", gudep.id)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 
 // ======================================================
 // SIMPAN PEMBAYARAN
@@ -97,10 +164,13 @@ export async function savePembayaran(dataBaru) {
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 
   return data;
 }
+
 
 // ======================================================
 // UPDATE PEMBAYARAN
@@ -118,10 +188,13 @@ export async function updatePembayaran(
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 
   return data;
 }
+
 
 // ======================================================
 // SEMUA PEMBAYARAN ADMIN
@@ -143,10 +216,13 @@ export async function getSemuaPembayaran() {
       ascending: false,
     });
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 
   return data || [];
 }
+
 
 // ======================================================
 // PEMBAYARAN LUNAS
@@ -166,7 +242,9 @@ export async function getPembayaranLunas() {
     `)
     .eq("status", "Lunas");
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 
   return data || [];
 }

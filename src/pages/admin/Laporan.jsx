@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import {
@@ -12,73 +12,7 @@ export default function Laporan() {
 
   const [data, setData] = useState([]);
 
-
-  // ======================================================
-  // STATISTIK
-  // ======================================================
-
-  const statistik = {
-
-    jumlahGudep:
-      data.length,
-
-
-    pembinaPutra:
-      data.reduce(
-        (total, item) =>
-          total + (Number(item.pembinaPutra) || 0),
-        0
-      ),
-
-
-    pembinaPutri:
-      data.reduce(
-        (total, item) =>
-          total + (Number(item.pembinaPutri) || 0),
-        0
-      ),
-
-
-    pesertaPutra:
-      data.reduce(
-        (total, item) =>
-          total + (Number(item.pesertaPutra) || 0),
-        0
-      ),
-
-
-    pesertaPutri:
-      data.reduce(
-        (total, item) =>
-          total + (Number(item.pesertaPutri) || 0),
-        0
-      ),
-
-
-    jumlahReguPutra:
-      data.reduce(
-        (total, item) =>
-          total + (Number(item.jumlahReguPutra) || 0),
-        0
-      ),
-
-
-    jumlahReguPutri:
-      data.reduce(
-        (total, item) =>
-          total + (Number(item.jumlahReguPutri) || 0),
-        0
-      ),
-
-
-    jumlahRegu:
-      data.reduce(
-        (total, item) =>
-          total + (Number(item.jumlahRegu) || 0),
-        0
-      )
-
-  };
+  const [loading, setLoading] = useState(true);
 
 
   // ======================================================
@@ -96,6 +30,8 @@ export default function Laporan() {
 
     try {
 
+      setLoading(true);
+
       const hasil =
         await getLaporanAdmin();
 
@@ -108,9 +44,256 @@ export default function Laporan() {
         error
       );
 
+      alert(
+        "Gagal mengambil data laporan.\n\n" +
+        error.message
+      );
+
       setData([]);
 
+    } finally {
+
+      setLoading(false);
+
     }
+
+  }
+
+
+  // ======================================================
+  // DATA SD
+  // ======================================================
+
+  const dataSD = useMemo(() => {
+
+    return data.filter(
+      (item) =>
+        String(item.jenjang || "")
+          .trim()
+          .toUpperCase() === "SD"
+    );
+
+  }, [data]);
+
+
+  // ======================================================
+  // DATA SMP
+  // ======================================================
+
+  const dataSMP = useMemo(() => {
+
+    return data.filter(
+      (item) =>
+        String(item.jenjang || "")
+          .trim()
+          .toUpperCase() === "SMP"
+    );
+
+  }, [data]);
+
+
+  // ======================================================
+  // BELUM DITENTUKAN
+  // ======================================================
+
+  const dataBelumDitentukan = useMemo(() => {
+
+    return data.filter(
+      (item) => {
+
+        const jenjang =
+          String(item.jenjang || "")
+            .trim()
+            .toUpperCase();
+
+        return (
+          jenjang !== "SD" &&
+          jenjang !== "SMP"
+        );
+
+      }
+    );
+
+  }, [data]);
+
+
+  // ======================================================
+  // FUNGSI HITUNG TOTAL
+  // ======================================================
+
+  function hitungKelompok(dataKelompok) {
+
+    return {
+
+      pangkalan:
+        dataKelompok.length,
+
+      reguPutra:
+        dataKelompok.reduce(
+          (total, item) =>
+            total +
+            (Number(item.reguPutra) || 0),
+          0
+        ),
+
+      reguPutri:
+        dataKelompok.reduce(
+          (total, item) =>
+            total +
+            (Number(item.reguPutri) || 0),
+          0
+        ),
+
+      pesertaPutra:
+        dataKelompok.reduce(
+          (total, item) =>
+            total +
+            (Number(item.pesertaPutra) || 0),
+          0
+        ),
+
+      pesertaPutri:
+        dataKelompok.reduce(
+          (total, item) =>
+            total +
+            (Number(item.pesertaPutri) || 0),
+          0
+        ),
+
+    };
+
+  }
+
+
+  // ======================================================
+  // STATISTIK KESELURUHAN
+  // ======================================================
+
+  const statistik = useMemo(() => {
+
+    return {
+
+      jumlahGudep:
+        data.length,
+
+      pembinaPutra:
+        data.reduce(
+          (total, item) =>
+            total +
+            (Number(item.pembinaPutra) || 0),
+          0
+        ),
+
+      pembinaPutri:
+        data.reduce(
+          (total, item) =>
+            total +
+            (Number(item.pembinaPutri) || 0),
+          0
+        ),
+
+      pesertaPutra:
+        data.reduce(
+          (total, item) =>
+            total +
+            (Number(item.pesertaPutra) || 0),
+          0
+        ),
+
+      pesertaPutri:
+        data.reduce(
+          (total, item) =>
+            total +
+            (Number(item.pesertaPutri) || 0),
+          0
+        ),
+
+      reguPutra:
+        data.reduce(
+          (total, item) =>
+            total +
+            (Number(item.reguPutra) || 0),
+          0
+        ),
+
+      reguPutri:
+        data.reduce(
+          (total, item) =>
+            total +
+            (Number(item.reguPutri) || 0),
+          0
+        ),
+
+    };
+
+  }, [data]);
+
+
+  // ======================================================
+  // RINGKASAN SD
+  // ======================================================
+
+  const statistikSD =
+    useMemo(
+      () => hitungKelompok(dataSD),
+      [dataSD]
+    );
+
+
+  // ======================================================
+  // RINGKASAN SMP
+  // ======================================================
+
+  const statistikSMP =
+    useMemo(
+      () => hitungKelompok(dataSMP),
+      [dataSMP]
+    );
+
+
+  // ======================================================
+  // LOADING
+  // ======================================================
+
+  if (loading) {
+
+    return (
+
+      <div className="
+        flex
+        items-center
+        justify-center
+        py-20
+      ">
+
+        <div className="text-center">
+
+          <div className="
+            w-12
+            h-12
+            border-4
+            border-green-200
+            border-t-green-700
+            rounded-full
+            animate-spin
+            mx-auto
+            mb-4
+          " />
+
+          <p className="
+            text-gray-500
+            font-medium
+          ">
+
+            Memuat laporan Jambore...
+
+          </p>
+
+        </div>
+
+      </div>
+
+    );
 
   }
 
@@ -121,7 +304,7 @@ export default function Laporan() {
 
   return (
 
-    <div className="space-y-5 sm:space-y-6">
+    <div className="space-y-6">
 
 
       {/* ==================================================
@@ -157,7 +340,7 @@ export default function Laporan() {
 
 
       {/* ==================================================
-          STATISTIK
+          STATISTIK UTAMA
       ================================================== */}
 
       <div className="
@@ -206,33 +389,578 @@ export default function Laporan() {
         />
 
 
-        {/* REGU PUTRA */}
-
         <StatCard
           icon="🏕️"
-          title="Regu Putra"
-          value={statistik.jumlahReguPutra}
-        />
-
-
-        {/* REGU PUTRI */}
-
-        <StatCard
-          icon="🌸"
-          title="Regu Putri"
-          value={statistik.jumlahReguPutri}
-        />
-
-
-        {/* TOTAL REGU */}
-
-        <StatCard
-          icon="🏕️"
-          title="Total Regu"
-          value={statistik.jumlahRegu}
+          title="Jumlah Regu"
+          value={
+            statistik.reguPutra +
+            statistik.reguPutri
+          }
         />
 
       </div>
+
+
+
+      {/* ==================================================
+          REKAP TINGKAT PENDIDIKAN
+      ================================================== */}
+
+      <div>
+
+        <div className="mb-4">
+
+          <h2 className="
+            text-xl
+            sm:text-2xl
+            font-bold
+            text-green-700
+          ">
+
+            🏫 Rekapitulasi Berdasarkan Tingkat Pendidikan
+
+          </h2>
+
+          <p className="
+            text-sm
+            text-gray-500
+            mt-1
+          ">
+
+            Data dikelompokkan berdasarkan jenjang yang ditentukan oleh Admin.
+
+          </p>
+
+        </div>
+
+
+
+        <div className="
+          grid
+          grid-cols-1
+          lg:grid-cols-2
+          gap-5
+        ">
+
+
+          {/* ==================================================
+              SD
+          ================================================== */}
+
+          <div className="
+            bg-white
+            rounded-2xl
+            shadow
+            overflow-hidden
+            border
+            border-green-200
+          ">
+
+
+            <div className="
+              bg-green-700
+              text-white
+              p-5
+            ">
+
+              <h3 className="
+                text-xl
+                font-bold
+              ">
+
+                🏫 SD / SDIT / MI
+
+              </h3>
+
+              <p className="
+                text-green-100
+                text-sm
+                mt-1
+              ">
+
+                Tingkat Sekolah Dasar
+
+              </p>
+
+            </div>
+
+
+
+            <div className="
+              grid
+              grid-cols-2
+              gap-3
+              p-5
+            ">
+
+
+              {/* PANGKALAN */}
+
+              <div className="
+                bg-green-50
+                rounded-xl
+                p-4
+                text-center
+              ">
+
+                <p className="
+                  text-xs
+                  text-gray-500
+                ">
+
+                  Jumlah Pangkalan
+
+                </p>
+
+                <p className="
+                  text-3xl
+                  font-extrabold
+                  text-green-700
+                  mt-1
+                ">
+
+                  {statistikSD.pangkalan}
+
+                </p>
+
+              </div>
+
+
+
+              {/* REGU PUTRA */}
+
+              <div className="
+                bg-green-50
+                rounded-xl
+                p-4
+                text-center
+              ">
+
+                <p className="
+                  text-xs
+                  text-gray-500
+                ">
+
+                  Regu Putra
+
+                </p>
+
+                <p className="
+                  text-3xl
+                  font-extrabold
+                  text-green-700
+                  mt-1
+                ">
+
+                  {statistikSD.reguPutra}
+
+                </p>
+
+              </div>
+
+
+
+              {/* REGU PUTRI */}
+
+              <div className="
+                bg-pink-50
+                rounded-xl
+                p-4
+                text-center
+              ">
+
+                <p className="
+                  text-xs
+                  text-gray-500
+                ">
+
+                  Regu Putri
+
+                </p>
+
+                <p className="
+                  text-3xl
+                  font-extrabold
+                  text-pink-600
+                  mt-1
+                ">
+
+                  {statistikSD.reguPutri}
+
+                </p>
+
+              </div>
+
+
+
+              {/* PESERTA PUTRA */}
+
+              <div className="
+                bg-blue-50
+                rounded-xl
+                p-4
+                text-center
+              ">
+
+                <p className="
+                  text-xs
+                  text-gray-500
+                ">
+
+                  Peserta Putra
+
+                </p>
+
+                <p className="
+                  text-3xl
+                  font-extrabold
+                  text-blue-700
+                  mt-1
+                ">
+
+                  {statistikSD.pesertaPutra}
+
+                </p>
+
+              </div>
+
+
+
+              {/* PESERTA PUTRI */}
+
+              <div className="
+                bg-purple-50
+                rounded-xl
+                p-4
+                text-center
+                col-span-2
+              ">
+
+                <p className="
+                  text-xs
+                  text-gray-500
+                ">
+
+                  Peserta Putri
+
+                </p>
+
+                <p className="
+                  text-3xl
+                  font-extrabold
+                  text-purple-700
+                  mt-1
+                ">
+
+                  {statistikSD.pesertaPutri}
+
+                </p>
+
+              </div>
+
+            </div>
+
+
+          </div>
+
+
+
+          {/* ==================================================
+              SMP
+          ================================================== */}
+
+          <div className="
+            bg-white
+            rounded-2xl
+            shadow
+            overflow-hidden
+            border
+            border-purple-200
+          ">
+
+
+            <div className="
+              bg-purple-700
+              text-white
+              p-5
+            ">
+
+              <h3 className="
+                text-xl
+                font-bold
+              ">
+
+                🏫 SMP / SMPIT / MTs
+
+              </h3>
+
+              <p className="
+                text-purple-100
+                text-sm
+                mt-1
+              ">
+
+                Tingkat Sekolah Menengah Pertama
+
+              </p>
+
+            </div>
+
+
+
+            <div className="
+              grid
+              grid-cols-2
+              gap-3
+              p-5
+            ">
+
+
+              {/* PANGKALAN */}
+
+              <div className="
+                bg-purple-50
+                rounded-xl
+                p-4
+                text-center
+              ">
+
+                <p className="
+                  text-xs
+                  text-gray-500
+                ">
+
+                  Jumlah Pangkalan
+
+                </p>
+
+                <p className="
+                  text-3xl
+                  font-extrabold
+                  text-purple-700
+                  mt-1
+                ">
+
+                  {statistikSMP.pangkalan}
+
+                </p>
+
+              </div>
+
+
+
+              {/* REGU PUTRA */}
+
+              <div className="
+                bg-green-50
+                rounded-xl
+                p-4
+                text-center
+              ">
+
+                <p className="
+                  text-xs
+                  text-gray-500
+                ">
+
+                  Regu Putra
+
+                </p>
+
+                <p className="
+                  text-3xl
+                  font-extrabold
+                  text-green-700
+                  mt-1
+                ">
+
+                  {statistikSMP.reguPutra}
+
+                </p>
+
+              </div>
+
+
+
+              {/* REGU PUTRI */}
+
+              <div className="
+                bg-pink-50
+                rounded-xl
+                p-4
+                text-center
+              ">
+
+                <p className="
+                  text-xs
+                  text-gray-500
+                ">
+
+                  Regu Putri
+
+                </p>
+
+                <p className="
+                  text-3xl
+                  font-extrabold
+                  text-pink-600
+                  mt-1
+                ">
+
+                  {statistikSMP.reguPutri}
+
+                </p>
+
+              </div>
+
+
+
+              {/* PESERTA PUTRA */}
+
+              <div className="
+                bg-blue-50
+                rounded-xl
+                p-4
+                text-center
+              ">
+
+                <p className="
+                  text-xs
+                  text-gray-500
+                ">
+
+                  Peserta Putra
+
+                </p>
+
+                <p className="
+                  text-3xl
+                  font-extrabold
+                  text-blue-700
+                  mt-1
+                ">
+
+                  {statistikSMP.pesertaPutra}
+
+                </p>
+
+              </div>
+
+
+
+              {/* PESERTA PUTRI */}
+
+              <div className="
+                bg-purple-50
+                rounded-xl
+                p-4
+                text-center
+                col-span-2
+              ">
+
+                <p className="
+                  text-xs
+                  text-gray-500
+                ">
+
+                  Peserta Putri
+
+                </p>
+
+                <p className="
+                  text-3xl
+                  font-extrabold
+                  text-purple-700
+                  mt-1
+                ">
+
+                  {statistikSMP.pesertaPutri}
+
+                </p>
+
+              </div>
+
+            </div>
+
+
+          </div>
+
+
+        </div>
+
+      </div>
+
+
+
+      {/* ==================================================
+          BELUM DITENTUKAN
+      ================================================== */}
+
+      {dataBelumDitentukan.length > 0 && (
+
+        <div className="
+          bg-yellow-50
+          border
+          border-yellow-300
+          rounded-2xl
+          p-5
+        ">
+
+          <h3 className="
+            font-bold
+            text-yellow-800
+          ">
+
+            ⚠️ Pangkalan Belum Ditentukan Jenjang
+
+          </h3>
+
+          <p className="
+            text-sm
+            text-yellow-700
+            mt-1
+          ">
+
+            Masih ada {dataBelumDitentukan.length} pangkalan
+            yang belum memiliki jenjang SD atau SMP.
+
+          </p>
+
+          <div className="
+            mt-3
+            flex
+            flex-wrap
+            gap-2
+          ">
+
+            {dataBelumDitentukan.map(
+              (item) => (
+
+                <span
+                  key={item.id}
+                  className="
+                    bg-yellow-100
+                    text-yellow-800
+                    px-3
+                    py-1
+                    rounded-full
+                    text-xs
+                    font-semibold
+                  "
+                >
+
+                  {item.nama_gudep || "-"}
+
+                </span>
+
+              )
+            )}
+
+          </div>
+
+        </div>
+
+      )}
 
 
 
@@ -249,12 +977,7 @@ export default function Laporan() {
       ">
 
 
-        {/* JUDUL TABEL */}
-
-        <div className="
-          mb-4
-          sm:mb-5
-        ">
+        <div className="mb-5">
 
           <h2 className="
             text-lg
@@ -274,17 +997,13 @@ export default function Laporan() {
             mt-1
           ">
 
-            Jumlah pembina, peserta, serta regu putra dan putri dari setiap Gudep.
+            Jumlah pembina, peserta, dan regu dari setiap Gudep.
 
           </p>
 
         </div>
 
 
-
-        {/* ==================================================
-            TABLE WRAPPER
-        ================================================== */}
 
         <div className="
           w-full
@@ -295,14 +1014,12 @@ export default function Laporan() {
 
 
           <table className="
-            min-w-[1050px]
+            min-w-[1100px]
             w-full
             border-collapse
             text-sm
           ">
 
-
-            {/* HEADER */}
 
             <thead className="
               bg-green-700
@@ -316,9 +1033,10 @@ export default function Laporan() {
                   border-green-600
                   p-3
                   text-center
-                  whitespace-nowrap
                 ">
+
                   No
+
                 </th>
 
 
@@ -327,9 +1045,10 @@ export default function Laporan() {
                   border-green-600
                   p-3
                   text-left
-                  whitespace-nowrap
                 ">
+
                   Nama Gudep
+
                 </th>
 
 
@@ -338,9 +1057,22 @@ export default function Laporan() {
                   border-green-600
                   p-3
                   text-center
-                  whitespace-nowrap
                 ">
+
+                  Jenjang
+
+                </th>
+
+
+                <th className="
+                  border
+                  border-green-600
+                  p-3
+                  text-center
+                ">
+
                   Pembina Putra
+
                 </th>
 
 
@@ -349,9 +1081,10 @@ export default function Laporan() {
                   border-green-600
                   p-3
                   text-center
-                  whitespace-nowrap
                 ">
+
                   Pembina Putri
+
                 </th>
 
 
@@ -360,9 +1093,10 @@ export default function Laporan() {
                   border-green-600
                   p-3
                   text-center
-                  whitespace-nowrap
                 ">
+
                   Peserta Putra
+
                 </th>
 
 
@@ -371,48 +1105,34 @@ export default function Laporan() {
                   border-green-600
                   p-3
                   text-center
-                  whitespace-nowrap
                 ">
+
                   Peserta Putri
+
                 </th>
 
-
-                {/* REGU PUTRA */}
 
                 <th className="
                   border
                   border-green-600
                   p-3
                   text-center
-                  whitespace-nowrap
                 ">
+
                   Regu Putra
+
                 </th>
 
-
-                {/* REGU PUTRI */}
 
                 <th className="
                   border
                   border-green-600
                   p-3
                   text-center
-                  whitespace-nowrap
                 ">
+
                   Regu Putri
-                </th>
 
-
-                {/* TOTAL REGU */}
-
-                <th className="
-                  border
-                  border-green-600
-                  p-3
-                  text-center
-                  whitespace-nowrap
-                ">
-                  Total Regu
                 </th>
 
 
@@ -421,9 +1141,10 @@ export default function Laporan() {
                   border-green-600
                   p-3
                   text-center
-                  whitespace-nowrap
                 ">
+
                   Aksi
+
                 </th>
 
               </tr>
@@ -432,9 +1153,8 @@ export default function Laporan() {
 
 
 
-            {/* BODY */}
-
             <tbody>
+
 
               {data.length === 0 ? (
 
@@ -458,211 +1178,250 @@ export default function Laporan() {
 
               ) : (
 
-                data.map((item, index) => (
+                data.map(
+                  (item, index) => (
 
-                  <tr
-                    key={
-                      item.id ||
-                      item.gudep_id ||
-                      index
-                    }
-                    className="
-                      hover:bg-gray-50
-                    "
-                  >
+                    <tr
+                      key={
+                        item.id ||
+                        item.gudep_id ||
+                        index
+                      }
+                      className="
+                        hover:bg-gray-50
+                      "
+                    >
 
 
-                    {/* NO */}
+                      {/* NO */}
 
-                    <td className="
-                      border
-                      p-3
-                      text-center
-                      whitespace-nowrap
-                    ">
+                      <td className="
+                        border
+                        p-3
+                        text-center
+                      ">
 
-                      {index + 1}
+                        {index + 1}
 
-                    </td>
+                      </td>
 
 
 
-                    {/* NAMA GUDEP */}
+                      {/* NAMA */}
 
-                    <td className="
-                      border
-                      p-3
-                      font-medium
-                      whitespace-nowrap
-                    ">
+                      <td className="
+                        border
+                        p-3
+                        font-medium
+                        whitespace-nowrap
+                      ">
 
-                      {item.nama_gudep || "-"}
+                        {item.nama_gudep || "-"}
 
-                    </td>
+                      </td>
 
 
 
-                    {/* PEMBINA PUTRA */}
+                      {/* JENJANG */}
 
-                    <td className="
-                      border
-                      p-3
-                      text-center
-                      whitespace-nowrap
-                    ">
+                      <td className="
+                        border
+                        p-3
+                        text-center
+                      ">
 
-                      {item.pembinaPutra || 0}
+                        {item.jenjang === "SD" ? (
 
-                    </td>
+                          <span className="
+                            inline-block
+                            bg-green-100
+                            text-green-700
+                            px-3
+                            py-1
+                            rounded-full
+                            text-xs
+                            font-bold
+                          ">
 
+                            SD
 
+                          </span>
 
-                    {/* PEMBINA PUTRI */}
+                        ) : item.jenjang === "SMP" ? (
 
-                    <td className="
-                      border
-                      p-3
-                      text-center
-                      whitespace-nowrap
-                    ">
+                          <span className="
+                            inline-block
+                            bg-purple-100
+                            text-purple-700
+                            px-3
+                            py-1
+                            rounded-full
+                            text-xs
+                            font-bold
+                          ">
 
-                      {item.pembinaPutri || 0}
+                            SMP
 
-                    </td>
+                          </span>
 
+                        ) : (
 
+                          <span className="
+                            inline-block
+                            bg-yellow-100
+                            text-yellow-700
+                            px-3
+                            py-1
+                            rounded-full
+                            text-xs
+                            font-bold
+                          ">
 
-                    {/* PESERTA PUTRA */}
+                            Belum Ditentukan
 
-                    <td className="
-                      border
-                      p-3
-                      text-center
-                      whitespace-nowrap
-                    ">
+                          </span>
 
-                      {item.pesertaPutra || 0}
+                        )}
 
-                    </td>
+                      </td>
 
 
 
-                    {/* PESERTA PUTRI */}
+                      {/* PEMBINA PUTRA */}
 
-                    <td className="
-                      border
-                      p-3
-                      text-center
-                      whitespace-nowrap
-                    ">
+                      <td className="
+                        border
+                        p-3
+                        text-center
+                      ">
 
-                      {item.pesertaPutri || 0}
+                        {item.pembinaPutra || 0}
 
-                    </td>
+                      </td>
 
 
 
-                    {/* REGU PUTRA */}
+                      {/* PEMBINA PUTRI */}
 
-                    <td className="
-                      border
-                      p-3
-                      text-center
-                      whitespace-nowrap
-                      font-bold
-                      text-green-700
-                    ">
+                      <td className="
+                        border
+                        p-3
+                        text-center
+                      ">
 
-                      {item.jumlahReguPutra || 0}
+                        {item.pembinaPutri || 0}
 
-                    </td>
+                      </td>
 
 
 
-                    {/* REGU PUTRI */}
+                      {/* PESERTA PUTRA */}
 
-                    <td className="
-                      border
-                      p-3
-                      text-center
-                      whitespace-nowrap
-                      font-bold
-                      text-pink-600
-                    ">
+                      <td className="
+                        border
+                        p-3
+                        text-center
+                      ">
 
-                      {item.jumlahReguPutri || 0}
+                        {item.pesertaPutra || 0}
 
-                    </td>
+                      </td>
 
 
 
-                    {/* TOTAL REGU */}
+                      {/* PESERTA PUTRI */}
 
-                    <td className="
-                      border
-                      p-3
-                      text-center
-                      whitespace-nowrap
-                      font-bold
-                    ">
+                      <td className="
+                        border
+                        p-3
+                        text-center
+                      ">
 
-                      {item.jumlahRegu || 0}
+                        {item.pesertaPutri || 0}
 
-                    </td>
+                      </td>
 
 
 
-                    {/* AKSI */}
+                      {/* REGU PUTRA */}
 
-                    <td className="
-                      border
-                      p-3
-                      text-center
-                      whitespace-nowrap
-                    ">
+                      <td className="
+                        border
+                        p-3
+                        text-center
+                      ">
 
-                      <Link
-                        to={`/admin/detail-laporan/${item.id}`}
-                        className="
-                          inline-flex
-                          items-center
-                          justify-center
-                          gap-1
-                          bg-blue-600
-                          hover:bg-blue-700
-                          text-white
-                          px-3
-                          py-2
-                          rounded-lg
-                          transition
-                          text-xs
-                          sm:text-sm
-                          font-medium
-                        "
-                      >
+                        {item.reguPutra || 0}
 
-                        👁️ Lihat
+                      </td>
 
-                      </Link>
 
-                    </td>
 
+                      {/* REGU PUTRI */}
 
-                  </tr>
+                      <td className="
+                        border
+                        p-3
+                        text-center
+                      ">
 
-                ))
+                        {item.reguPutri || 0}
+
+                      </td>
+
+
+
+                      {/* AKSI */}
+
+                      <td className="
+                        border
+                        p-3
+                        text-center
+                      ">
+
+                        <Link
+                          to={`/admin/detail-laporan/${item.id}`}
+                          className="
+                            inline-flex
+                            items-center
+                            justify-center
+                            gap-1
+                            bg-blue-600
+                            hover:bg-blue-700
+                            text-white
+                            px-3
+                            py-2
+                            rounded-lg
+                            transition
+                            text-xs
+                            sm:text-sm
+                            font-medium
+                          "
+                        >
+
+                          👁️ Lihat
+
+                        </Link>
+
+                      </td>
+
+
+                    </tr>
+
+                  )
+                )
 
               )}
 
             </tbody>
 
+
           </table>
+
 
         </div>
 
 
-
-        {/* PETUNJUK HP */}
 
         {data.length > 0 && (
 
@@ -681,6 +1440,7 @@ export default function Laporan() {
         )}
 
       </div>
+
 
     </div>
 

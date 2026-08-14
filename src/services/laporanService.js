@@ -1,165 +1,235 @@
 import supabase from "../lib/supabase";
 
+
 export async function getLaporanAdmin() {
+
   try {
-    // ======================================================
-    // AMBIL DATA GUDEP
-    // ======================================================
+
+    // =====================================================
+    // AMBIL SEMUA GUDEP
+    // =====================================================
 
     const {
       data: gudep,
-      error: gudepError,
+      error: gudepError
     } = await supabase
       .from("profil_gudep")
       .select(`
         id,
-        nama_pangkalan
-      `);
+        nama_pangkalan,
+        gudep_putra,
+        gudep_putri,
+        jenjang
+      `)
+      .order("nama_pangkalan", {
+        ascending: true
+      });
 
-    if (gudepError) throw gudepError;
 
-    // ======================================================
-    // PROSES SETIAP GUDEP
-    // ======================================================
+    if (gudepError) {
+
+      throw gudepError;
+
+    }
+
+
+    // =====================================================
+    // HITUNG DATA MASING-MASING GUDEP
+    // =====================================================
 
     const laporan = await Promise.all(
-      gudep.map(async (item) => {
 
-        // ==================================================
-        // PEMBINA
-        // ==================================================
-
-        const {
-          data: pembina,
-          error: pembinaError,
-        } = await supabase
-          .from("data_pembina")
-          .select("jk")
-          .eq("gudep_id", item.id);
-
-        if (pembinaError) throw pembinaError;
-
-        const pembinaPutra =
-          pembina?.filter(
-            (x) =>
-              String(x.jk || "")
-                .trim()
-                .toLowerCase() === "putra"
-          ).length || 0;
-
-        const pembinaPutri =
-          pembina?.filter(
-            (x) =>
-              String(x.jk || "")
-                .trim()
-                .toLowerCase() === "putri"
-          ).length || 0;
+      (gudep || []).map(
+        async (item) => {
 
 
-        // ==================================================
-        // PESERTA
-        // ==================================================
+          // ===============================================
+          // PEMBINA
+          // ===============================================
 
-        const {
-          data: peserta,
-          error: pesertaError,
-        } = await supabase
-          .from("peserta")
-          .select("jk")
-          .eq("gudep_id", item.id);
-
-        if (pesertaError) throw pesertaError;
-
-        const pesertaPutra =
-          peserta?.filter(
-            (x) =>
-              String(x.jk || "")
-                .trim()
-                .toLowerCase() === "putra"
-          ).length || 0;
-
-        const pesertaPutri =
-          peserta?.filter(
-            (x) =>
-              String(x.jk || "")
-                .trim()
-                .toLowerCase() === "putri"
-          ).length || 0;
+          const {
+            data: pembina,
+            error: pembinaError
+          } = await supabase
+            .from("data_pembina")
+            .select("jk")
+            .eq("gudep_id", item.id);
 
 
-        // ==================================================
-        // REGU
-        // ==================================================
+          if (pembinaError) {
 
-        const {
-          data: regu,
-          error: reguError,
-        } = await supabase
-          .from("data_regu")
-          .select("jenis")
-          .eq("gudep_id", item.id);
+            console.error(
+              "ERROR PEMBINA:",
+              item.id,
+              pembinaError
+            );
 
-        if (reguError) throw reguError;
+          }
 
 
-        // ==================================================
-        // JUMLAH REGU PUTRA
-        // ==================================================
-
-        const jumlahReguPutra =
-          regu?.filter(
-            (x) =>
-              String(x.jenis || "")
-                .trim()
-                .toLowerCase() === "putra"
-          ).length || 0;
+          const pembinaData =
+            pembina || [];
 
 
-        // ==================================================
-        // JUMLAH REGU PUTRI
-        // ==================================================
-
-        const jumlahReguPutri =
-          regu?.filter(
-            (x) =>
-              String(x.jenis || "")
-                .trim()
-                .toLowerCase() === "putri"
-          ).length || 0;
+          const pembinaPutra =
+            pembinaData.filter(
+              (x) =>
+                String(x.jk || "")
+                  .trim()
+                  .toLowerCase() === "putra"
+            ).length;
 
 
-        // ==================================================
-        // TOTAL REGU
-        // ==================================================
+          const pembinaPutri =
+            pembinaData.filter(
+              (x) =>
+                String(x.jk || "")
+                  .trim()
+                  .toLowerCase() === "putri"
+            ).length;
 
-        const jumlahRegu =
-          jumlahReguPutra + jumlahReguPutri;
 
 
-        // ==================================================
-        // HASIL
-        // ==================================================
+          // ===============================================
+          // PESERTA
+          // ===============================================
 
-        return {
-          id: item.id,
+          const {
+            data: peserta,
+            error: pesertaError
+          } = await supabase
+            .from("peserta")
+            .select("jk")
+            .eq("gudep_id", item.id);
 
-          nama_gudep: item.nama_pangkalan,
 
-          pembinaPutra,
-          pembinaPutri,
+          if (pesertaError) {
 
-          pesertaPutra,
-          pesertaPutri,
+            console.error(
+              "ERROR PESERTA:",
+              item.id,
+              pesertaError
+            );
 
-          jumlahReguPutra,
-          jumlahReguPutri,
+          }
 
-          jumlahRegu,
-        };
-      })
+
+          const pesertaData =
+            peserta || [];
+
+
+          const pesertaPutra =
+            pesertaData.filter(
+              (x) =>
+                String(x.jk || "")
+                  .trim()
+                  .toLowerCase() === "putra"
+            ).length;
+
+
+          const pesertaPutri =
+            pesertaData.filter(
+              (x) =>
+                String(x.jk || "")
+                  .trim()
+                  .toLowerCase() === "putri"
+            ).length;
+
+
+
+          // ===============================================
+          // REGU
+          // ===============================================
+
+          const {
+            data: regu,
+            error: reguError
+          } = await supabase
+            .from("data_regu")
+            .select("jenis")
+            .eq("gudep_id", item.id);
+
+
+          if (reguError) {
+
+            console.error(
+              "ERROR REGU:",
+              item.id,
+              reguError
+            );
+
+          }
+
+
+          const reguData =
+            regu || [];
+
+
+          const reguPutra =
+            reguData.filter(
+              (x) =>
+                String(x.jenis || "")
+                  .trim()
+                  .toLowerCase() === "putra"
+            ).length;
+
+
+          const reguPutri =
+            reguData.filter(
+              (x) =>
+                String(x.jenis || "")
+                  .trim()
+                  .toLowerCase() === "putri"
+            ).length;
+
+
+
+          // ===============================================
+          // RETURN
+          // ===============================================
+
+          return {
+
+            id: item.id,
+
+            nama_gudep:
+              item.nama_pangkalan,
+
+            gudep_putra:
+              item.gudep_putra,
+
+            gudep_putri:
+              item.gudep_putri,
+
+            jenjang:
+              item.jenjang,
+
+            pembinaPutra,
+
+            pembinaPutri,
+
+            pesertaPutra,
+
+            pesertaPutri,
+
+            reguPutra,
+
+            reguPutri,
+
+            jumlahRegu:
+              reguPutra +
+              reguPutri,
+
+          };
+
+        }
+      )
+
     );
 
+
     return laporan;
+
 
   } catch (error) {
 
@@ -169,5 +239,7 @@ export async function getLaporanAdmin() {
     );
 
     throw error;
+
   }
+
 }

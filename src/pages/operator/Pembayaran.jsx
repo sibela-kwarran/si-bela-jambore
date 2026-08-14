@@ -4,6 +4,7 @@ import { getRegu } from "../../services/reguService";
 
 import {
   getPembayaran,
+  getBuktiPembayaran,
   savePembayaran,
   updatePembayaran,
 } from "../../services/pembayaranService";
@@ -285,15 +286,27 @@ async function loadDataPembayaran() {
       data
     );
 
-
     if (!data) {
+
+      setPembayaran(prev => ({
+        ...prev,
+
+        bukti: null,
+
+        status: "Belum Bayar",
+
+        tanggal: null,
+
+        tanggalPembayaran: "",
+      }));
 
       return;
 
     }
 
+    setPembayaran(prev => ({
 
-    setPembayaran({
+      ...prev,
 
       bank:
         data.bank ||
@@ -323,57 +336,15 @@ async function loadDataPembayaran() {
         data.status ||
         "Belum Bayar",
 
-      // --------------------------------
-      // TANGGAL UPLOAD
-      // --------------------------------
-
       tanggal:
         data.tanggal ||
         null,
-
-      // --------------------------------
-      // TANGGAL PEMBAYARAN KWITANSI
-      // --------------------------------
 
       tanggalPembayaran:
         data.tanggal_pembayaran ||
         "",
 
-      // --------------------------------
-      // BUKTI PEMBAYARAN
-      // --------------------------------
-
-      bukti:
-        data.bukti
-          ? {
-
-              nama:
-                "Bukti Pembayaran",
-
-              file:
-                data.bukti,
-
-              tipe:
-                data.bukti.startsWith(
-                  "data:application/pdf"
-                )
-                  ? "application/pdf"
-                  : "image",
-
-              tanggal:
-                data.tanggal
-                  ? new Date(
-                      data.tanggal
-                    ).toLocaleString(
-                      "id-ID"
-                    )
-                  : "",
-
-            }
-          : null,
-
-    });
-
+    }));
 
   } catch (err) {
 
@@ -568,24 +539,24 @@ async function loadDataPembayaran() {
             nominal:
               totalBayar,
 
-            bukti: {
+           bukti: {
 
-              nama:
-                file.name,
+  nama:
+    file.name,
 
-              tipe:
-                file.type,
+  tipe:
+    file.type,
 
-              file:
-                reader.result,
+  file:
+    null,
 
-              tanggal:
-                new Date()
-                  .toLocaleString(
-                    "id-ID"
-                  ),
+  tanggal:
+    new Date()
+      .toLocaleString(
+        "id-ID"
+      ),
 
-            },
+},
 
             status:
               "Menunggu Verifikasi",
@@ -701,11 +672,18 @@ async function loadDataPembayaran() {
   // LIHAT BUKTI
   // ==========================================
 
-  function lihatBukti() {
+  async function lihatBukti() {
 
-    if (
-      !pembayaran.bukti?.file
-    ) {
+  try {
+
+    console.log(
+      "MENGAMBIL BUKTI PEMBAYARAN..."
+    );
+
+    const data =
+      await getBuktiPembayaran();
+
+    if (!data?.bukti) {
 
       alert(
         "File bukti pembayaran tidak ditemukan."
@@ -715,12 +693,25 @@ async function loadDataPembayaran() {
 
     }
 
-
     setPreview(
-      pembayaran.bukti.file
+      data.bukti
+    );
+
+  } catch (err) {
+
+    console.error(
+      "ERROR AMBIL BUKTI PEMBAYARAN:",
+      err
+    );
+
+    alert(
+      err?.message ||
+      "Gagal mengambil bukti pembayaran."
     );
 
   }
+
+}
 
 
   // ==========================================

@@ -217,7 +217,8 @@ export async function getSemuaPendaftaran() {
         .select(`
           id,
           nama_pangkalan,
-          nama_mabigus
+          nama_mabigus,
+          jenjang
         `)
         .in("id", gudepIds);
 
@@ -353,8 +354,10 @@ export async function getSemuaPendaftaran() {
 
             nama_mabigus:
               profil.nama_mabigus ||
-              "-"
-
+              "-",
+            jenjang:
+             profil.jenjang ||
+             ""
           },
 
           jumlah_pembina:

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import supabase from "../../lib/supabase";
 import {
   getSemuaPendaftaran,
 } from "../../services/pendaftaranService";
@@ -15,7 +15,7 @@ export default function VerifikasiGudep() {
 
   const [error, setError] = useState("");
 
-
+const [savingJenjang, setSavingJenjang] = useState({});
   // ==========================================
   // LOAD DATA
   // ==========================================
@@ -66,7 +66,79 @@ export default function VerifikasiGudep() {
     }
 
   }
+async function handleJenjangChange(item, value) {
 
+  if (!value) return;
+
+  const gudepId =
+    item.profil_gudep?.id ||
+    item.gudep_id;
+
+  if (!gudepId) {
+    alert("ID Gudep tidak ditemukan.");
+    return;
+  }
+
+  try {
+
+    setSavingJenjang((prev) => ({
+      ...prev,
+      [item.id]: true,
+    }));
+
+    const { error } = await supabase
+      .from("profil_gudep")
+      .update({
+        jenjang: value,
+      })
+      .eq("id", gudepId);
+
+    if (error) {
+      throw error;
+    }
+
+    // Update tampilan langsung
+    setDataPendaftaran((prev) =>
+      prev.map((x) => {
+
+        if (x.id !== item.id) {
+          return x;
+        }
+
+        return {
+          ...x,
+
+          profil_gudep: {
+            ...(x.profil_gudep || {}),
+            jenjang: value,
+          },
+
+        };
+
+      })
+    );
+
+  } catch (err) {
+
+    console.error(
+      "GAGAL MENYIMPAN JENJANG:",
+      err
+    );
+
+    alert(
+      err?.message ||
+      "Gagal menyimpan jenjang."
+    );
+
+  } finally {
+
+    setSavingJenjang((prev) => ({
+      ...prev,
+      [item.id]: false,
+    }));
+
+  }
+}
 
   // ==========================================
   // BADGE STATUS
@@ -393,7 +465,15 @@ export default function VerifikasiGudep() {
                 >
                   Gudep
                 </th>
-
+<th
+  className="
+    p-2
+    sm:p-3
+    text-center
+  "
+>
+  Jenjang
+</th>
                 <th
                   className="
                     p-2
@@ -512,6 +592,13 @@ export default function VerifikasiGudep() {
                         "
                       >
 
+
+
+
+
+
+
+
                         <div
                           className="
                             font-semibold
@@ -548,6 +635,67 @@ export default function VerifikasiGudep() {
                         )}
 
                       </td>
+{/* JENJANG */}
+
+<td
+  className="
+    p-2
+    sm:p-3
+    text-center
+  "
+>
+
+  <select
+    value={
+      item.profil_gudep?.jenjang ||
+      ""
+    }
+    onChange={(e) =>
+      handleJenjangChange(
+        item,
+        e.target.value
+      )
+    }
+    disabled={
+      savingJenjang[item.id]
+    }
+    className="
+      border
+      border-gray-300
+      rounded-lg
+      px-2
+      py-1.5
+      text-xs
+      sm:text-sm
+      font-semibold
+      bg-white
+      focus:outline-none
+      focus:ring-2
+      focus:ring-amber-300
+    "
+  >
+
+    <option value="">
+      Pilih Jenjang
+    </option>
+
+    <option value="SD">
+      SD / SDIT / MI
+    </option>
+
+    <option value="SMP">
+      SMP / SMPIT / MTs
+    </option>
+
+  </select>
+
+  {savingJenjang[item.id] && (
+    <div className="text-[10px] text-gray-400 mt-1">
+      Menyimpan...
+    </div>
+  )}
+
+</td>
 
 
                       {/* PEMBINA */}
