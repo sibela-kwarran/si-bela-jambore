@@ -6,7 +6,6 @@ const TABLE = "profil_gudep";
 // AMBIL SESSION OPERATOR
 // ======================================
 function getOperatorLogin() {
-
   const data = localStorage.getItem("operatorLogin");
 
   console.log("CEK SESSION PROFIL GUDEP:", data);
@@ -22,7 +21,6 @@ function getOperatorLogin() {
 // AMBIL PROFIL GUDEP
 // ======================================
 export async function getProfilGudep() {
-
   const operator = getOperatorLogin();
 
   const { data, error } = await supabase
@@ -31,10 +29,15 @@ export async function getProfilGudep() {
     .eq("operator_id", operator.id)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) {
+    console.error("ERROR GET PROFIL GUDEP:", error);
+    throw error;
+  }
 
+  // ======================================
+  // SIMPAN gudep_id KE SESSION OPERATOR
+  // ======================================
   if (data) {
-
     localStorage.setItem(
       "operatorLogin",
       JSON.stringify({
@@ -42,7 +45,6 @@ export async function getProfilGudep() {
         gudep_id: data.id,
       })
     );
-
   }
 
   return data;
@@ -52,11 +54,9 @@ export async function getProfilGudep() {
 // SIMPAN / UPDATE PROFIL
 // ======================================
 export async function saveProfilGudep(form) {
-
   const operator = getOperatorLogin();
 
   const dataBaru = {
-
     operator_id: operator.id,
 
     nama_pangkalan: form.pangkalan,
@@ -80,72 +80,63 @@ export async function saveProfilGudep(form) {
     nama_mabigus: form.namaMabigus,
 
     hp_mabigus: form.hpMabigus,
-
   };
 
-  console.log("DATA PROFIL:", dataBaru);
+  console.log("DATA PROFIL GUDEP:", dataBaru);
 
-  // ==========================
-  // CEK PROFIL SUDAH ADA?
-  // ==========================
-  const {
-    data: profilLama,
-    error: cekError,
-  } = await supabase
-    .from(TABLE)
-    .select("id")
-    .eq("operator_id", operator.id)
-    .maybeSingle();
-
-  if (cekError) throw cekError;
-
-  // ==========================
-  // UPDATE
-  // ==========================
-  if (profilLama) {
-
-    const {
-      data,
-      error,
-    } = await supabase
-      .from(TABLE)
-      .update(dataBaru)
-      .eq("id", profilLama.id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    await supabase
-      .from("operator_gudep")
-      .update({
-        gudep_id: data.id,
-      })
-      .eq("id", operator.id);
-
-    return data;
-  }
-
-  // ==========================
-  // INSERT
-  // ==========================
+  // ======================================
+  // UPSERT PROFIL GUDEP
+  // ======================================
+  // operator_id sudah dibuat UNIQUE di
+  // database sehingga 1 operator hanya
+  // boleh memiliki 1 profil Gudep.
   const {
     data,
     error,
   } = await supabase
     .from(TABLE)
-    .insert(dataBaru)
+    .upsert(dataBaru, {
+      onConflict: "operator_id",
+    })
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error("ERROR SIMPAN PROFIL GUDEP:", error);
+    throw error;
+  }
 
-  await supabase
+  // ======================================
+  // UPDATE gudep_id DI operator_gudep
+  // ======================================
+  const {
+    error: operatorError,
+  } = await supabase
     .from("operator_gudep")
     .update({
       gudep_id: data.id,
     })
     .eq("id", operator.id);
+
+  if (operatorError) {
+    console.error(
+      "ERROR UPDATE GUDEP ID OPERATOR:",
+      operatorError
+    );
+
+    throw operatorError;
+  }
+
+  // ======================================
+  // UPDATE SESSION LOCAL STORAGE
+  // ======================================
+  localStorage.setItem(
+    "operatorLogin",
+    JSON.stringify({
+      ...operator,
+      gudep_id: data.id,
+    })
+  );
 
   return data;
 }
@@ -154,9 +145,7 @@ export async function saveProfilGudep(form) {
 // UPDATE PROFIL
 // ======================================
 export async function updateProfilGudep(id, form) {
-
   const dataUpdate = {
-
     nama_pangkalan: form.pangkalan,
 
     gudep_putra: form.gudepPutra,
@@ -178,7 +167,6 @@ export async function updateProfilGudep(id, form) {
     nama_mabigus: form.namaMabigus,
 
     hp_mabigus: form.hpMabigus,
-
   };
 
   const { error } = await supabase
@@ -186,14 +174,16 @@ export async function updateProfilGudep(id, form) {
     .update(dataUpdate)
     .eq("id", id);
 
-  if (error) throw error;
+  if (error) {
+    console.error("ERROR UPDATE PROFIL GUDEP:", error);
+    throw error;
+  }
 }
 
 // ======================================
 // ADMIN
 // ======================================
 export async function getProfilGudepById(id) {
-
   const { data, error } = await supabase
     .from(TABLE)
     .select("*")
@@ -201,7 +191,6 @@ export async function getProfilGudepById(id) {
     .single();
 
   if (error) {
-
     console.error(
       "ERROR GET PROFIL GUDEP BY ID:",
       error
@@ -212,3 +201,4 @@ export async function getProfilGudepById(id) {
 
   return data;
 }
+
