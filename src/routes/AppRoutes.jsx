@@ -18,7 +18,8 @@ import StatusVerifikasi from "../pages/operator/StatusVerifikasi";
 import DownloadKartu from "../pages/operator/DownloadKartu";
 import KartuKapling from "../pages/operator/KartuKapling";
 import DaftarOperator from "../pages/auth/DaftarOperator";
-
+import OperatorGuard
+  from "../components/guards/OperatorGuard";
 
 import LoginAdmin from "../pages/auth/LoginAdmin";
 import VerifikasiPembayaran from "../pages/admin/VerifikasiPembayaran";
@@ -33,7 +34,8 @@ import PetaPerkemahan from "../pages/admin/PetaPerkemahan";
 
 import Laporan from "../pages/admin/Laporan";
 import DetailLaporan from "../pages/admin/DetailLaporan";
-
+import PengaturanPendaftaran
+  from "../pages/admin/PengaturanPendaftaran";
 
 
 export default function AppRoutes() {
@@ -59,27 +61,71 @@ export default function AppRoutes() {
 
 
 
-        <Route path="/operator" element={<MainLayout />}>
+        <Route
+  path="/operator"
+  element={<OperatorGuard />}
+>
 
-  <Route path="dashboard" element={<Dashboard />} />
-  <Route path="profil" element={<ProfilGudep />} />
-  <Route path="pembina" element={<DataPembina />} />
-  <Route path="regu" element={<DataRegu />} />
-  <Route path="peserta" element={<DataPeserta />} />
-  <Route path="upload" element={<UploadBerkas />} />
-  <Route path="pembayaran" element={<Pembayaran />} />
-  <Route path="konfirmasi" element={<KonfirmasiData />} />
-  <Route path="status" element={<StatusVerifikasi />} />
- <Route
+  <Route
+    path="dashboard"
+    element={<Dashboard />}
+  />
+
+  <Route
+    path="profil"
+    element={<ProfilGudep />}
+  />
+
+  <Route
+    path="pembina"
+    element={<DataPembina />}
+  />
+
+  <Route
+    path="regu"
+    element={<DataRegu />}
+  />
+
+  <Route
+    path="peserta"
+    element={<DataPeserta />}
+  />
+
+  <Route
+    path="upload"
+    element={<UploadBerkas />}
+  />
+
+  <Route
+    path="pembayaran"
+    element={<Pembayaran />}
+  />
+
+  <Route
+    path="konfirmasi"
+    element={<KonfirmasiData />}
+  />
+
+  <Route
+    path="status"
+    element={<StatusVerifikasi />}
+  />
+
+  <Route
     path="kartu"
     element={<DownloadKartu />}
   />
-<Route
-  path="kapling/:id"
-  element={<KartuKapling />}
-/>
+
+  <Route
+    path="kapling/:id"
+    element={<KartuKapling />}
+  />
+
 
 </Route>
+
+
+
 
 <Route path="/admin" element={<AdminLayout />}>
 
@@ -87,7 +133,10 @@ export default function AppRoutes() {
     path="dashboard"
     element={<DashboardAdmin />}
   />
-
+<Route
+  path="pengaturan-pendaftaran"
+  element={<PengaturanPendaftaran />}
+/>
   <Route
     path="verifikasi-pembayaran"
     element={<VerifikasiPembayaran />}

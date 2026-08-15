@@ -177,7 +177,18 @@ export default function AdminLayout() {
           >
             🏠 Dashboard
           </Link>
-
+<Link
+  to="/admin/pengaturan-pendaftaran"
+  className="
+    hover:bg-amber-600
+    rounded-lg
+    px-4
+    py-3
+    transition
+  "
+>
+  ⚙️ Pengaturan Pendaftaran
+</Link>
           <Link
             to="/admin/verifikasi-gudep"
             className="
