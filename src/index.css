@@ -117,3 +117,443 @@ body {
   }
 
 }
+/* =========================================================
+   CETAK LAPORAN SI BELA
+   F4 LANDSCAPE
+   ========================================================= */
+
+@media print {
+
+  @page {
+    size: 330mm 215mm;
+    margin: 8mm;
+  }
+
+  body.print-laporan {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 10px !important;
+  }
+
+  body.print-laporan main {
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Sembunyikan tombol cetak dan kolom aksi */
+
+  body.print-laporan .print-hidden {
+    display: none !important;
+  }
+
+  /* Header laporan */
+
+  body.print-laporan .print-header {
+    margin-bottom: 8px !important;
+  }
+
+  body.print-laporan h1 {
+    font-size: 20px !important;
+  }
+
+  body.print-laporan h2 {
+    font-size: 14px !important;
+  }
+
+  body.print-laporan h3 {
+    font-size: 12px !important;
+  }
+
+  /* Hilangkan shadow */
+
+  body.print-laporan [class*="shadow"] {
+    box-shadow: none !important;
+  }
+
+  /* Hilangkan radius berlebihan */
+
+  body.print-laporan [class*="rounded-2xl"],
+  body.print-laporan [class*="rounded-xl"],
+  body.print-laporan [class*="rounded-lg"] {
+    border-radius: 3px !important;
+  }
+
+  /* Tabel */
+
+  body.print-laporan table {
+    width: 100% !important;
+    min-width: 0 !important;
+    border-collapse: collapse !important;
+    font-size: 8px !important;
+  }
+
+  body.print-laporan th,
+  body.print-laporan td {
+    padding: 3px 4px !important;
+    border: 1px solid #000 !important;
+    white-space: nowrap !important;
+  }
+
+  body.print-laporan th {
+    font-weight: 700 !important;
+  }
+
+  body.print-laporan thead {
+    display: table-header-group !important;
+  }
+
+  body.print-laporan tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  body.print-laporan .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  body.print-laporan .print-section {
+    padding: 0 !important;
+    margin-top: 8px !important;
+  }
+
+  /* Jangan tampilkan petunjuk geser */
+
+  body.print-laporan .sm\:hidden {
+    display: none !important;
+  }
+}
+/* =========================================================
+   CETAK LAPORAN JAMBore - F4 / LEGAL LANDSCAPE
+   ========================================================= */
+
+@media print {
+
+  @page {
+    size: legal landscape;
+    margin: 10mm;
+  }
+
+  html,
+  body {
+    width: 100%;
+    height: auto;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  /* Hilangkan elemen navigasi / tombol */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Sidebar dan elemen layout aplikasi */
+  aside,
+  nav,
+  header,
+  footer {
+    display: none !important;
+  }
+
+  /*
+   * JANGAN menggunakan:
+   * visibility: hidden;
+   * pada body atau seluruh halaman.
+   */
+
+  .laporan-page {
+    display: block !important;
+    visibility: visible !important;
+
+    width: 100% !important;
+    max-width: none !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: white !important;
+  }
+
+  .laporan-page * {
+    visibility: visible !important;
+  }
+
+  /* Hilangkan bayangan */
+  .laporan-page .shadow,
+  .laporan-page .shadow-sm,
+  .laporan-page .shadow-md,
+  .laporan-page .shadow-lg,
+  .laporan-page .shadow-xl,
+  .laporan-page .shadow-2xl {
+    box-shadow: none !important;
+  }
+
+  /* Hilangkan rounded berlebihan saat cetak */
+  .laporan-page .rounded-xl,
+  .laporan-page .rounded-2xl {
+    border-radius: 0 !important;
+  }
+
+  /*
+   * Tabel laporan
+   */
+  .laporan-page table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    font-size: 9pt !important;
+  }
+
+  .laporan-page th,
+  .laporan-page td {
+    padding: 5px !important;
+    border: 1px solid #333 !important;
+  }
+
+  /*
+   * Jangan biarkan tabel menjadi area scroll
+   */
+  .laporan-page .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  .laporan-page .min-w-\[1100px\] {
+    min-width: 0 !important;
+  }
+
+  /*
+   * Warna tetap muncul ketika print
+   */
+  .laporan-page * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /*
+   * Hindari kartu terpotong
+   */
+  .laporan-page > div {
+    break-inside: avoid;
+  }
+
+  .laporan-page table {
+    break-inside: auto;
+  }
+
+  .laporan-page tr {
+    break-inside: avoid;
+    break-after: auto;
+  }
+
+}
+/* =========================================================
+   CETAK LAPORAN JAMBORE
+   LEGAL LANDSCAPE
+   ========================================================= */
+
+@media print {
+
+  /* Ukuran kertas Legal Landscape */
+  @page {
+    size: legal landscape;
+    margin: 10mm;
+  }
+
+
+  /* =======================================================
+     BODY
+     ======================================================= */
+
+  body.print-laporan {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+
+  /* =======================================================
+     SEMBUNYIKAN BAGIAN APLIKASI
+     ======================================================= */
+
+  body.print-laporan * {
+    visibility: hidden;
+  }
+
+
+  /*
+     Bagian laporan tetap terlihat.
+     Jika class ini belum ada, lihat langkah 4 di bawah.
+  */
+  body.print-laporan .laporan-print-area,
+  body.print-laporan .laporan-print-area * {
+    visibility: visible;
+  }
+
+
+  body.print-laporan .laporan-print-area {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+
+  /* =======================================================
+     TABEL
+     ======================================================= */
+
+  body.print-laporan .laporan-print-table {
+    width: 100% !important;
+    min-width: 0 !important;
+
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+
+    table-layout: fixed !important;
+
+    font-size: 9px !important;
+  }
+
+
+  /* =======================================================
+     SEL TABEL
+     ======================================================= */
+
+  body.print-laporan .laporan-print-table th,
+  body.print-laporan .laporan-print-table td {
+    border: 1px solid #000 !important;
+
+    padding: 4px 5px !important;
+
+    vertical-align: middle !important;
+
+    box-sizing: border-box !important;
+  }
+
+
+  /* =======================================================
+     HEADER TABEL
+     ======================================================= */
+
+  body.print-laporan .laporan-print-table thead {
+    display: table-header-group !important;
+  }
+
+
+  body.print-laporan .laporan-print-table thead tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+
+  /* =======================================================
+     BARIS DATA
+     JANGAN POTONG BARIS DI TENGAH HALAMAN
+     ======================================================= */
+
+  body.print-laporan .laporan-print-table tbody tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+
+  /* =======================================================
+     SELALU PAKSA BORDER SEL LENGKAP
+     ======================================================= */
+
+  body.print-laporan .laporan-print-table tbody td {
+    border-top: 1px solid #000 !important;
+    border-right: 1px solid #000 !important;
+    border-bottom: 1px solid #000 !important;
+    border-left: 1px solid #000 !important;
+  }
+
+
+  body.print-laporan .laporan-print-table thead th {
+    border: 1px solid #000 !important;
+  }
+
+
+  /* =======================================================
+     HILANGKAN KOLOM AKSI SAAT CETAK
+     ======================================================= */
+
+  body.print-laporan .laporan-print-table th:last-child,
+body.print-laporan .laporan-print-table td:last-child {
+  display: none !important;
+}
+body.print-laporan .laporan-print-table th.kolom-aksi,
+body.print-laporan .laporan-print-table td.kolom-aksi,
+body.print-laporan .laporan-print-table .kolom-aksi {
+  display: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+}
+
+  /* =======================================================
+     LINK / TOMBOL
+     ======================================================= */
+
+  body.print-laporan .laporan-print-table a {
+    text-decoration: none !important;
+    color: inherit !important;
+  }
+
+
+  /* =======================================================
+     JANGAN POTONG KARTU / BLOK
+     ======================================================= */
+
+  body.print-laporan .laporan-print-area > div {
+    break-inside: avoid;
+  }
+
+
+  /* =======================================================
+     WARNA TABEL TETAP TERCETAK
+     ======================================================= */
+
+  body.print-laporan .laporan-print-table th {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+
+  /* =======================================================
+     HILANGKAN OVERFLOW
+     ======================================================= */
+
+  body.print-laporan .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+
+  body.print-laporan .overflow-hidden {
+    overflow: visible !important;
+  }
+
+
+  /* =======================================================
+     LINK / BUTTON / ELEMEN YANG TIDAK PERLU
+     ======================================================= */
+
+  body.print-laporan button {
+    display: none !important;
+  }
+
+
+  body.print-laporan .no-print {
+    display: none !important;
+  }
+
+}
