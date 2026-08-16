@@ -17,10 +17,30 @@ function getOperatorLogin() {
   return JSON.parse(data);
 }
 
+
 // ======================================
-// AMBIL PROFIL GUDEP
+// NORMALISASI NAMA PANGKALAN
+// ======================================
+// Contoh:
+// "SMPIT AQIDAH"
+// "smpit aqidah"
+// " SMPIT AQIDAH "
+//
+// dianggap sebagai nama yang sama.
+// ======================================
+function normalisasiNama(nama) {
+  return String(nama || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
+
+// ======================================
+// AMBIL PROFIL GUDEP OPERATOR
 // ======================================
 export async function getProfilGudep() {
+
   const operator = getOperatorLogin();
 
   const { data, error } = await supabase
@@ -30,14 +50,22 @@ export async function getProfilGudep() {
     .maybeSingle();
 
   if (error) {
-    console.error("ERROR GET PROFIL GUDEP:", error);
+
+    console.error(
+      "ERROR GET PROFIL GUDEP:",
+      error
+    );
+
     throw error;
   }
+
 
   // ======================================
   // SIMPAN gudep_id KE SESSION OPERATOR
   // ======================================
+
   if (data) {
+
     localStorage.setItem(
       "operatorLogin",
       JSON.stringify({
@@ -45,70 +73,202 @@ export async function getProfilGudep() {
         gudep_id: data.id,
       })
     );
+
   }
 
   return data;
 }
 
+
 // ======================================
 // SIMPAN / UPDATE PROFIL
 // ======================================
 export async function saveProfilGudep(form) {
+
   const operator = getOperatorLogin();
 
-  const dataBaru = {
-    operator_id: operator.id,
-
-    nama_pangkalan: form.pangkalan,
-
-    gudep_putra: form.gudepPutra,
-
-    gudep_putri: form.gudepPutri,
-
-    kwarran: form.kwarran,
-
-    kwarcab: form.kwarcab,
-
-    kabupaten: form.kabupaten,
-
-    provinsi: form.provinsi,
-
-    alamat: form.alamat,
-
-    email: form.email,
-
-    nama_mabigus: form.namaMabigus,
-
-    hp_mabigus: form.hpMabigus,
-  };
-
-  console.log("DATA PROFIL GUDEP:", dataBaru);
 
   // ======================================
-  // UPSERT PROFIL GUDEP
+  // VALIDASI NAMA PANGKALAN
   // ======================================
-  // operator_id sudah dibuat UNIQUE di
-  // database sehingga 1 operator hanya
-  // boleh memiliki 1 profil Gudep.
+
+  const namaPangkalan =
+    String(form.pangkalan || "").trim();
+
+  if (!namaPangkalan) {
+
+    throw new Error(
+      "Nama Pangkalan wajib diisi."
+    );
+
+  }
+
+
+  // ======================================
+  // CEK NAMA PANGKALAN SUDAH DIGUNAKAN
+  // ======================================
+
+  const namaNormal =
+    normalisasiNama(namaPangkalan);
+
+
   const {
-    data,
-    error,
+    data: semuaProfil,
+    error: cekError
   } = await supabase
     .from(TABLE)
-    .upsert(dataBaru, {
-      onConflict: "operator_id",
-    })
-    .select()
-    .single();
+    .select(
+      "id,operator_id,nama_pangkalan"
+    );
 
-  if (error) {
-    console.error("ERROR SIMPAN PROFIL GUDEP:", error);
-    throw error;
+
+  if (cekError) {
+
+    console.error(
+      "ERROR CEK DUPLIKAT GUDEP:",
+      cekError
+    );
+
+    throw cekError;
+  }
+
+
+  // ======================================
+  // CARI NAMA YANG SAMA
+  // ======================================
+
+  const duplikat =
+    (semuaProfil || []).find(item => {
+
+      const namaDatabase =
+        normalisasiNama(
+          item.nama_pangkalan
+        );
+
+      return (
+        namaDatabase === namaNormal &&
+        String(item.operator_id) !==
+          String(operator.id)
+      );
+
+    });
+
+
+  // ======================================
+  // JIKA SUDAH ADA
+  // ======================================
+
+  if (duplikat) {
+
+    throw new Error(
+      `Nama Pangkalan "${namaPangkalan}" sudah terdaftar pada operator lain. Silakan gunakan data Gudep yang sudah ada dan jangan membuat profil baru.`
+    );
+
+  }
+
+
+  // ======================================
+  // DATA BARU
+  // ======================================
+
+  const dataBaru = {
+
+    operator_id:
+      operator.id,
+
+    nama_pangkalan:
+      namaPangkalan,
+
+    gudep_putra:
+      form.gudepPutra,
+
+    gudep_putri:
+      form.gudepPutri,
+
+    kwarran:
+      form.kwarran,
+
+    kwarcab:
+      form.kwarcab,
+
+    kabupaten:
+      form.kabupaten,
+
+    provinsi:
+      form.provinsi,
+
+    alamat:
+      form.alamat,
+
+    email:
+      form.email,
+
+    nama_mabigus:
+      form.namaMabigus,
+
+    hp_mabigus:
+      form.hpMabigus,
+
+  };
+
+
+  console.log(
+    "DATA PROFIL GUDEP:",
+    dataBaru
+  );
+
+
+  // ======================================
+  // UPSERT PROFIL
+  // ======================================
+
+  const {
+  data,
+  error,
+} = await supabase
+  .from(TABLE)
+  .upsert(dataBaru, {
+    onConflict: "operator_id",
+  })
+  .select()
+  .single();
+
+if (error) {
+
+  console.error(
+    "ERROR SIMPAN PROFIL GUDEP:",
+    error
+  );
+
+  // ======================================
+  // CEK DUPLIKAT NAMA PANGKALAN
+  // ======================================
+
+  if (
+    error.code === "23505" &&
+    error.message?.includes(
+      "profil_gudep_nama_pangkalan_unique"
+    )
+  ) {
+
+    throw new Error(
+      `Nama Pangkalan "${namaPangkalan}" sudah terdaftar. Silakan gunakan data Gudep yang sudah ada dan jangan membuat profil baru.`
+    );
+
   }
 
   // ======================================
-  // UPDATE gudep_id DI operator_gudep
+  // ERROR LAIN
   // ======================================
+
+  throw error;
+}
+
+
+  // ======================================
+  // UPDATE GUDEP ID OPERATOR
+  // ======================================
+
   const {
     error: operatorError,
   } = await supabase
@@ -116,9 +276,14 @@ export async function saveProfilGudep(form) {
     .update({
       gudep_id: data.id,
     })
-    .eq("id", operator.id);
+    .eq(
+      "id",
+      operator.id
+    );
+
 
   if (operatorError) {
+
     console.error(
       "ERROR UPDATE GUDEP ID OPERATOR:",
       operatorError
@@ -127,9 +292,11 @@ export async function saveProfilGudep(form) {
     throw operatorError;
   }
 
+
   // ======================================
-  // UPDATE SESSION LOCAL STORAGE
+  // UPDATE SESSION
   // ======================================
+
   localStorage.setItem(
     "operatorLogin",
     JSON.stringify({
@@ -138,59 +305,162 @@ export async function saveProfilGudep(form) {
     })
   );
 
+
   return data;
 }
 
+
 // ======================================
-// UPDATE PROFIL
+// UPDATE PROFIL GUDEP
 // ======================================
-export async function updateProfilGudep(id, form) {
+export async function updateProfilGudep(
+  id,
+  form
+) {
+
+  const namaPangkalan =
+    String(form.pangkalan || "").trim();
+
+
+  if (!namaPangkalan) {
+
+    throw new Error(
+      "Nama Pangkalan wajib diisi."
+    );
+
+  }
+
+
+  // ======================================
+  // CEK DUPLIKAT SAAT EDIT
+  // ======================================
+
+  const namaNormal =
+    normalisasiNama(namaPangkalan);
+
+
+  const {
+    data: semuaProfil,
+    error: cekError
+  } = await supabase
+    .from(TABLE)
+    .select(
+      "id,operator_id,nama_pangkalan"
+    );
+
+
+  if (cekError) {
+
+    throw cekError;
+
+  }
+
+
+  const duplikat =
+    (semuaProfil || []).find(item => {
+
+      const namaDatabase =
+        normalisasiNama(
+          item.nama_pangkalan
+        );
+
+      return (
+        namaDatabase === namaNormal &&
+        String(item.id) !==
+          String(id)
+      );
+
+    });
+
+
+  if (duplikat) {
+
+    throw new Error(
+      `Nama Pangkalan "${namaPangkalan}" sudah digunakan oleh Gudep lain.`
+    );
+
+  }
+
+
+  // ======================================
+  // UPDATE
+  // ======================================
+
   const dataUpdate = {
-    nama_pangkalan: form.pangkalan,
 
-    gudep_putra: form.gudepPutra,
+    nama_pangkalan:
+      namaPangkalan,
 
-    gudep_putri: form.gudepPutri,
+    gudep_putra:
+      form.gudepPutra,
 
-    kwarran: form.kwarran,
+    gudep_putri:
+      form.gudepPutri,
 
-    kwarcab: form.kwarcab,
+    kwarran:
+      form.kwarran,
 
-    kabupaten: form.kabupaten,
+    kwarcab:
+      form.kwarcab,
 
-    provinsi: form.provinsi,
+    kabupaten:
+      form.kabupaten,
 
-    alamat: form.alamat,
+    provinsi:
+      form.provinsi,
 
-    email: form.email,
+    alamat:
+      form.alamat,
 
-    nama_mabigus: form.namaMabigus,
+    email:
+      form.email,
 
-    hp_mabigus: form.hpMabigus,
+    nama_mabigus:
+      form.namaMabigus,
+
+    hp_mabigus:
+      form.hpMabigus,
+
   };
 
-  const { error } = await supabase
-    .from(TABLE)
-    .update(dataUpdate)
-    .eq("id", id);
+
+  const { error } =
+    await supabase
+      .from(TABLE)
+      .update(dataUpdate)
+      .eq("id", id);
+
 
   if (error) {
-    console.error("ERROR UPDATE PROFIL GUDEP:", error);
+
+    console.error(
+      "ERROR UPDATE PROFIL GUDEP:",
+      error
+    );
+
     throw error;
   }
+
 }
+
 
 // ======================================
 // ADMIN
 // ======================================
 export async function getProfilGudepById(id) {
-  const { data, error } = await supabase
+
+  const {
+    data,
+    error
+  } = await supabase
     .from(TABLE)
     .select("*")
     .eq("id", id)
     .single();
 
+
   if (error) {
+
     console.error(
       "ERROR GET PROFIL GUDEP BY ID:",
       error
@@ -199,6 +469,6 @@ export async function getProfilGudepById(id) {
     throw error;
   }
 
+
   return data;
 }
-
