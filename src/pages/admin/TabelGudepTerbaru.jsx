@@ -247,22 +247,46 @@ export default function TabelGudepTerbaru() {
                     <td className="text-center">
 
                       <button
-  onClick={() =>
-  navigate(`/admin/detail-gudep/${item.id}`, {
-    state: {
-      from: "dashboard",
-    },
-  })
-}
-className="
-  bg-blue-600
-  hover:bg-blue-700
-  text-white
-  px-4
-  py-2
-  rounded-lg
-  font-semibold
-"
+  onClick={() => {
+
+    if (item.pendaftaran_id) {
+
+      navigate(
+        `/admin/detail-gudep/${item.pendaftaran_id}`,
+        {
+          state: {
+            from: "dashboard",
+            gudepId: item.id,
+            sudahMendaftar: true,
+          },
+        }
+      );
+
+    } else {
+
+      navigate(
+        `/admin/detail-gudep/${item.id}`,
+        {
+          state: {
+            from: "dashboard",
+            gudepId: item.id,
+            sudahMendaftar: false,
+          },
+        }
+      );
+
+    }
+
+  }}
+  className="
+    bg-blue-600
+    hover:bg-blue-700
+    text-white
+    px-4
+    py-2
+    rounded-lg
+    font-semibold
+  "
 >
   Detail
 </button>
