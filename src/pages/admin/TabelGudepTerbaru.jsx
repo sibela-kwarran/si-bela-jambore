@@ -159,13 +159,25 @@ export default function TabelGudepTerbaru() {
                     <td className="text-center">
 
                       <button
-                        onClick={() =>
-                          navigate(`/admin/detail-gudep/${item.id}`)
-                        }
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-                      >
-                        Detail
-                      </button>
+  onClick={() =>
+  navigate(`/admin/detail-gudep/${item.id}`, {
+    state: {
+      from: "dashboard",
+    },
+  })
+}
+className="
+  bg-blue-600
+  hover:bg-blue-700
+  text-white
+  px-4
+  py-2
+  rounded-lg
+  font-semibold
+"
+>
+  Detail
+</button>
 
                     </td>
 

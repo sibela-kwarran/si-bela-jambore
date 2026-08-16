@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+
 
 import {
   getPembinaByGudep,
@@ -18,26 +18,64 @@ import {
 } from "../../services/profilGudepService";
 
 import {
-  getPendaftaranById,
+  getPendaftaranByGudep,
   updatePendaftaran,
 } from "../../services/pendaftaranService";
+
+import {
+  useNavigate,
+  useParams,
+  useLocation,
+} from "react-router-dom";
+
+
+
 
 
 export default function DetailGudep() {
 
   const { id } = useParams();
+
   const navigate = useNavigate();
 
-  const [profil, setProfil] = useState({});
-  const [pembina, setPembina] = useState([]);
-  const [regu, setRegu] = useState([]);
-  const [peserta, setPeserta] = useState([]);
+  const location = useLocation();
 
-  const [catatanAdmin, setCatatanAdmin] = useState("");
-  const [pendaftaran, setPendaftaran] = useState(null);
+
+  // ==========================================
+  // FUNGSI KEMBALI
+  // ==========================================
+
+  const handleKembali = () => {
+
+  if (location.state?.from === "dashboard") {
+
+    navigate("/admin/dashboard");
+
+    return;
+
+  }
+
+  navigate("/admin/verifikasi-gudep");
+
+};
+
+
+  // ==========================================
+  // STATE
+  // ==========================================
 
   const [loading, setLoading] = useState(true);
+
   const [saving, setSaving] = useState(false);
+
+  const [profil, setProfil] = useState({});
+const [pembina, setPembina] = useState([]);
+const [regu, setRegu] = useState([]);
+const [peserta, setPeserta] = useState([]);
+const [belumMendaftar, setBelumMendaftar] = useState(false);
+
+const [catatanAdmin, setCatatanAdmin] = useState("");
+const [pendaftaran, setPendaftaran] = useState(null);
 
 
   // ==========================================
@@ -47,11 +85,12 @@ export default function DetailGudep() {
   useEffect(() => {
 
     if (id) {
+
       loadData();
+
     }
 
   }, [id]);
-
 
   async function loadData() {
 
@@ -72,29 +111,47 @@ export default function DetailGudep() {
     console.log("1. AMBIL PENDAFTARAN...");
 
     const pendaftaranData =
-      await getPendaftaranById(id);
+  await getPendaftaranByGudep(id);
 
     console.log(
       "HASIL PENDAFTARAN:",
       pendaftaranData
     );
 
+if (!pendaftaranData) {
 
-    if (!pendaftaranData) {
+  // =====================================
+  // GUDEP BELUM MENDAFTAR
+  // =====================================
 
-      throw new Error(
-        "Data pendaftaran tidak ditemukan."
-      );
+  console.log("GUDEP BELUM MELAKUKAN PENDAFTARAN");
 
-    }
+  setBelumMendaftar(true);
 
+  setPendaftaran(null);
 
-    setPendaftaran(pendaftaranData);
+  setCatatanAdmin("");
 
+} else {
 
-    setCatatanAdmin(
-      pendaftaranData.catatan_admin || ""
-    );
+  // =====================================
+  // GUDEP SUDAH MENDAFTAR
+  // =====================================
+
+  console.log(
+    "GUDEP SUDAH MENDAFTAR:",
+    pendaftaranData
+  );
+
+  setBelumMendaftar(false);
+
+  setPendaftaran(pendaftaranData);
+
+  setCatatanAdmin(
+    pendaftaranData.catatan_admin || ""
+  );
+
+}
 
 
     // =====================================
@@ -102,22 +159,20 @@ export default function DetailGudep() {
     // =====================================
 
     const gudepId =
-      pendaftaranData.gudep_id;
+  pendaftaranData?.gudep_id || id;
 
+console.log(
+  "2. GUDEP ID:",
+  gudepId
+);
 
-    console.log(
-      "2. GUDEP ID:",
-      gudepId
-    );
+if (!gudepId) {
 
+  throw new Error(
+    "ID Gudep tidak ditemukan."
+  );
 
-    if (!gudepId) {
-
-      throw new Error(
-        "gudep_id tidak ditemukan pada data pendaftaran."
-      );
-
-    }
+}
 
 
     // =====================================
@@ -523,22 +578,28 @@ async function updateStatus(statusBaru) {
 
 
         <button
-
-          onClick={() =>
-            navigate("/admin/verifikasi-gudep")
-          }
-
-          className="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-lg"
-
-        >
-
-          ← Kembali
-
-        </button>
+  onClick={handleKembali}
+  className="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-lg"
+>
+  ← Kembali
+</button>
 
       </div>
 
+{belumMendaftar && (
+  <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 rounded-xl p-4">
+    
+    <div className="font-bold text-lg">
+      ℹ️ Gudep Belum Mendaftar
+    </div>
 
+    <div className="mt-1">
+      Gugus Depan ini belum melakukan pendaftaran
+      Jambore Ranting 2026.
+    </div>
+
+  </div>
+)}
 
       {/* ===================================== */}
       {/* PROFIL GUGUS DEPAN */}
