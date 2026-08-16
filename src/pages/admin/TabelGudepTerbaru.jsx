@@ -13,39 +13,104 @@ export default function TabelGudepTerbaru() {
   }, []);
 
   async function loadData() {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      // Ambil data gudep
-      const { data: gudep, error: errGudep } = await supabase
-        .from("profil_gudep")
-        .select("*")
-        .order("created_at", { ascending: false });
+    // ==========================================
+    // 1. AMBIL DATA GUDEP
+    // ==========================================
 
-      if (errGudep) throw errGudep;
+    const { data: gudep, error: errGudep } = await supabase
+      .from("profil_gudep")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-      // Ambil data operator
-      const { data: operator, error: errOperator } = await supabase
-        .from("operator_gudep")
-        .select("id,nama_operator,email,status");
+    if (errGudep) throw errGudep;
 
-      if (errOperator) throw errOperator;
 
-      // Join manual
-      const hasil = gudep.map((g) => ({
+    // ==========================================
+    // 2. AMBIL DATA OPERATOR
+    // ==========================================
+
+    const { data: operator, error: errOperator } = await supabase
+      .from("operator_gudep")
+      .select("id,nama_operator,email,status");
+
+    if (errOperator) throw errOperator;
+
+
+    // ==========================================
+    // 3. AMBIL DATA PENDAFTARAN
+    // ==========================================
+
+    const { data: pendaftaran, error: errPendaftaran } =
+      await supabase
+        .from("pendaftaran")
+        .select("id,gudep_id,status");
+
+    if (errPendaftaran) throw errPendaftaran;
+
+
+    console.log("DATA GUDEP :", gudep);
+    console.log("DATA PENDAFTARAN :", pendaftaran);
+
+
+    // ==========================================
+    // 4. JOIN GUDEP + OPERATOR + PENDAFTARAN
+    // ==========================================
+
+    const hasil = gudep.map((g) => {
+
+      const operatorGudep =
+        operator.find(
+          (o) => o.id === g.operator_id
+        ) || null;
+
+
+      const dataPendaftaran =
+        pendaftaran.find(
+          (p) => p.gudep_id === g.id
+        ) || null;
+
+
+      return {
+
         ...g,
-        operator: operator.find((o) => o.id === g.operator_id) || null,
-      }));
 
-      console.log("HASIL JOIN :", hasil);
+        operator: operatorGudep,
 
-      setData(hasil);
-    } catch (err) {
-      console.error("ERROR LOAD GUDEP :", err);
-    } finally {
-      setLoading(false);
-    }
+        pendaftaran_id:
+          dataPendaftaran?.id || null,
+
+        pendaftaran_status:
+          dataPendaftaran?.status || null,
+
+      };
+
+    });
+
+
+    console.log(
+      "HASIL JOIN GUDEP + PENDAFTARAN :",
+      hasil
+    );
+
+
+    setData(hasil);
+
+  } catch (err) {
+
+    console.error(
+      "ERROR LOAD GUDEP :",
+      err
+    );
+
+  } finally {
+
+    setLoading(false);
+
   }
+}
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -108,16 +173,39 @@ export default function TabelGudepTerbaru() {
 
                     <td>
 
-                      <div className="font-semibold">
-                        {item.gudep_putra}
-                      </div>
+  {item.pendaftaran_id ? (
 
-                      <div className="text-gray-600">
-                        {item.gudep_putri}
-                      </div>
+    <>
+      <div className="font-semibold">
+        {item.gudep_putra}
+      </div>
 
-                    </td>
+      <div className="text-gray-600">
+        {item.gudep_putri}
+      </div>
+    </>
 
+  ) : (
+
+    <div className="bg-red-100 border border-red-300 rounded-lg px-3 py-2">
+
+      <div className="font-bold text-red-700">
+        {item.gudep_putra}
+      </div>
+
+      <div className="text-red-600">
+        {item.gudep_putri}
+      </div>
+
+      <div className="text-xs font-bold text-red-700 mt-1">
+        ⚠️ BELUM MENDAFTAR
+      </div>
+
+    </div>
+
+  )}
+
+</td>
                     <td>
 
                       <div className="font-semibold">
