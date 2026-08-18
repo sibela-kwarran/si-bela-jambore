@@ -447,6 +447,10 @@ async function loadDataPembayaran() {
 // UPLOAD BUKTI PEMBAYARAN
 // ==========================================
 
+// ==========================================
+// UPLOAD BUKTI PEMBAYARAN
+// ==========================================
+
 async function uploadBukti(e) {
 
   const file = e.target.files?.[0];
@@ -454,6 +458,24 @@ async function uploadBukti(e) {
   if (!file) {
     return;
   }
+
+
+  // ======================================
+  // PENGAMAN TOTAL PEMBAYARAN
+  // ======================================
+
+  if (totalBayar <= 0) {
+
+    alert(
+      "Total pembayaran masih Rp0.\n\nSilakan isi data regu dan jumlah peserta terlebih dahulu sebelum mengupload bukti pembayaran."
+    );
+
+    // Kosongkan kembali pilihan file
+    e.target.value = "";
+
+    return;
+  }
+
 
   // ======================================
   // VALIDASI FILE
@@ -673,7 +695,7 @@ async function uploadBukti(e) {
 
 
         // ==================================
-        // LANGSUNG TAMPILKAN PREVIEW
+        // PREVIEW
         // ==================================
 
         setPreview(base64);
@@ -728,7 +750,6 @@ async function uploadBukti(e) {
   }
 
 }
-
 
 
 
