@@ -165,20 +165,23 @@ export default function AdminLayout() {
 
         <nav className="flex flex-col p-4 gap-2 flex-1 overflow-y-auto">
 
-          <Link
-            to="/admin/dashboard"
-            className="
-              hover:bg-amber-600
-              rounded-lg
-              px-4
-              py-3
-              transition
-            "
-          >
-            🏠 Dashboard
-          </Link>
+         <Link
+  to="/admin/dashboard"
+  onClick={handleMenuClick}
+  className="
+    hover:bg-amber-600
+    rounded-lg
+    px-4
+    py-3
+    transition
+  "
+>
+  🏠 Dashboard
+</Link>
+
 <Link
   to="/admin/pengaturan-pendaftaran"
+  onClick={handleMenuClick}
   className="
     hover:bg-amber-600
     rounded-lg
@@ -189,18 +192,20 @@ export default function AdminLayout() {
 >
   ⚙️ Pengaturan Pendaftaran
 </Link>
-          <Link
-            to="/admin/verifikasi-gudep"
-            className="
-              hover:bg-amber-600
-              rounded-lg
-              px-4
-              py-3
-              transition
-            "
-          >
-            🏕 Verifikasi Gudep
-          </Link>
+
+<Link
+  to="/admin/verifikasi-gudep"
+  onClick={handleMenuClick}
+  className="
+    hover:bg-amber-600
+    rounded-lg
+    px-4
+    py-3
+    transition
+  "
+>
+  🏕 Verifikasi Gudep
+</Link>
 
           <Link
             to="/admin/verifikasi-berkas"
