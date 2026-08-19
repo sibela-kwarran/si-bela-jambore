@@ -160,29 +160,20 @@ export async function updatePengaturanPendaftaran(
 // BUKA PENDAFTARAN
 // ========================================
 export async function bukaPendaftaran(id) {
-
-  const { data, error } =
-    await supabase
-      .from(TABLE)
-      .update({
-
-        status: "dibuka",
-
-        manual_override: true,
-
-        updated_at:
-          new Date().toISOString(),
-
-      })
-      .eq("id", id)
-      .select()
-      .single();
-
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update({
+      status: "dibuka",
+      manual_override: true,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select()
+    .single();
 
   if (error) throw error;
 
   return data;
-
 }
 
 
@@ -190,27 +181,18 @@ export async function bukaPendaftaran(id) {
 // TUTUP PENDAFTARAN
 // ========================================
 export async function tutupPendaftaran(id) {
-
-  const { data, error } =
-    await supabase
-      .from(TABLE)
-      .update({
-
-        status: "ditutup",
-
-        manual_override: false,
-
-        updated_at:
-          new Date().toISOString(),
-
-      })
-      .eq("id", id)
-      .select()
-      .single();
-
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update({
+      status: "ditutup",
+      manual_override: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select()
+    .single();
 
   if (error) throw error;
 
   return data;
-
 }
