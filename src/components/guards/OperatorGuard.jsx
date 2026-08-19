@@ -38,13 +38,13 @@ export default function OperatorGuard() {
 
 
         const hasil =
-          await cekPendaftaranDibuka();
+  await cekPendaftaranDibuka();
 
 
-        setPendaftaranDibuka(
-          hasil.dibuka
-        );
 
+setPendaftaranDibuka(
+  hasil.dibuka
+);
 
       } catch (error) {
 

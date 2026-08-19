@@ -24,25 +24,49 @@ export async function getPengaturanPendaftaran() {
 // ========================================
 export async function cekPendaftaranDibuka() {
 
-  const pengaturan = await getPengaturanPendaftaran();
+  const pengaturan =
+    await getPengaturanPendaftaran();
+
 
   // Kalau belum ada pengaturan
   // kita anggap ditutup agar aman
   if (!pengaturan) {
+
     return {
       dibuka: false,
       pengaturan: null,
     };
+
   }
 
+
   // ========================================
-  // JIKA ADMIN MENUTUP MANUAL
+  // ADMIN MENUTUP MANUAL
   // ========================================
   if (pengaturan.status === "ditutup") {
+
     return {
       dibuka: false,
+      otomatisDitutup: false,
       pengaturan,
     };
+
+  }
+
+
+  // ========================================
+  // ADMIN MEMBUKA KEMBALI SECARA MANUAL
+  // ========================================
+  if (pengaturan.status === "dibuka" &&
+      pengaturan.manual_override === true) {
+
+    return {
+      dibuka: true,
+      otomatisDitutup: false,
+      manualOverride: true,
+      pengaturan,
+    };
+
   }
 
 
@@ -58,12 +82,11 @@ export async function cekPendaftaranDibuka() {
     const deadlineString =
       `${pengaturan.tanggal_tutup}T${pengaturan.jam_tutup}`;
 
-    // Data tanggal/jam dari Supabase dianggap WIB
-    const deadlineUTC = new Date(
-      `${deadlineString}+07:00`
-    );
+    const deadlineUTC =
+      new Date(`${deadlineString}+07:00`);
 
     const sekarang = new Date();
+
 
     if (sekarang >= deadlineUTC) {
 
@@ -81,9 +104,13 @@ export async function cekPendaftaranDibuka() {
   return {
     dibuka: true,
     otomatisDitutup: false,
+    manualOverride: false,
     pengaturan,
   };
+
 }
+
+
 // ========================================
 // SIMPAN PENGATURAN PENDAFTARAN
 // ========================================
@@ -91,22 +118,41 @@ export async function updatePengaturanPendaftaran(
   id,
   data
 ) {
-  const { data: hasil, error } = await supabase
-    .from(TABLE)
-    .update({
-      status: data.status,
-      tanggal_tutup: data.tanggal_tutup,
-      jam_tutup: data.jam_tutup,
-      pesan_penutupan: data.pesan_penutupan,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select()
-    .single();
+
+  const { data: hasil, error } =
+    await supabase
+      .from(TABLE)
+      .update({
+
+        status: data.status,
+
+        tanggal_tutup:
+          data.tanggal_tutup,
+
+        jam_tutup:
+          data.jam_tutup,
+
+        pesan_penutupan:
+          data.pesan_penutupan,
+
+        // Kalau Admin menyimpan status
+        // "dibuka", override manual aktif.
+        manual_override:
+          data.status === "dibuka",
+
+        updated_at:
+          new Date().toISOString(),
+
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
 
   if (error) throw error;
 
   return hasil;
+
 }
 
 
@@ -114,19 +160,29 @@ export async function updatePengaturanPendaftaran(
 // BUKA PENDAFTARAN
 // ========================================
 export async function bukaPendaftaran(id) {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update({
-      status: "dibuka",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select()
-    .single();
+
+  const { data, error } =
+    await supabase
+      .from(TABLE)
+      .update({
+
+        status: "dibuka",
+
+        manual_override: true,
+
+        updated_at:
+          new Date().toISOString(),
+
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
 
   if (error) throw error;
 
   return data;
+
 }
 
 
@@ -134,17 +190,27 @@ export async function bukaPendaftaran(id) {
 // TUTUP PENDAFTARAN
 // ========================================
 export async function tutupPendaftaran(id) {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update({
-      status: "ditutup",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select()
-    .single();
+
+  const { data, error } =
+    await supabase
+      .from(TABLE)
+      .update({
+
+        status: "ditutup",
+
+        manual_override: false,
+
+        updated_at:
+          new Date().toISOString(),
+
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
 
   if (error) throw error;
 
   return data;
+
 }
