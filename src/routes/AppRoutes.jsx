@@ -36,8 +36,10 @@ import Laporan from "../pages/admin/Laporan";
 import DetailLaporan from "../pages/admin/DetailLaporan";
 import PengaturanPendaftaran
   from "../pages/admin/PengaturanPendaftaran";
-
-
+import UpdateDataPeserta
+  from "../pages/admin/UpdateDataPeserta";
+import LaporanRekapFinal
+  from "../pages/admin/LaporanRekapFinal";
 export default function AppRoutes() {
   console.log("APP ROUTES DIRENDER");
 
@@ -175,6 +177,17 @@ element={<Laporan />}
     path="detail-laporan/:id"
     element={<DetailLaporan />}
   />
+<Route
+  path="update-data-peserta"
+  element={<UpdateDataPeserta />}
+/>
+
+<Route
+  path="laporan-rekap-final"
+  element={<LaporanRekapFinal />}
+/>
+
+
 
         </Route>
 

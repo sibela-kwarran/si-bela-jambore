@@ -152,32 +152,23 @@ export async function getAdminDashboard() {
     ) {
 
       const {
-        count,
-        error: pesertaError
-      } = await supabase
-        .from("peserta")
-        .select(
-          "id",
-          {
-            count: "exact",
-            head: true
-          }
-        )
-        .in(
-          "gudep_id",
-          gudepIds
-        );
+  data: pesertaData,
+  error: pesertaError
+} = await supabase
+  .from("peserta")
+  .select("id")
+  .in("gudep_id", gudepIds);
 
+if (pesertaError) {
+  throw pesertaError;
+}
 
-      if (pesertaError) {
+jumlahPeserta = pesertaData?.length || 0;
 
-        throw pesertaError;
-
-      }
-
-
-      jumlahPeserta =
-        count || 0;
+console.log(
+  "TOTAL PESERTA DASHBOARD:",
+  jumlahPeserta
+);
 
     }
 

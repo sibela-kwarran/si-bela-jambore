@@ -270,7 +270,23 @@ export default function AdminLayout() {
             "
           >
             📊 Laporan
-          </Link>
+</Link>
+<Link
+  to="/admin/laporan-rekap-final"
+  onClick={handleMenuClick}
+  className="
+    hover:bg-amber-600
+    rounded-lg
+    px-4
+    py-3
+    transition
+  "
+>
+  📊 Laporan Rekap Final
+</Link>
+
+
+
 
           <button
             onClick={() => {
@@ -559,6 +575,21 @@ export default function AdminLayout() {
                 "
               >
                 📊 Laporan
+<Link
+  to="/admin/laporan-rekap-final"
+  onClick={handleMenuClick}
+  className="
+    hover:bg-amber-600
+    rounded-lg
+    px-4
+    py-3
+    transition
+  "
+>
+  📊 Laporan Rekap Final
+</Link>
+
+
               </Link>
 
               <button
