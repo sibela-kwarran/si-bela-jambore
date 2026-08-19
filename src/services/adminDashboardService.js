@@ -143,34 +143,63 @@ export async function getAdminDashboard() {
     // Hanya peserta yang gudep_id-nya termasuk
     // Gudep yang sudah kirim pendaftaran.
     //
+// ==================================================
+// 3. HITUNG TOTAL PESERTA
+// ==================================================
+// Supabase membatasi hasil query.
+// Gunakan pagination supaya tidak berhenti di 1000.
 
-    let jumlahPeserta = 0;
+let jumlahPeserta = 0;
 
+if (gudepIds.length > 0) {
 
-    if (
-      gudepIds.length > 0
-    ) {
+  const ukuranBatch = 1000;
 
-      const {
-  data: pesertaData,
-  error: pesertaError
-} = await supabase
-  .from("peserta")
-  .select("id")
-  .in("gudep_id", gudepIds);
+  let mulai = 0;
 
-if (pesertaError) {
-  throw pesertaError;
-}
+  while (true) {
 
-jumlahPeserta = pesertaData?.length || 0;
+    const {
+      data: pesertaData,
+      error: pesertaError
+    } = await supabase
+      .from("peserta")
+      .select("id")
+      .in("gudep_id", gudepIds)
+      .range(
+        mulai,
+        mulai + ukuranBatch - 1
+      );
 
-console.log(
-  "TOTAL PESERTA DASHBOARD:",
-  jumlahPeserta
-);
-
+    if (pesertaError) {
+      throw pesertaError;
     }
+
+    if (!pesertaData || pesertaData.length === 0) {
+      break;
+    }
+
+    jumlahPeserta += pesertaData.length;
+
+    console.log(
+      `PESERTA DASHBOARD BATCH ${mulai}-${mulai + pesertaData.length - 1}:`,
+      pesertaData.length
+    );
+
+    if (pesertaData.length < ukuranBatch) {
+      break;
+    }
+
+    mulai += ukuranBatch;
+
+  }
+
+  console.log(
+    "TOTAL PESERTA DASHBOARD:",
+    jumlahPeserta
+  );
+
+}
 
 
     // ==================================================
