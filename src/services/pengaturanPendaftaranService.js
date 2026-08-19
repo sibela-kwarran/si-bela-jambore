@@ -2,10 +2,12 @@ import supabase from "../lib/supabase";
 
 const TABLE = "pengaturan_pendaftaran";
 
+
 // ========================================
 // AMBIL PENGATURAN PENDAFTARAN
 // ========================================
 export async function getPengaturanPendaftaran() {
+
   const { data, error } = await supabase
     .from(TABLE)
     .select("*")
@@ -13,14 +15,35 @@ export async function getPengaturanPendaftaran() {
     .limit(1)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) {
+    console.error(
+      "GAGAL MENGAMBIL PENGATURAN PENDAFTARAN:",
+      error
+    );
+
+    throw error;
+  }
 
   return data;
 }
 
 
+
 // ========================================
-// CEK APAKAH PENDAFTARAN MASIH DIBUKA
+// CEK STATUS PENDAFTARAN
+// ========================================
+//
+// ATURAN UTAMA:
+//
+// status = "dibuka"
+// → Operator BOLEH masuk
+//
+// status = "ditutup"
+// → Operator TERKUNCI
+//
+// manual_override hanya sebagai informasi
+// dan tidak lagi menentukan akses Operator.
+//
 // ========================================
 export async function cekPendaftaranDibuka() {
 
@@ -28,12 +51,15 @@ export async function cekPendaftaranDibuka() {
     await getPengaturanPendaftaran();
 
 
-  // Kalau belum ada pengaturan
-  // kita anggap ditutup agar aman
+  // ========================================
+  // JIKA PENGATURAN BELUM ADA
+  // ========================================
+
   if (!pengaturan) {
 
     return {
       dibuka: false,
+      otomatisDitutup: false,
       pengaturan: null,
     };
 
@@ -41,8 +67,9 @@ export async function cekPendaftaranDibuka() {
 
 
   // ========================================
-  // ADMIN MENUTUP MANUAL
+  // PENDAFTARAN DITUTUP
   // ========================================
+
   if (pengaturan.status === "ditutup") {
 
     return {
@@ -55,15 +82,24 @@ export async function cekPendaftaranDibuka() {
 
 
   // ========================================
-  // ADMIN MEMBUKA KEMBALI SECARA MANUAL
+  // PENDAFTARAN DIBUKA
   // ========================================
-  if (pengaturan.status === "dibuka" &&
-      pengaturan.manual_override === true) {
+  //
+  // Kalau Admin sudah membuka kembali,
+  // Operator langsung boleh masuk.
+  //
+  // Tanggal/jam penutupan lama TIDAK
+  // digunakan untuk mengunci Operator.
+  //
+  // ========================================
+
+  if (pengaturan.status === "dibuka") {
 
     return {
       dibuka: true,
       otomatisDitutup: false,
-      manualOverride: true,
+      manualOverride:
+        pengaturan.manual_override === true,
       pengaturan,
     };
 
@@ -71,44 +107,18 @@ export async function cekPendaftaranDibuka() {
 
 
   // ========================================
-  // CEK TANGGAL & JAM PENUTUPAN OTOMATIS
-  // WIB = UTC+7
+  // STATUS TIDAK DIKENAL
+  // DEFAULT AMAN = TUTUP
   // ========================================
-  if (
-    pengaturan.tanggal_tutup &&
-    pengaturan.jam_tutup
-  ) {
-
-    const deadlineString =
-      `${pengaturan.tanggal_tutup}T${pengaturan.jam_tutup}`;
-
-    const deadlineUTC =
-      new Date(`${deadlineString}+07:00`);
-
-    const sekarang = new Date();
-
-
-    if (sekarang >= deadlineUTC) {
-
-      return {
-        dibuka: false,
-        otomatisDitutup: true,
-        pengaturan,
-      };
-
-    }
-
-  }
-
 
   return {
-    dibuka: true,
+    dibuka: false,
     otomatisDitutup: false,
-    manualOverride: false,
     pengaturan,
   };
 
 }
+
 
 
 // ========================================
@@ -119,26 +129,35 @@ export async function updatePengaturanPendaftaran(
   data
 ) {
 
+  const status =
+    data.status === "dibuka"
+      ? "dibuka"
+      : "ditutup";
+
+
   const { data: hasil, error } =
     await supabase
       .from(TABLE)
       .update({
 
-        status: data.status,
+        status: status,
 
         tanggal_tutup:
-          data.tanggal_tutup,
+          data.tanggal_tutup || null,
 
         jam_tutup:
-          data.jam_tutup,
+          data.jam_tutup || null,
 
         pesan_penutupan:
-          data.pesan_penutupan,
+          data.pesan_penutupan || null,
 
-        // Kalau Admin menyimpan status
-        // "dibuka", override manual aktif.
+        // Kalau status dibuka,
+        // aktifkan override manual.
+        //
+        // Kalau status ditutup,
+        // matikan override manual.
         manual_override:
-          data.status === "dibuka",
+          status === "dibuka",
 
         updated_at:
           new Date().toISOString(),
@@ -149,50 +168,97 @@ export async function updatePengaturanPendaftaran(
       .single();
 
 
-  if (error) throw error;
+  if (error) {
+
+    console.error(
+      "GAGAL MENYIMPAN PENGATURAN:",
+      error
+    );
+
+    throw error;
+  }
+
 
   return hasil;
 
 }
 
 
+
 // ========================================
 // BUKA PENDAFTARAN
 // ========================================
 export async function bukaPendaftaran(id) {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update({
-      status: "dibuka",
-      manual_override: true,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select()
-    .single();
 
-  if (error) throw error;
+  const { data, error } =
+    await supabase
+      .from(TABLE)
+      .update({
+
+        status: "dibuka",
+
+        manual_override: true,
+
+        updated_at:
+          new Date().toISOString(),
+
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+
+  if (error) {
+
+    console.error(
+      "GAGAL MEMBUKA PENDAFTARAN:",
+      error
+    );
+
+    throw error;
+  }
+
 
   return data;
+
 }
+
 
 
 // ========================================
 // TUTUP PENDAFTARAN
 // ========================================
 export async function tutupPendaftaran(id) {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update({
-      status: "ditutup",
-      manual_override: false,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select()
-    .single();
 
-  if (error) throw error;
+  const { data, error } =
+    await supabase
+      .from(TABLE)
+      .update({
+
+        status: "ditutup",
+
+        manual_override: false,
+
+        updated_at:
+          new Date().toISOString(),
+
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+
+  if (error) {
+
+    console.error(
+      "GAGAL MENUTUP PENDAFTARAN:",
+      error
+    );
+
+    throw error;
+  }
+
 
   return data;
+
 }
